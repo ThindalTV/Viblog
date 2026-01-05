@@ -1,6 +1,6 @@
-using Vilog.Shared.Models.Feeds;
+using Viblog.Shared.Models.Feeds;
 
-namespace Vilog.Frontend.Infrastructure;
+namespace Viblog.Frontend.Infrastructure;
 
 /// <summary>
 /// Facade for RSS/Atom feed generation

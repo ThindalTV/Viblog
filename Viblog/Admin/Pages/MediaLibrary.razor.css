@@ -1,0 +1,50 @@
+/* Media Library Page */
+.media-library {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.media-library-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+/* Content Area */
+.media-library-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    overflow: hidden;
+}
+
+.media-library-content.preview-open {
+    grid-template-columns: 250px 1fr 400px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .media-library-content {
+        grid-template-columns: 200px 1fr;
+    }
+
+    .media-library-content.preview-open {
+        grid-template-columns: 200px 1fr 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .media-library-header {
+        padding: 1rem;
+    }
+
+    .media-library-content {
+        grid-template-columns: 1fr;
+    }
+
+    .media-library-content.preview-open {
+        grid-template-columns: 1fr;
+    }
+}

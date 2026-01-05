@@ -31,7 +31,7 @@ This project uses **Blazor CSS Isolation** for component and page-specific style
 
 ### After (CSS Isolation)
 ```
-Vilog/Frontend/
+Viblog/Frontend/
 ??? Components/
 ?   ??? PostCard.razor
 ?   ??? PostCard.razor.css          ? Component styles
@@ -199,7 +199,7 @@ Only for truly global, reusable utilities:
 
 ### DO ?
 - Put component-specific styles in `.razor.css` files
-- Use simple class names (`.post-title` not `.vilog-post-card-title`)
+- Use simple class names (`.post-title` not `.Viblog-post-card-title`)
 - Keep global utilities minimal
 - Use CSS custom properties for theming if needed
 - Leverage Blazor's automatic scoping
@@ -326,12 +326,12 @@ $breakpoint-mobile: 640.98px;
 ### Build Output
 Blazor bundles all `.razor.css` files into:
 ```
-Vilog.styles.css
+Viblog.styles.css
 ```
 
 This file is automatically referenced in `App.razor`:
 ```html
-<link rel="stylesheet" href="Vilog.styles.css" />
+<link rel="stylesheet" href="Viblog.styles.css" />
 ```
 
 ### Loading
@@ -354,7 +354,7 @@ Look for the `b-xxxxxx` attribute to identify the scope.
 1. Inspect element in DevTools
 2. Look for styles ending with `[b-xxxxxx]`
 3. The scope ID matches the component file name
-4. Styles come from `Vilog.styles.css`
+4. Styles come from `Viblog.styles.css`
 
 ## Future Enhancements
 
@@ -365,11 +365,11 @@ Potential improvements:
 - **Design Tokens**: For design system integration
 
 ## Related Files
-- All `.razor.css` files in `Vilog\Frontend\`
-- `Vilog\wwwroot\blog.scss` - Global utilities
-- `Vilog\wwwroot\styles\_variables.scss` - Shared variables
-- `Vilog\wwwroot\styles\_mixins.scss` - Shared mixins
-- `Vilog\Components\App.razor` - References `Vilog.styles.css`
+- All `.razor.css` files in `Viblog\Frontend\`
+- `Viblog\wwwroot\blog.scss` - Global utilities
+- `Viblog\wwwroot\styles\_variables.scss` - Shared variables
+- `Viblog\wwwroot\styles\_mixins.scss` - Shared mixins
+- `Viblog\Components\App.razor` - References `Viblog.styles.css`
 
 ## References
 - [Blazor CSS Isolation Docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/components/css-isolation)

@@ -1,7 +1,7 @@
 # Front Page Facade Pattern
 
 ## Overview
-The Front Page Facade provides a simplified interface for retrieving blog posts to display on the home page. It implements the Display-Facade-Repository pattern used throughout the Vilog application.
+The Front Page Facade provides a simplified interface for retrieving blog posts to display on the home page. It implements the Display-Facade-Repository pattern used throughout the Viblog application.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ CosmosDB
 ## Components
 
 ### 1. IFrontPageFacade (Interface)
-Location: `Vilog\Shared\Facades\IFrontPageFacade.cs`
+Location: `Viblog\Shared\Facades\IFrontPageFacade.cs`
 
 Defines the contract for front page operations:
 - `GetFrontPagePostsAsync()` - Main method: Gets featured + latest posts (max 8)
@@ -28,7 +28,7 @@ Defines the contract for front page operations:
 - `GetLatestPostsAsync()` - Gets latest published posts
 
 ### 2. FrontPageFacade (Implementation)
-Location: `Vilog\Shared\Facades\FrontPageFacade.cs`
+Location: `Viblog\Shared\Facades\FrontPageFacade.cs`
 
 Business logic for assembling the front page:
 
@@ -47,7 +47,7 @@ Business logic for assembling the front page:
 - Virtual methods for testability
 
 ### 3. Index.razor (Display)
-Location: `Vilog\Frontend\Pages\Index.razor`
+Location: `Viblog\Frontend\Pages\Index.razor`
 
 Front-end display component:
 - Injects `IFrontPageFacade`
@@ -94,7 +94,7 @@ public class BlogService
 ## Configuration
 
 ### Service Registration
-Located in `Vilog\Shared\Services\ServiceExtensions.cs`:
+Located in `Viblog\Shared\Services\ServiceExtensions.cs`:
 
 ```csharp
 services.AddScoped<IFrontPageFacade, FrontPageFacade>();
@@ -155,7 +155,7 @@ mockFacade
 
 ## Styling
 
-Location: `Vilog\wwwroot\blog.css`
+Location: `Viblog\wwwroot\blog.css`
 
 Key CSS classes:
 - `.blog-post` - Post container

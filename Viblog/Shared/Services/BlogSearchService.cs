@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Infrastructure;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
+using Viblog.Shared.Infrastructure;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Default implementation of blog search service using the repository pattern

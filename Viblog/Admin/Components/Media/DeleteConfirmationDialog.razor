@@ -1,0 +1,50 @@
+@using Viblog.Shared.Data.Entities
+
+<TelerikDialog @bind-Visible="@Visible"
+              Title="Confirm Delete"
+              Width="500px">
+    <DialogContent>
+        <p>Are you sure you want to delete @(SelectedItems?.Count == 1 ? "this item" : $"these {SelectedItems?.Count ?? 0} items")?</p>
+        @if (SelectedItems != null && SelectedItems.Any())
+        {
+            <ul class="delete-list">
+                @foreach (var item in SelectedItems.Take(5))
+                {
+                    <li>@item.FileName</li>
+                }
+                @if (SelectedItems.Count > 5)
+                {
+                    <li><em>... and @(SelectedItems.Count - 5) more</em></li>
+                }
+            </ul>
+        }
+        <p class="warning-text">This action can be undone later from the trash.</p>
+    </DialogContent>
+    <DialogButtons>
+        <TelerikButton OnClick="@OnCancel">Cancel</TelerikButton>
+        <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Error"
+                     OnClick="@OnConfirm">
+            Delete
+        </TelerikButton>
+    </DialogButtons>
+</TelerikDialog>
+
+@code {
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter]
+    public List<MediaItem>? SelectedItems { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    private async Task OnCancel()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+}

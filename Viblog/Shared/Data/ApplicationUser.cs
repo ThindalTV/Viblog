@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Vilog.Shared.Data;
+namespace Viblog.Shared.Data;
 
 /// <summary>
 /// Application user entity extending ASP.NET Core Identity

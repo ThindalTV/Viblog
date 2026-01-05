@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Options;
 using Moq;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Services;
+using Viblog.Shared.Configuration;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
+using Viblog.Shared.Services;
 
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 public class SitemapServiceTests
 {

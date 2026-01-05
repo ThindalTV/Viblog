@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Data.Entities;
+namespace Viblog.Shared.Data.Entities;
 
 /// <summary>
 /// Represents a blog post with full content and metadata

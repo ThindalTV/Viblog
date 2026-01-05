@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Provides text manipulation and formatting utilities

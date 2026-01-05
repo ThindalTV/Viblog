@@ -1,6 +1,6 @@
 # CosmosDB Infrastructure Setup
 
-This document describes the CosmosDB infrastructure implementation for the Vilog blogging platform.
+This document describes the CosmosDB infrastructure implementation for the Viblog blogging platform.
 
 ## Overview
 
@@ -54,7 +54,7 @@ The generic repository provides paged CRUD operations:
     "CosmosConnection": "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
   },
   "CosmosDb": {
-    "DatabaseName": "VilogDb"
+    "DatabaseName": "ViblogDb"
   }
 }
 ```
@@ -69,7 +69,7 @@ Use **Azure Key Vault** or **User Secrets** for production credentials:
     "CosmosConnection": "AccountEndpoint=https://{account-name}.documents.azure.com:443/;AccountKey={key};"
   },
   "CosmosDb": {
-    "DatabaseName": "VilogDb"
+    "DatabaseName": "ViblogDb"
   }
 }
 ```
@@ -79,9 +79,9 @@ Use **Azure Key Vault** or **User Secrets** for production credentials:
 ### Creating a Domain Entity
 
 ```csharp
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Shared.Data.Entities;
+namespace Viblog.Shared.Data.Entities;
 
 public class BlogPost : BaseEntity
 {
@@ -103,11 +103,11 @@ public class BlogPost : BaseEntity
 ### Creating a Specific Repository
 
 ```csharp
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
 
-namespace Vilog.Shared.Data.Repositories;
+namespace Viblog.Shared.Data.Repositories;
 
 public interface IBlogPostRepository : IRepository<BlogPost>
 {
@@ -176,9 +176,9 @@ public static IServiceCollection AddRepositories(this IServiceCollection service
 ### Using Repositories in Services
 
 ```csharp
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
 
 public class BlogPostService
 {
@@ -412,7 +412,7 @@ For unit testing, mock the `IRepository<TEntity>` interface:
 ```csharp
 using Moq;
 using Xunit;
-using Vilog.Shared.Data.Common;
+using Viblog.Shared.Data.Common;
 
 public class BlogPostServiceTests
 {

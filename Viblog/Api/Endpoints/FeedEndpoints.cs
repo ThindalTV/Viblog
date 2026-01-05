@@ -3,10 +3,10 @@ using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Models.Feeds;
+using Viblog.Frontend.Infrastructure;
+using Viblog.Shared.Models.Feeds;
 
-namespace Vilog.Api.Endpoints;
+namespace Viblog.Api.Endpoints;
 
 /// <summary>
 /// Feed API endpoints (RSS, Atom)

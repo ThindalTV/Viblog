@@ -1,14 +1,14 @@
-# Vilog Configuration System
+# Viblog Configuration System
 
-This document explains how to use the Vilog configuration system based on the IOptions pattern.
+This document explains how to use the Viblog configuration system based on the IOptions pattern.
 
 ## Overview
 
-The Vilog configuration system provides a structured, type-safe way to access application settings. All configuration is centralized in the `VilogConfiguration` class and individual configuration sections can be injected independently.
+The Viblog configuration system provides a structured, type-safe way to access application settings. All configuration is centralized in the `ViblogConfiguration` class and individual configuration sections can be injected independently.
 
 ## Configuration Structure
 
-### Root Configuration (`VilogConfiguration`)
+### Root Configuration (`ViblogConfiguration`)
 The root configuration class that contains all application settings:
 - `SiteMetadata` - Site-wide metadata for SEO and social sharing
 - `CosmosDb` - CosmosDB database settings
@@ -39,11 +39,11 @@ CosmosDB configuration:
 Configuration is registered in `Program.cs` using the extension method:
 
 ```csharp
-builder.Services.AddVilogConfiguration(builder.Configuration);
+builder.Services.AddViblogConfiguration(builder.Configuration);
 ```
 
 This single line registers:
-- The root `VilogConfiguration` object
+- The root `ViblogConfiguration` object
 - Individual configuration sections (`SiteMetadata`, `CosmosDbSettings`)
 
 ## Usage Patterns
@@ -76,9 +76,9 @@ Use this when you need access to multiple configuration sections:
 ```csharp
 public class MyService
 {
-    private readonly VilogConfiguration _config;
+    private readonly ViblogConfiguration _config;
 
-    public MyService(IOptions<VilogConfiguration> config)
+    public MyService(IOptions<ViblogConfiguration> config)
     {
         _config = config.Value;
     }
@@ -169,7 +169,7 @@ public class MySingletonService
 
 To add a new configuration section:
 
-1. Create a new configuration class in `Vilog/Shared/Configuration/`:
+1. Create a new configuration class in `Viblog/Shared/Configuration/`:
 
 ```csharp
 public class MyNewSettings
@@ -178,17 +178,17 @@ public class MyNewSettings
 }
 ```
 
-2. Add it to `VilogConfiguration`:
+2. Add it to `ViblogConfiguration`:
 
 ```csharp
-public class VilogConfiguration
+public class ViblogConfiguration
 {
     // ...existing properties...
     public MyNewSettings MyNewSettings { get; set; } = new();
 }
 ```
 
-3. Register it in `ConfigurationExtensions.AddVilogConfiguration()`:
+3. Register it in `ConfigurationExtensions.AddViblogConfiguration()`:
 
 ```csharp
 services.Configure<MyNewSettings>(configuration.GetSection("MyNewSettings"));

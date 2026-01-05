@@ -37,7 +37,7 @@ Should show: `0.0.0.0:8081->8081/tcp, 0.0.0.0:10251-10254->10251-10254/tcp`
     "CosmosConnection": "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
   },
   "CosmosDb": {
-    "DatabaseName": "VilogDb"
+    "DatabaseName": "ViblogDb"
   }
 }
 ```
@@ -302,7 +302,7 @@ cosmosOptions.LimitToEndpoint();
     "CosmosConnection": "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
   },
   "CosmosDb": {
-    "DatabaseName": "VilogDb"
+    "DatabaseName": "ViblogDb"
   }
 }
 ```
@@ -314,7 +314,7 @@ cosmosOptions.LimitToEndpoint();
     "CosmosConnection": "AccountEndpoint=https://your-cosmos-account.documents.azure.com:443/;AccountKey=YOUR-PRODUCTION-KEY-HERE"
   },
   "CosmosDb": {
-    "DatabaseName": "VilogDb"
+    "DatabaseName": "ViblogDb"
   }
 }
 ```

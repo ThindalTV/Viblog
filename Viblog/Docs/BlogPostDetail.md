@@ -6,7 +6,7 @@ The blog post detail feature displays the full content of a blog post with rich 
 ## Components
 
 ### 1. BlogPostDetailFacade
-**Location:** `Vilog\Shared\Facades\BlogPostDetailFacade.cs`
+**Location:** `Viblog\Shared\Facades\BlogPostDetailFacade.cs`
 
 **Purpose:** Provides business logic for retrieving and managing individual blog posts.
 
@@ -17,7 +17,7 @@ The blog post detail feature displays the full content of a blog post with rich 
 **Registration:** `services.AddScoped<IBlogPostDetailFacade, BlogPostDetailFacade>()`
 
 ### 2. Post.razor
-**Location:** `Vilog\Frontend\Pages\Post.razor`
+**Location:** `Viblog\Frontend\Pages\Post.razor`
 
 **Route:** `/post/{slug}`
 
@@ -38,7 +38,7 @@ The blog post detail feature displays the full content of a blog post with rich 
 - `Slug` (string): URL-friendly identifier for the post
 
 ### 3. PostCard Component Updates
-**Location:** `Vilog\Frontend\Components\PostCard.razor`
+**Location:** `Viblog\Frontend\Components\PostCard.razor`
 
 **New Features:**
 - Conditional linking based on content availability
@@ -78,7 +78,7 @@ The frontend pages are configured for static server-side rendering (SSR) in `Pro
 ```csharp
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddAdditionalAssemblies(typeof(Vilog.Frontend._Imports).Assembly);
+    .AddAdditionalAssemblies(typeof(Viblog.Frontend._Imports).Assembly);
 ```
 
 ### How It Works
@@ -134,7 +134,7 @@ _ = Task.Run(async () =>
 ## Styling
 
 ### Post Detail Styles
-All styles are defined in `Vilog\wwwroot\blog.scss`:
+All styles are defined in `Viblog\wwwroot\blog.scss`:
 
 **Key Classes:**
 - `.post-detail`: Main article container (max-width: 800px)
@@ -246,23 +246,23 @@ Potential additions:
 ## Related Files
 
 ### Core Implementation
-- `Vilog\Frontend\Pages\Post.razor`
-- `Vilog\Shared\Facades\IBlogPostDetailFacade.cs`
-- `Vilog\Shared\Facades\BlogPostDetailFacade.cs`
-- `Vilog\Frontend\Components\PostCard.razor`
+- `Viblog\Frontend\Pages\Post.razor`
+- `Viblog\Shared\Facades\IBlogPostDetailFacade.cs`
+- `Viblog\Shared\Facades\BlogPostDetailFacade.cs`
+- `Viblog\Frontend\Components\PostCard.razor`
 
 ### Styling
-- `Vilog\wwwroot\blog.scss` (post detail styles)
-- `Vilog\wwwroot\styles\_variables.scss` (variables)
+- `Viblog\wwwroot\blog.scss` (post detail styles)
+- `Viblog\wwwroot\styles\_variables.scss` (variables)
 
 ### Data Layer
-- `Vilog\Shared\Data\Entities\BlogPost.cs`
-- `Vilog\Shared\Data\Repositories\IBlogPostRepository.cs`
-- `Vilog\Shared\Data\Repositories\BlogPostRepository.cs`
+- `Viblog\Shared\Data\Entities\BlogPost.cs`
+- `Viblog\Shared\Data\Repositories\IBlogPostRepository.cs`
+- `Viblog\Shared\Data\Repositories\BlogPostRepository.cs`
 
 ### Configuration
-- `Vilog\Program.cs` (prerendering setup)
-- `Vilog\Shared\Services\ServiceExtensions.cs` (facade registration)
+- `Viblog\Program.cs` (prerendering setup)
+- `Viblog\Shared\Services\ServiceExtensions.cs` (facade registration)
 
 ## Best Practices
 

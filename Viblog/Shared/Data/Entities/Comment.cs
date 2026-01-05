@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Data.Entities;
+namespace Viblog.Shared.Data.Entities;
 
 /// <summary>
 /// Represents a comment on a blog post

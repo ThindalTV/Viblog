@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Data.Common;
+namespace Viblog.Shared.Data.Common;
 
 /// <summary>
 /// Parameters for pagination

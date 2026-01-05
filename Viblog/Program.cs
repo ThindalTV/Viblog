@@ -1,17 +1,18 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Vilog.Components;
-using Vilog.Shared.Data;
-using Vilog.Frontend;
-using Vilog.Api;
-using Vilog.Shared;
-using Vilog.Shared.Configuration;
-using Vilog.Admin;
+using Viblog.Components;
+using Viblog.Shared.Data;
+using Viblog.Frontend;
+using Viblog.Api;
+using Viblog.Shared;
+using Viblog.Shared.Configuration;
+using Viblog.Admin;
+using Viblog.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure all Vilog settings using the IOptions pattern
-builder.Services.AddVilogConfiguration(builder.Configuration);
+// Configure all Viblog settings using the IOptions pattern
+builder.Services.AddViblogConfiguration(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -61,11 +62,14 @@ builder.Services.AddRepositories();
 // Register blog services
 builder.Services.AddBlogServices();
 
-// Register Vilog Frontend services (statically rendered, no auth)
-builder.Services.AddVilogFrontend();
+// Register media storage services
+builder.Services.AddMediaStorage(builder.Configuration);
 
-// Register Vilog Admin services (interactive server, with auth)
-builder.Services.AddVilogAdmin();
+// Register Viblog Frontend services (statically rendered, no auth)
+builder.Services.AddViblogFrontend();
+
+// Register Viblog Admin services (interactive server, with auth)
+builder.Services.AddViblogAdmin();
 
 var app = builder.Build();
 
@@ -89,18 +93,29 @@ else
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-app.UseVilogFrontend();
-app.UseVilogAdmin();
+// Configure static file serving for media files
+var mediaBasePath = builder.Configuration["MediaStorage:FileSystem:BasePath"];
+if (!string.IsNullOrEmpty(mediaBasePath) && Directory.Exists(mediaBasePath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(mediaBasePath),
+        RequestPath = "/media"
+    });
+}
+
+app.UseViblogFrontend();
+app.UseViblogAdmin();
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 
 // Map admin endpoints
-app.MapVilogAdminEndpoints();
+app.MapViblogAdminEndpoints();
 
 // Map all blog API endpoints
-app.MapVilogApiEndpoints();
+app.MapViblogApiEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -139,7 +154,7 @@ static async Task SeedDatabaseAsync(WebApplication app)
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("Checking if database seeding is needed...");
-    await Vilog.Shared.Data.Seeders.BlogPostSeeder.SeedAsync(dbContext);
+    await Viblog.Shared.Data.Seeders.BlogPostSeeder.SeedAsync(dbContext);
     logger.LogInformation("Database seeding completed.");
 
 }

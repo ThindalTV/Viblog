@@ -1,6 +1,6 @@
-using Vilog.Shared.Data.Common;
+using Viblog.Shared.Data.Common;
 
-namespace Vilog.Tests.Common;
+namespace Viblog.Tests.Common;
 
 public class PagedResultTests
 {

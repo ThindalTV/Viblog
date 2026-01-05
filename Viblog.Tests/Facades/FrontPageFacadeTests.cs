@@ -1,10 +1,10 @@
 using Moq;
-using Vilog.Frontend.Facades;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Frontend.Facades;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
 
-namespace Vilog.Tests.Facades;
+namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for FrontPageFacade

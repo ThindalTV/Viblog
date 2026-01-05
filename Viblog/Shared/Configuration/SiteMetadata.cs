@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Configuration;
+namespace Viblog.Shared.Configuration;
 
 /// <summary>
 /// Configuration for site-wide metadata used in SEO, structured data, and social sharing

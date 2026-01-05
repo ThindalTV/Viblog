@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Models.Sitemap;
+using Viblog.Shared.Configuration;
+using Viblog.Shared.Data.Repositories;
+using Viblog.Shared.Models.Sitemap;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Service for generating sitemap data

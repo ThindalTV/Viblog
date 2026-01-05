@@ -1,7 +1,7 @@
-using Vilog.Admin.Models;
-using Vilog.Shared.Data.Entities;
+using Viblog.Admin.Models;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Admin.Extensions;
+namespace Viblog.Admin.Extensions;
 
 /// <summary>
 /// Extension methods for converting between BlogPost entity and BlogPostModel

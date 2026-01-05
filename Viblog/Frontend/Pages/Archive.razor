@@ -1,11 +1,11 @@
 @page "/archive/{Year:int}/{Month:int}"
 @page "/archive/{Year:int}/{Month:int}/{PageNumber:int}"
-@layout Vilog.Frontend.Layout.BlogLayout
+@layout Viblog.Frontend.Layout.BlogLayout
 @using System.Globalization
-@using Vilog.Frontend.Components
-@using Vilog.Frontend.Infrastructure
-@using Vilog.Shared.Data.Common
-@using Vilog.Shared.Data.Entities
+@using Viblog.Frontend.Components
+@using Viblog.Frontend.Infrastructure
+@using Viblog.Shared.Data.Common
+@using Viblog.Shared.Data.Entities
 
 @inject IArchiveFacade ArchiveFacade
 @inject NavigationManager Navigation

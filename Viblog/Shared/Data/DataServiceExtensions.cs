@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
 
-namespace Vilog.Shared.Data;
+namespace Viblog.Shared.Data;
 
 /// <summary>
 /// Extension methods for registering data access services

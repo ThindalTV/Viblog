@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Data.Common;
+namespace Viblog.Shared.Data.Common;
 
 /// <summary>
 /// Base class containing pagination metadata without generic type

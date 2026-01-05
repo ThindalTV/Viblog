@@ -1,12 +1,12 @@
 # API Architecture Documentation
 
 ## Overview
-The Vilog blog uses a clean, modular Minimal API architecture for all public API endpoints. This structure provides excellent organization, testability, and extensibility.
+The Viblog blog uses a clean, modular Minimal API architecture for all public API endpoints. This structure provides excellent organization, testability, and extensibility.
 
 ## Project Structure
 
 ```
-Vilog/
+Viblog/
 ??? Api/
 ?   ??? ApiServiceExtensions.cs        ? Central registration point
 ?   ??? Endpoints/
@@ -28,7 +28,7 @@ app.MapBlogApiEndpoints();
 Each feature area has its own endpoint class:
 
 ```csharp
-namespace Vilog.Api.Endpoints;
+namespace Viblog.Api.Endpoints;
 
 public static class FeedEndpoints
 {
@@ -197,7 +197,7 @@ Create a new file in `/Api/Endpoints/`:
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace Vilog.Api.Endpoints;
+namespace Viblog.Api.Endpoints;
 
 public static class WebhookEndpoints
 {
@@ -471,16 +471,16 @@ Track endpoint metrics:
 ## Related Files
 
 ### API Structure
-- `Vilog\Api\ApiServiceExtensions.cs`
-- `Vilog\Api\Endpoints\FeedEndpoints.cs`
-- `Vilog\Api\Endpoints\SitemapEndpoints.cs`
+- `Viblog\Api\ApiServiceExtensions.cs`
+- `Viblog\Api\Endpoints\FeedEndpoints.cs`
+- `Viblog\Api\Endpoints\SitemapEndpoints.cs`
 
 ### Registration
-- `Vilog\Program.cs`
+- `Viblog\Program.cs`
 
 ### Facades (Used by APIs)
-- `Vilog\Shared\Facades\IRssFeedFacade.cs`
-- `Vilog\Shared\Facades\RssFeedFacade.cs`
+- `Viblog\Shared\Facades\IRssFeedFacade.cs`
+- `Viblog\Shared\Facades\RssFeedFacade.cs`
 
 ### Documentation
 - This file: `ApiArchitecture.md`
@@ -489,7 +489,7 @@ Track endpoint metrics:
 
 ## Summary
 
-The Vilog API architecture provides:
+The Viblog API architecture provides:
 
 ? **Clean Organization** - Modular endpoint files  
 ? **Easy to Extend** - Add new endpoint groups easily  

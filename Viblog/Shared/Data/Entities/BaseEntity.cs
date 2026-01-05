@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Data.Entities;
+namespace Viblog.Shared.Data.Entities;
 
 /// <summary>
 /// Base entity class providing common properties for all entities

@@ -1,7 +1,7 @@
-﻿using Vilog.Frontend.Facades;
-using Vilog.Frontend.Infrastructure;
+﻿using Viblog.Frontend.Facades;
+using Viblog.Frontend.Infrastructure;
 
-namespace Vilog.Frontend;
+namespace Viblog.Frontend;
 
 public static class RegisterFrontendExtensions
 {
@@ -10,7 +10,7 @@ public static class RegisterFrontendExtensions
     /// </summary>
     extension(IServiceCollection collection)
     {
-        public IServiceCollection AddVilogFrontend()
+        public IServiceCollection AddViblogFrontend()
         {
             // Register facades
             collection.AddScoped<IFrontPageFacade, FrontPageFacade>();
@@ -32,7 +32,7 @@ public static class RegisterFrontendExtensions
     /// </summary>
     extension(IApplicationBuilder app)
     {
-        public IApplicationBuilder UseVilogFrontend()
+        public IApplicationBuilder UseViblogFrontend()
         {
             // Reserved for future frontend-specific middleware
             // (e.g., custom response caching, frontend-specific error handling)

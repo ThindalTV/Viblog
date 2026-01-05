@@ -1,7 +1,7 @@
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Models.Sitemap;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Models.Sitemap;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Service for generating sitemap data

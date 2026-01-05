@@ -1,6 +1,6 @@
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Frontend.Infrastructure;
+namespace Viblog.Frontend.Infrastructure;
 
 /// <summary>
 /// Facade for front page operations

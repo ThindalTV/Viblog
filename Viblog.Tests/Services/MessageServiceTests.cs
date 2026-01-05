@@ -1,7 +1,7 @@
-using Vilog.Admin.Services;
+using Viblog.Admin.Services;
 using Xunit;
 
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 /// <summary>
 /// Unit tests for MessageService

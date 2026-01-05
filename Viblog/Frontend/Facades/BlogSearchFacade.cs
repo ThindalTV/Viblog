@@ -1,9 +1,9 @@
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Infrastructure;
+using Viblog.Frontend.Infrastructure;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Infrastructure;
 
-namespace Vilog.Frontend.Facades;
+namespace Viblog.Frontend.Facades;
 
 /// <summary>
 /// Facade implementation for blog search operations

@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using Vilog.Admin.Infrastructure;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Admin.Infrastructure;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
+using Viblog.Shared.Data.Repositories;
 
-namespace Vilog.Admin.Facades;
+namespace Viblog.Admin.Facades;
 
 /// <summary>
 /// Facade implementation for admin post management operations

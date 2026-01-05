@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Vilog.Shared.Infrastructure;
-using Vilog.Shared.Services;
+using Viblog.Shared.Infrastructure;
+using Viblog.Shared.Services;
 
-namespace Vilog.Shared;
+namespace Viblog.Shared;
 
 /// <summary>
 /// Extension methods for registering service layer dependencies

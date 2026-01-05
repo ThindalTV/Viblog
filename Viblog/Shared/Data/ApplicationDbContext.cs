@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Shared.Data;
+namespace Viblog.Shared.Data;
 
 /// <summary>
 /// Application database context configured for CosmosDB
@@ -149,6 +149,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 c.Property(cm => cm.IpAddress);
                 c.Property(cm => cm.UserAgent);
             });
+        });
+
+        builder.Entity<MediaItem>(b =>
+        {
+            b.ToContainer("MediaItems");
+            b.HasPartitionKey(m => m.PartitionKey);
+            b.HasNoDiscriminator();
+            
+            // Configure dictionary property for additional metadata
+            b.Property(m => m.AdditionalMetadata);
         });
     }
 

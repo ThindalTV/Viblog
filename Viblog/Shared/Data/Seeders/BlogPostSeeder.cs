@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Vilog.Shared.Data;
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Shared.Data.Seeders;
+namespace Viblog.Shared.Data.Seeders;
 
 /// <summary>
 /// Seeds the database with initial blog post data

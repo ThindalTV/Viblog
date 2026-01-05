@@ -1,4 +1,4 @@
-namespace Vilog.Admin.Services;
+namespace Viblog.Admin.Services;
 
 /// <summary>
 /// Represents a dialog to be displayed

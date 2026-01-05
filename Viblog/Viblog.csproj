@@ -4,21 +4,23 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-Vilog-9812851b-d00e-4c01-9949-944fd4067437</UserSecretsId>
+    <UserSecretsId>aspnet-ViblogViblog-9812851b-d00e-4c01-9949-944fd4067437</UserSecretsId>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageReference Include="Telerik.UI.for.Blazor" Version="12.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Admin\Pages\Media\" />
     <Folder Include="Shared\Data\Migrations\" />
-    <Folder Include="Shared\Facades\" />
   </ItemGroup>
 
 </Project>

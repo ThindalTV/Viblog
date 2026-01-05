@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
-using Vilog.Admin.Configuration;
-using Vilog.Admin.Facades;
-using Vilog.Admin.Infrastructure;
-using Vilog.Admin.Services;
+using Viblog.Admin.Configuration;
+using Viblog.Admin.Facades;
+using Viblog.Admin.Infrastructure;
+using Viblog.Admin.Services;
 
-namespace Vilog.Admin;
+namespace Viblog.Admin;
 
 public static class RegisterAdminExtensions
 {
@@ -14,7 +14,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IServiceCollection collection)
     {
-        public IServiceCollection AddVilogAdmin()
+        public IServiceCollection AddViblogAdmin()
         {
             // Register admin authentication settings
             var adminSettings = new AdminAuthenticationSettings();
@@ -50,7 +50,7 @@ public static class RegisterAdminExtensions
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.Cookie.Name = "Vilog.Admin.Auth";
+                    options.Cookie.Name = "Viblog.Admin.Auth";
                 });
 
             return collection;
@@ -62,7 +62,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IApplicationBuilder app)
     {
-        public IApplicationBuilder UseVilogAdmin()
+        public IApplicationBuilder UseViblogAdmin()
         {
             app.UseAuthentication();
             app.UseAuthorization();
@@ -76,7 +76,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IEndpointRouteBuilder endpoints)
     {
-        public IEndpointRouteBuilder MapVilogAdminEndpoints()
+        public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
             // Map admin login endpoint
             endpoints.MapPost("/admin/api/login", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>

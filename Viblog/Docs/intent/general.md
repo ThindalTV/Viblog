@@ -1,8 +1,8 @@
-# Vilog: Blogging Platform Architecture
+# Viblog: Blogging Platform Architecture
 
 ## Overview
 
-**Vilog** is a modern, high-performance blogging platform built with ASP.NET Core Blazor and Azure CosmosDB. It features a dual-architecture design that separates public content (statically rendered for optimal performance) from administrative functionality (interactive server-side rendering).
+**Viblog** is a modern, high-performance blogging platform built with ASP.NET Core Blazor and Azure CosmosDB. It features a dual-architecture design that separates public content (statically rendered for optimal performance) from administrative functionality (interactive server-side rendering).
 
 ## Technology Stack
 
@@ -24,7 +24,7 @@
 
 ### Display-Facade-Repository Pattern
 
-Vilog implements a clean three-layer architecture:
+Viblog implements a clean three-layer architecture:
 
 1. **Display Layer** (Blazor Components)
    - Minimal logic, presentation focused
@@ -75,7 +75,7 @@ The application is split into two distinct areas:
 ## Project Structure
 
 ```
-Vilog/
+Viblog/
 ??? Components/          # Root-level shared components
 ?   ??? App.razor       # Application entry point
 ?   ??? Routes.razor    # Main routing configuration
@@ -133,7 +133,7 @@ Primary entities:
 Uses the IOptions pattern with strongly-typed configuration:
 
 ```csharp
-services.AddVilogConfiguration(configuration);
+services.AddViblogConfiguration(configuration);
 ```
 
 Key configuration sections:
@@ -162,15 +162,15 @@ Modular registration through extension methods:
 
 ```csharp
 // Shared services
-builder.Services.AddVilogConfiguration(builder.Configuration);
+builder.Services.AddViblogConfiguration(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddBlogServices();
 
 // Frontend-specific
-builder.Services.AddVilogFrontend();
+builder.Services.AddViblogFrontend();
 
 // Admin-specific
-builder.Services.AddVilogAdmin();
+builder.Services.AddViblogAdmin();
 ```
 
 ## Routing Strategy
@@ -372,7 +372,7 @@ The modular structure supports future plugin development:
 
 ## Contributing
 
-When contributing to Vilog:
+When contributing to Viblog:
 1. Follow existing code patterns and conventions
 2. Add unit tests for new functionality
 3. Include XML documentation for public APIs

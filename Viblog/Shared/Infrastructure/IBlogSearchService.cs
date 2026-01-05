@@ -1,7 +1,7 @@
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Shared.Infrastructure;
+namespace Viblog.Shared.Infrastructure;
 
 /// <summary>
 /// Service interface for blog post search operations

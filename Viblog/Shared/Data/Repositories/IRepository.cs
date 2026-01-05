@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
+using Viblog.Shared.Data.Common;
+using Viblog.Shared.Data.Entities;
 
-namespace Vilog.Shared.Data.Repositories;
+namespace Viblog.Shared.Data.Repositories;
 
 /// <summary>
 /// Generic repository interface providing basic CRUD operations

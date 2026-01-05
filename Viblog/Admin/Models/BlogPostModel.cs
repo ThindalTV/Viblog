@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Vilog.Admin.Models;
+namespace Viblog.Admin.Models;
 
 /// <summary>
 /// View model for blog post editing

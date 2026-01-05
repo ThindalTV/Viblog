@@ -1,0 +1,127 @@
+@page "/admin/media"
+@page "/admin/media/{*FolderPath}"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@using Viblog.Admin.Layout
+@using Viblog.Admin.Components.Media
+@using Viblog.Shared.Data.Entities
+@inject NavigationManager NavigationManager
+@inject ILogger<MediaLibrary> Logger
+
+<PageTitle>Media Library - Viblog Admin</PageTitle>
+
+<div class="media-library">
+    <div class="media-library-header">
+        <BreadcrumbNavigation CurrentPath="@_currentFolder"
+                            RootLabel="Media Library"
+                            RootUrl="/admin/media"
+                            BaseUrl="/admin/media"
+                            OnNavigate="@NavigateToFolder" />
+    </div>
+
+    <div class="media-library-content @(_previewItem != null ? "preview-open" : "")">
+        <!-- Folder Tree Panel -->
+        <FolderTreePanel @ref="_folderTreePanel"
+                        CurrentFolder="@_currentFolder"
+                        OnFolderNavigate="@NavigateToFolder" />
+
+        <!-- Media Grid Panel -->
+        <MediaGridPanel @ref="_mediaGridPanel"
+                       CurrentFolder="@_currentFolder"
+                       FolderTreeData="@(_folderTreePanel?.GetFolderTreeData())"
+                       OnItemDoubleClick="@OnItemDoubleClick"
+                       OnUploadComplete="@HandleUploadCompleteAsync"
+                       OnItemMoved="@HandleItemMovedAsync"
+                       OnNewFolder="@ShowNewFolderDialog" />
+
+        <!-- Preview Panel -->
+        <PreviewPanel PreviewItem="@_previewItem"
+                     OnClose="@ClosePreview" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? FolderPath { get; set; }
+
+    // State
+    private string _currentFolder = "/";
+    private MediaItem? _previewItem;
+    
+    // References
+    private FolderTreePanel? _folderTreePanel;
+    private MediaGridPanel? _mediaGridPanel;
+    
+    protected override void OnInitialized()
+    {
+        _currentFolder = string.IsNullOrWhiteSpace(FolderPath) ? "/" : FolderPath;
+    }
+
+    protected override void OnParametersSet()
+    {
+        var newFolder = string.IsNullOrWhiteSpace(FolderPath) ? "/" : FolderPath;
+        if (newFolder != _currentFolder)
+        {
+            _currentFolder = newFolder;
+            _previewItem = null; // Clear preview when changing folders
+        }
+    }
+
+    private void NavigateToFolder(string folderPath)
+    {
+        // Normalize the folder path
+        folderPath = folderPath.Trim().Replace("\\", "/");
+        if (string.IsNullOrEmpty(folderPath) || folderPath == "/")
+        {
+            folderPath = "/";
+        }
+        
+        // Don't navigate if already on this folder
+        if (folderPath.Equals(_currentFolder, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // Update URL - this will trigger OnParametersSet
+        NavigationManager.NavigateTo($"/admin/media{(folderPath == "/" ? "" : folderPath)}");
+    }
+
+    private void OnItemDoubleClick(MediaItem item)
+    {
+        _previewItem = item;
+        StateHasChanged();
+    }
+
+    private void ClosePreview()
+    {
+        _previewItem = null;
+    }
+
+    private async Task HandleUploadCompleteAsync()
+    {
+        // Refresh folder tree to show new folders that may have been created
+        if (_folderTreePanel != null)
+        {
+            await _folderTreePanel.RefreshFoldersAsync();
+        }
+        
+        // Grid will refresh itself
+    }
+
+    private async Task HandleItemMovedAsync((MediaItem Item, string TargetPath) moveData)
+    {
+        Logger.LogInformation("Item moved: {FileName} to {TargetPath}", moveData.Item.FileName, moveData.TargetPath);
+        
+        // Refresh folder tree in case new folders were involved
+        if (_folderTreePanel != null)
+        {
+            await _folderTreePanel.RefreshFoldersAsync();
+        }
+        
+        // Grid will refresh itself
+    }
+
+    private void ShowNewFolderDialog()
+    {
+        // TODO: Implement new folder dialog
+        Logger.LogInformation("New folder requested");
+    }
+}

@@ -1,13 +1,13 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components
-@using Vilog.Frontend
+@using Viblog.Frontend
 
-<Router AppAssembly="typeof(Vilog.Frontend._Imports).Assembly">
+<Router AppAssembly="typeof(Viblog.Frontend._Imports).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.BlogLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <Frontend.Pages.NotFound />
+        <Viblog.Frontend.Pages.NotFound />
     </NotFound>
 </Router>

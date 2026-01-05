@@ -1,4 +1,4 @@
-namespace Vilog.Frontend.Models;
+namespace Viblog.Frontend.Models;
 
 /// <summary>
 /// Represents a social media link with URL, label, and icon

@@ -1,7 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
-@using Vilog.Admin.Components
-@using Vilog.Admin.Services
+@using Viblog.Admin.Components
+@using Viblog.Admin.Services
 @inject AdminAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
@@ -160,6 +160,7 @@
         new DrawerItem { Text = "Dashboard", Icon = SvgIcon.Grid, Url = "/admin" },
         new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/admin/posts" },
         new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/admin/pages" },
+        new DrawerItem { Text = "Media", Icon = SvgIcon.Image, Url = "/admin/media" },
         new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/analytics" },
         new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/admin/settings" }
     };
@@ -186,6 +187,13 @@
     {
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         var targetPath = item.Url.TrimStart('/');
+        
+        // For Media Library, also match subpaths like /admin/media/folder1
+        if (item.Url == "/admin/media" && currentPath.StartsWith("admin/media", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        
         return currentPath.Equals(targetPath, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -193,10 +201,20 @@
     {
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         
+        // Check for exact match first
         var item = _navigationItems.FirstOrDefault(i => 
             currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
             ?? _toolsItems.FirstOrDefault(i => 
                 currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+        
+        // If no exact match, check if current path starts with any nav item URL
+        if (item == null)
+        {
+            item = _navigationItems.FirstOrDefault(i => 
+                currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
+                ?? _toolsItems.FirstOrDefault(i => 
+                    currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+        }
         
         return item?.Text ?? "Dashboard";
     }
