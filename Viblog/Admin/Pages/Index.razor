@@ -1,0 +1,129 @@
+@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+
+<PageTitle>Dashboard - Vilog Admin</PageTitle>
+
+<div class="dashboard">
+    <h1 class="welcome-title">Welcome back, @_userName!</h1>
+
+    <div class="dashboard-grid">
+        <!-- Performance Chart -->
+        <div class="grid-item chart-area">
+            <div class="card">
+                <h2 class="card-title">Performance</h2>
+                <div class="chart-placeholder">
+                    <div class="chart-legend">
+                        <span class="legend-item">
+                            <span class="legend-dot google"></span> Google
+                        </span>
+                        <span class="legend-item">
+                            <span class="legend-dot bing"></span> Bing
+                        </span>
+                        <span class="legend-item">
+                            <span class="legend-dot twitter"></span> Twitter
+                        </span>
+                    </div>
+                    <div class="chart-visual">
+                        <span class="chart-label">Chart Placeholder</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid-item stat-card-1">
+            <div class="card stat-card">
+                <div class="stat-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.FileAdd" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                </div>
+                <div class="stat-change negative">
+                    <TelerikSvgIcon Icon="@SvgIcon.ArrowDown" />
+                    15.7%
+                </div>
+                <div class="stat-number">6,794</div>
+                <div class="stat-label">Tickets Answered</div>
+            </div>
+        </div>
+
+        <div class="grid-item stat-card-2">
+            <div class="card stat-card">
+                <div class="stat-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.User" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                </div>
+                <div class="stat-change positive">
+                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
+                    20.2%
+                </div>
+                <div class="stat-number">457</div>
+                <div class="stat-label">New Visitors</div>
+            </div>
+        </div>
+
+        <div class="grid-item stat-card-3">
+            <div class="card stat-card">
+                <div class="stat-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.InfoCircle" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                </div>
+                <div class="stat-change positive">
+                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
+                    5.7%
+                </div>
+                <div class="stat-number">1,678</div>
+                <div class="stat-label">Projects Launched</div>
+            </div>
+        </div>
+
+        <div class="grid-item stat-card-4">
+            <div class="card stat-card">
+                <div class="stat-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.Cart" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                </div>
+                <div class="stat-change positive">
+                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
+                    5.3%
+                </div>
+                <div class="stat-number">5,627</div>
+                <div class="stat-label">Orders</div>
+            </div>
+        </div>
+
+        <!-- Additional Cards -->
+        <div class="grid-item info-card-1">
+            <div class="card info-card">
+                <div class="info-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.ChartLineMarkers" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                </div>
+                <h3>Sales Statistics</h3>
+                <p>View detailed sales reports and analytics</p>
+            </div>
+        </div>
+
+        <div class="grid-item info-card-2">
+            <div class="card info-card">
+                <div class="info-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.Grid" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                </div>
+                <h3>Recent Activity</h3>
+                <p>Monitor latest updates and changes</p>
+            </div>
+        </div>
+
+        <div class="grid-item info-card-3">
+            <div class="card info-card">
+                <div class="info-icon">
+                    <TelerikSvgIcon Icon="@SvgIcon.InfoCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                </div>
+                <h3>Performance Metrics</h3>
+                <p>Track key performance indicators</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _userName = "Douglas";
+    private int _totalPosts = 42;
+    private int _totalComments = 128;
+    private int _totalCategories = 8;
+}

@@ -1,0 +1,84 @@
+@using Vilog.Shared.Data.Entities
+@using Vilog.Shared.Services
+@inject StructuredDataHelper Helper
+
+@if (Type == StructuredDataType.BlogPost && Post != null && !string.IsNullOrWhiteSpace(Url))
+{
+    <script type="application/ld+json">
+        @((MarkupString)Helper.GenerateBlogPostingSchema(Post, Url))
+    </script>
+}
+else if (Type == StructuredDataType.WebSite)
+{
+    <script type="application/ld+json">
+        @((MarkupString)Helper.GenerateWebSiteSchema())
+    </script>
+}
+else if (Type == StructuredDataType.Organization)
+{
+    <script type="application/ld+json">
+        @((MarkupString)Helper.GenerateOrganizationSchema())
+    </script>
+}
+else if (Type == StructuredDataType.Breadcrumb && BreadcrumbItems != null && BreadcrumbItems.Any())
+{
+    <script type="application/ld+json">
+        @((MarkupString)Helper.GenerateBreadcrumbSchema(BreadcrumbItems))
+    </script>
+}
+else if (Type == StructuredDataType.CollectionPage && !string.IsNullOrWhiteSpace(Url) && !string.IsNullOrWhiteSpace(PageTitle))
+{
+    <script type="application/ld+json">
+        @((MarkupString)Helper.GenerateCollectionPageSchema(Url, PageTitle, PageDescription))
+    </script>
+}
+
+@code {
+    /// <summary>
+    /// Type of structured data to generate
+    /// </summary>
+    [Parameter, EditorRequired]
+    public StructuredDataType Type { get; set; }
+
+    /// <summary>
+    /// Blog post for BlogPost schema
+    /// </summary>
+    [Parameter]
+    public BlogPost? Post { get; set; }
+
+    /// <summary>
+    /// URL for the current page
+    /// </summary>
+    [Parameter]
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Breadcrumb items for Breadcrumb schema
+    /// </summary>
+    [Parameter]
+    public List<(string name, string url)>? BreadcrumbItems { get; set; }
+
+    /// <summary>
+    /// Page title for CollectionPage schema
+    /// </summary>
+    [Parameter]
+    public string? PageTitle { get; set; }
+
+    /// <summary>
+    /// Page description for CollectionPage schema
+    /// </summary>
+    [Parameter]
+    public string? PageDescription { get; set; }
+
+    /// <summary>
+    /// Enum for structured data types
+    /// </summary>
+    public enum StructuredDataType
+    {
+        BlogPost,
+        WebSite,
+        Organization,
+        Breadcrumb,
+        CollectionPage
+    }
+}

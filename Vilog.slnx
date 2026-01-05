@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/copilot-instructions.md" />
+  </Folder>
+  <Folder Name="/Pipelines/" />
+  <Project Path="Viblog.Tests/Viblog.Tests.csproj" />
+  <Project Path="Viblog/Viblog.csproj" />
+</Solution>

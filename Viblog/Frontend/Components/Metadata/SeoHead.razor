@@ -1,0 +1,123 @@
+@using Vilog.Frontend.Components.Metadata
+@using Vilog.Shared.Data.Entities
+@using Vilog.Frontend.Models
+@using static Vilog.Frontend.Components.Metadata.StructuredData
+
+<MetaTags 
+    Title="@Title"
+    Description="@Description"
+    CanonicalUrl="@CanonicalUrl"
+    Keywords="@Keywords"
+    Author="@Author"
+    ImageUrl="@ImageUrl"
+    ImageAlt="@ImageAlt"
+    OgType="@OgType"
+    PublishedTime="@PublishedTime"
+    ModifiedTime="@ModifiedTime"
+    ArticleAuthor="@ArticleAuthor"
+    ArticleTags="@ArticleTags"
+    TwitterCardType="@TwitterCardType"
+    TwitterMetadataItems="@TwitterMetadataItems"
+    RobotsContent="@RobotsContent" />
+
+<HeadContent>
+    @ChildContent
+</HeadContent>
+
+@code {
+    /// <summary>
+    /// Page title
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Page description
+    /// </summary>
+    [Parameter]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Canonical URL
+    /// </summary>
+    [Parameter]
+    public string CanonicalUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Keywords
+    /// </summary>
+    [Parameter]
+    public string? Keywords { get; set; }
+
+    /// <summary>
+    /// Author
+    /// </summary>
+    [Parameter]
+    public string? Author { get; set; }
+
+    /// <summary>
+    /// Image URL
+    /// </summary>
+    [Parameter]
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// Image alt text
+    /// </summary>
+    [Parameter]
+    public string? ImageAlt { get; set; }
+
+    /// <summary>
+    /// Open Graph type
+    /// </summary>
+    [Parameter]
+    public string OgType { get; set; } = "website";
+
+    /// <summary>
+    /// Published time
+    /// </summary>
+    [Parameter]
+    public DateTimeOffset? PublishedTime { get; set; }
+
+    /// <summary>
+    /// Modified time
+    /// </summary>
+    [Parameter]
+    public DateTimeOffset? ModifiedTime { get; set; }
+
+    /// <summary>
+    /// Article author
+    /// </summary>
+    [Parameter]
+    public string? ArticleAuthor { get; set; }
+
+    /// <summary>
+    /// Article tags
+    /// </summary>
+    [Parameter]
+    public IEnumerable<string>? ArticleTags { get; set; }
+
+    /// <summary>
+    /// Twitter card type
+    /// </summary>
+    [Parameter]
+    public string TwitterCardType { get; set; } = "summary";
+
+    /// <summary>
+    /// List of Twitter Card metadata items (label/data pairs)
+    /// </summary>
+    [Parameter]
+    public List<TwitterMetadata>? TwitterMetadataItems { get; set; }
+
+    /// <summary>
+    /// Robots content
+    /// </summary>
+    [Parameter]
+    public string RobotsContent { get; set; } = "index, follow";
+
+    /// <summary>
+    /// Additional head content (structured data, etc.)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

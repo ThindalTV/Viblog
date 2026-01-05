@@ -1,0 +1,137 @@
+@page "/category/{categoryId}"
+@page "/category/{categoryId}/{PageNumber:int}"
+@layout Vilog.Frontend.Layout.BlogLayout
+@using Vilog.Frontend.Components
+@using Vilog.Frontend.Components.Metadata
+@using Vilog.Frontend.Infrastructure
+@using Vilog.Shared.Data.Common
+@using Vilog.Shared.Data.Entities
+
+@inject ICategoryPostsFacade CategoryPostsFacade
+
+<CollectionSeoHead 
+    Title="@($"Category: {CategoryId}")" 
+    Description="@($"Posts in the {CategoryId} category")"
+    BreadcrumbItems="@_breadcrumbItems" />
+
+<Breadcrumb Items="_breadcrumbItems" />
+
+<section class="blog-section">
+    <h2 class="section-title">Category: @CategoryId</h2>
+    
+    @if (_isLoading)
+    {
+        <p class="loading-message">Loading posts...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (_pagedResult == null || !_pagedResult.Items.Any())
+    {
+        <article class="blog-post">
+            <h3 class="post-title">No Posts in This Category</h3>
+            <p class="post-excerpt">
+                There are no published posts in this category yet.
+            </p>
+            <div class="back-navigation">
+                <a href="/posts" class="back-link">? View All Posts</a>
+            </div>
+        </article>
+    }
+    else
+    {
+        @foreach (var post in _pagedResult.Items)
+        {
+            <PostCard Post="post" />
+        }
+
+        <Pagination PagedResult="@_pagedResult"
+                    GetPageUrl="@GetPageUrl"
+                    AriaLabel="Category posts pagination"
+                    ItemName="posts" />
+
+        <div class="back-navigation">
+            <a href="/posts" class="back-link">? View All Posts</a>
+        </div>
+    }
+</section>
+
+@code {
+    private const int PostsPerPage = 5;
+    
+    private PagedResult<BlogPost>? _pagedResult;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+
+    [Parameter]
+    public string CategoryId { get; set; } = string.Empty;
+
+    [Parameter]
+    public int? PageNumber { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        BuildBreadcrumbs();
+        await LoadPostsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPage = PageNumber ?? 1;
+        if (newPage != (PageNumber ?? 1))
+        {
+            await LoadPostsAsync();
+        }
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Label = "Posts", Url = "/posts" },
+            new() { Label = $"Category: {CategoryId}", Url = $"/category/{CategoryId}" }
+        };
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            var currentPage = PageNumber ?? 1;
+            var pagingParams = new PagingParameters(currentPage, PostsPerPage);
+            _pagedResult = await CategoryPostsFacade.GetPostsByCategoryAsync(CategoryId, pagingParams);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load blog posts for this category. Please try again later.";
+            // In production, log the exception
+            // Logger.LogError(ex, "Error loading posts for category: {CategoryId}", CategoryId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetPageUrl(int pageNumber)
+    {
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+
+        if (_pagedResult != null && pageNumber > _pagedResult.TotalPages)
+        {
+            pageNumber = _pagedResult.TotalPages;
+        }
+
+        return pageNumber == 1 
+            ? $"/category/{Uri.EscapeDataString(CategoryId)}" 
+            : $"/category/{Uri.EscapeDataString(CategoryId)}/{pageNumber}";
+    }
+}

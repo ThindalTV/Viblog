@@ -1,0 +1,127 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq.Expressions
+
+<div class="text-input-wrapper">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label for="@Id" class="input-label">@Label</label>
+    }
+    
+    @if (Multiline)
+    {
+        <textarea id="@Id"
+                  value="@Value"
+                  @oninput="HandleInput"
+                  @onblur="HandleBlur"
+                  class="@CssClass"
+                  placeholder="@Placeholder"
+                  rows="@Rows"
+                  disabled="@Disabled"
+                  required="@Required" />
+    }
+    else
+    {
+        <input id="@Id"
+               type="text"
+               value="@Value"
+               @oninput="HandleInput"
+               @onblur="HandleBlur"
+               class="@CssClass"
+               placeholder="@Placeholder"
+               disabled="@Disabled"
+               required="@Required" />
+    }
+
+    @if (ValidationFor != null)
+    {
+        <ValidationMessage For="@ValidationFor" />
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Label text to display above the input
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Placeholder text for the input
+    /// </summary>
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    /// <summary>
+    /// Whether to render as a textarea instead of input
+    /// </summary>
+    [Parameter]
+    public bool Multiline { get; set; }
+
+    /// <summary>
+    /// Number of rows for textarea (only applies when Multiline is true)
+    /// </summary>
+    [Parameter]
+    public int Rows { get; set; } = 5;
+
+    /// <summary>
+    /// Whether the input is disabled
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether the input is required
+    /// </summary>
+    [Parameter]
+    public bool Required { get; set; }
+
+    /// <summary>
+    /// The input value
+    /// </summary>
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Event callback when value changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Event callback when input loses focus
+    /// </summary>
+    [Parameter]
+    public EventCallback<FocusEventArgs> OnBlur { get; set; }
+
+    /// <summary>
+    /// Additional CSS classes
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    /// <summary>
+    /// Expression for validation messages
+    /// </summary>
+    [Parameter]
+    public Expression<Func<string>>? ValidationFor { get; set; }
+
+    /// <summary>
+    /// Unique identifier for the input element
+    /// </summary>
+    private string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? string.Empty;
+        Value = newValue;
+        await ValueChanged.InvokeAsync(newValue);
+    }
+
+    private async Task HandleBlur(FocusEventArgs e)
+    {
+        if (OnBlur.HasDelegate)
+        {
+            await OnBlur.InvokeAsync(e);
+        }
+    }
+}

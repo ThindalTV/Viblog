@@ -1,0 +1,52 @@
+@using Vilog.Frontend.Infrastructure
+
+
+<div class="comments-section">
+    @if (Comments.Any())
+    {
+        <h3 class="comments-title">@CommentCount @(CommentCount == 1 ? "Comment" : "Comments")</h3>
+        
+        <div class="comments-list">
+            @foreach (var comment in Comments)
+            {
+                <CommentItem Comment="comment" OnReply="HandleReply" />
+            }
+        </div>
+    }
+    else
+    {
+        <p class="no-comments">No comments yet. Be the first to comment!</p>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The list of comments to display
+    /// </summary>
+    [Parameter]
+    public IEnumerable<CommentViewModel> Comments { get; set; } = Enumerable.Empty<CommentViewModel>();
+
+    /// <summary>
+    /// Event callback when user clicks reply
+    /// </summary>
+    [Parameter]
+    public EventCallback<CommentViewModel> OnReply { get; set; }
+
+    private int CommentCount => CountComments(Comments);
+
+    private static int CountComments(IEnumerable<CommentViewModel> comments)
+    {
+        var count = 0;
+        foreach (var comment in comments)
+        {
+            count++; // Count this comment
+            count += CountComments(comment.Replies); // Count all nested replies
+        }
+        return count;
+    }
+
+    private async Task HandleReply(CommentViewModel comment)
+    {
+        await OnReply.InvokeAsync(comment);
+    }
+}

@@ -1,0 +1,288 @@
+/* Admin Dashboard Isolated Styles */
+/* These styles are automatically scoped to Index.razor component */
+
+.dashboard {
+    max-width: 1600px;
+}
+
+.dashboard h1 {
+    margin-bottom: 2rem;
+    color: var(--admin-text);
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.stat-card-1 { grid-area: stat1; }
+.stat-card-2 { grid-area: stat2; }
+.stat-card-3 { grid-area: stat3; }
+.stat-card-4 { grid-area: stat4; }
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--admin-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--admin-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.activity-section {
+    padding: 1.5rem;
+}
+
+.welcome-message {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--admin-text);
+}
+
+.quick-actions {
+    list-style-type: none;
+    padding: 0;
+}
+
+.quick-actions li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.quick-actions li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--admin-primary);
+    font-weight: bold;
+}
+
+/* New styles for CSS Grid layout with named areas */
+.welcome-title {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #90a4ae;
+    margin-bottom: 2rem;
+}
+
+/* CSS Grid Layout with Named Areas */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 1.5rem;
+    grid-template-areas:
+        "chart chart chart chart"
+        "stat1 stat2 stat3 stat4"
+        "info1 info2 info3 info3";
+}
+
+.chart-area { grid-area: chart; }
+.info-card-1 { grid-area: info1; }
+.info-card-2 { grid-area: info2; }
+.info-card-3 { grid-area: info3; }
+
+/* Card Styles */
+.card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    height: 100%;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #37474f;
+    margin-bottom: 1.5rem;
+}
+
+/* Chart Placeholder */
+.chart-placeholder {
+    height: 400px;
+    position: relative;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #546e7a;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.legend-dot.google {
+    background-color: #ffa726;
+}
+
+.legend-dot.bing {
+    background-color: #26c6da;
+}
+
+.legend-dot.twitter {
+    background-color: #546e7a;
+}
+
+.chart-visual {
+    height: calc(100% - 40px);
+    background: linear-gradient(135deg, 
+        rgba(255, 167, 38, 0.1) 0%,
+        rgba(38, 198, 218, 0.15) 50%,
+        rgba(84, 110, 122, 0.2) 100%);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-visual::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: linear-gradient(to top,
+        rgba(84, 110, 122, 0.3) 0%,
+        rgba(38, 198, 218, 0.25) 30%,
+        rgba(255, 167, 38, 0.2) 60%,
+        transparent 100%);
+    border-radius: 4px;
+}
+
+.chart-label {
+    font-size: 1rem;
+    color: #90a4ae;
+    font-weight: 500;
+    z-index: 1;
+}
+
+/* Stat Cards */
+.stat-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+}
+
+.stat-icon {
+    color: #90a4ae;
+    margin-bottom: 0.5rem;
+}
+
+.stat-change {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.stat-change.positive {
+    color: #66bb6a;
+}
+
+.stat-change.negative {
+    color: #ef5350;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #37474f;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #90a4ae;
+    text-transform: capitalize;
+}
+
+/* Info Cards */
+.info-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.info-icon {
+    color: #4dd0e1;
+    margin-bottom: 1rem;
+}
+
+.info-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #37474f;
+    margin-bottom: 0.5rem;
+}
+
+.info-card p {
+    font-size: 0.9rem;
+    color: #90a4ae;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-areas:
+            "chart chart"
+            "stat1 stat2"
+            "stat3 stat4"
+            "info1 info2"
+            "info3 info3";
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "chart"
+            "stat1"
+            "stat2"
+            "stat3"
+            "stat4"
+            "info1"
+            "info2"
+            "info3";
+    }
+    
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+}

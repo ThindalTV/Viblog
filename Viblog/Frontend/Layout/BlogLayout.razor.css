@@ -1,0 +1,179 @@
+/* BlogLayout Isolated Styles */
+
+.blog-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.blog-header {
+    background: linear-gradient(135deg, #ff6ec4 0%, #7873f5 50%, #4facfe 100%);
+    color: #ffffff;
+    padding: 2rem;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.header-banner {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 1rem;
+    padding: 2rem 3rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.header-name {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1a1a1a;
+    letter-spacing: -1px;
+}
+
+.header-search {
+    align-self: flex-end;
+    width: 320px;
+}
+
+.search-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(26, 26, 26, 0.5);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-button {
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-button:hover {
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-button svg {
+    display: block;
+}
+
+.blog-content-wrapper {
+    flex: 1;
+    padding: 3rem 2rem;
+    background-color: #f5f5f5;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.blog-main {
+    background-color: #ffffff;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
+                0 10px 20px rgba(0, 0, 0, 0.08),
+                0 20px 40px rgba(0, 0, 0, 0.06);
+    min-height: 400px;
+}
+
+.blog-footer {
+    background-color: #1a1a1a;
+    color: #d7d7d7;
+    text-align: center;
+    padding: 2rem;
+    margin-top: auto;
+}
+
+.blog-footer p {
+    margin: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .blog-header {
+        padding: 1.5rem 1rem;
+    }
+
+    .header-content {
+        gap: 1.5rem;
+    }
+
+    .header-banner {
+        padding: 1.5rem 2rem;
+    }
+
+    .header-name {
+        font-size: 2.5rem;
+    }
+
+    .header-search {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    .blog-content-wrapper {
+        padding: 2rem 1rem;
+    }
+
+    .blog-main {
+        padding: 2rem;
+        border-radius: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .blog-header {
+        padding: 1rem;
+    }
+
+    .header-banner {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .header-name {
+        font-size: 2rem;
+    }
+
+    .blog-content-wrapper {
+        padding: 1.5rem 1rem;
+    }
+
+    .blog-main {
+        padding: 1.5rem;
+    }
+}

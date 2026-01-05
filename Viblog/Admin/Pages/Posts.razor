@@ -1,0 +1,198 @@
+@page "/admin/posts"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@using Vilog.Admin.Infrastructure
+@using Vilog.Shared.Data.Entities
+@using Vilog.Shared.Data.Common
+@inject IServiceProvider ServiceProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Posts - Vilog Admin</PageTitle>
+
+<div class="admin-page">
+    <div class="page-header">
+        <h1>Posts</h1>
+        <div class="page-actions">
+            <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                         Icon="@SvgIcon.Plus"
+                         OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/admin/posts/new"))">
+                New Post
+            </TelerikButton>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="card">
+            <div class="posts-toolbar">
+                <TelerikButtonGroup SelectionMode="@ButtonGroupSelectionMode.Single">
+                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(null))"
+                                   Icon="@SvgIcon.Grid">
+                        All Posts
+                    </TelerikButton>
+                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(true))"
+                                   Icon="@SvgIcon.Check">
+                        Published
+                    </TelerikButton>
+                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(false))"
+                                   Icon="@SvgIcon.X">
+                        Unpublished
+                    </TelerikButton>
+                </TelerikButtonGroup>
+            </div>
+
+            <TelerikGrid @ref="@_gridRef"
+                        TItem="BlogPost"
+                        OnRead="@ReadPostsAsync"
+                        OnRowClick="@OnRowClick"
+                        Pageable="true"
+                        PageSize="@_pageSize"
+                        Sortable="true"
+                        FilterMode="@GridFilterMode.FilterRow"
+                        Height="calc(100vh - 300px)" PageChanged="@PageChanged">
+                <GridColumns>
+                    <GridColumn Field="@nameof(BlogPost.IsFeatured)" 
+                               Title="Featured" 
+                               Width="100px"
+                               Sortable="true">
+                        <Template>
+                            @{
+                                var post = context as BlogPost;
+                                if (post?.IsFeatured == true)
+                                {
+                                    <TelerikSvgIcon Icon="@SvgIcon.Star" Class="featured-icon" />
+                                }
+                            }
+                        </Template>
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(BlogPost.Title)" 
+                               Title="Title" 
+                               Sortable="true">
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(BlogPost.Slug)" 
+                               Title="Slug" 
+                               Width="200px"
+                               Sortable="true">
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(BlogPost.CreatedAt)" 
+                               Title="Created" 
+                               Width="180px"
+                               Sortable="true">
+                        <Template>
+                            @{
+                                var post = context as BlogPost;
+                                @post?.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                            }
+                        </Template>
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(BlogPost.PublishedAt)" 
+                               Title="Publication Status" 
+                               Width="240px"
+                               Sortable="true">
+                        <Template>
+                            @{
+                                var post = context as BlogPost;
+                                if (post != null)
+                                {
+                                    if (!post.IsPublished)
+                                    {
+                                        <div class="status-cell">
+                                            <span class="status-badge status-draft">Draft</span>
+                                        </div>
+                                    }
+                                    else if (post.PublishedAt > DateTimeOffset.UtcNow)
+                                    {
+                                        <div class="status-cell">
+                                            <span class="status-badge status-scheduled">Scheduled</span>
+                                            <span class="status-date">@post.PublishedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="status-cell">
+                                            <span class="status-badge status-published">Published</span>
+                                            <span class="status-date">@post.PublishedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                        </div>
+                                    }
+                                }
+                            }
+                        </Template>
+                    </GridColumn>
+                </GridColumns>
+            </TelerikGrid>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TelerikGrid<BlogPost>? _gridRef;
+    private int _pageSize = 20;
+    private bool? _publishedFilter = null;
+    private int _skip = 0;
+
+    private async Task ReadPostsAsync(GridReadEventArgs args)
+    {
+        // Determine sort field and direction from grid state
+        var sortDescriptor = args.Request.Sorts.FirstOrDefault();
+        var sortField = PostSortField.CreatedAt;
+        var sortAscending = false;
+
+        if (sortDescriptor != null)
+        {
+            sortField = sortDescriptor.Member switch
+            {
+                nameof(BlogPost.Title) => PostSortField.Title,
+                nameof(BlogPost.Slug) => PostSortField.Slug,
+                nameof(BlogPost.PublishedAt) => PostSortField.PublishedAt,
+                nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,
+                nameof(BlogPost.IsPublished) => PostSortField.IsPublished,
+                nameof(BlogPost.CreatedAt) => PostSortField.CreatedAt,
+                _ => PostSortField.CreatedAt
+            };
+            sortAscending = sortDescriptor.SortDirection == Telerik.DataSource.ListSortDirection.Ascending;
+        }
+
+        // Calculate page number from skip/take
+        var take = args.Request.PageSize;
+        var pageNumber = (_skip / take) + 1;
+        var pagingParams = new PagingParameters(pageNumber, take);
+
+        // Create a new scope for each request to avoid DbContext disposal issues
+        await using (var scope = ServiceProvider.CreateAsyncScope())
+        {
+            var postsFacade = scope.ServiceProvider.GetRequiredService<IPostsAdminFacade>();
+            var result = await postsFacade.GetPostsAsync(
+                pagingParams,
+                _publishedFilter,
+                sortField,
+                sortAscending);
+
+            args.Data = result.Items;
+            args.Total = result.TotalCount;
+        }
+    }
+
+    private void OnRowClick(GridRowClickEventArgs args)
+    {
+        var post = args.Item as BlogPost;
+        if (post != null)
+        {
+            NavigationManager.NavigateTo($"/admin/posts/edit/{post.Id}");
+        }
+    }
+
+    private async Task PageChanged(int newPage)
+    {
+        _skip = newPage;
+    }
+
+    private void OnFilterChanged(bool? publishedFilter)
+    {
+        _publishedFilter = publishedFilter;
+        _skip = 0; // Reset to first page when filter changes
+        _gridRef?.Rebind();
+    }
+}

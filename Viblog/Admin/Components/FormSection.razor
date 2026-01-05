@@ -1,0 +1,18 @@
+<div class="form-section">
+    <h2>@Title</h2>
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>
+    /// Title of the form section
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Content to render inside the section
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

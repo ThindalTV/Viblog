@@ -1,0 +1,121 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="tag-input-wrapper">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="input-label">@Label</label>
+    }
+
+    <div class="tag-input-container">
+        <div class="tags-display">
+            @foreach (var tag in Tags)
+            {
+                <span class="tag-item">
+                    @tag
+                    <button type="button" 
+                            class="tag-remove" 
+                            @onclick="() => RemoveTag(tag)"
+                            disabled="@Disabled">×</button>
+                </span>
+            }
+        </div>
+
+        <input type="text"
+               class="tag-input"
+               placeholder="@Placeholder"
+               @bind="newTag"
+               @onkeydown="HandleKeyDown"
+               disabled="@Disabled"
+               required="@Required" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(HelpText))
+    {
+        <small class="help-text">@HelpText</small>
+    }
+</div>
+
+@code {
+    private string newTag = string.Empty;
+
+    /// <summary>
+    /// Label text to display above the tag editor
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Placeholder text for the input
+    /// </summary>
+    [Parameter]
+    public string Placeholder { get; set; } = "Add a tag and press Enter";
+
+    /// <summary>
+    /// Help text to display below the input
+    /// </summary>
+    [Parameter]
+    public string? HelpText { get; set; }
+
+    /// <summary>
+    /// The list of tags
+    /// </summary>
+    [Parameter]
+    public List<string> Tags { get; set; } = new();
+
+    /// <summary>
+    /// Event callback when tags change
+    /// </summary>
+    [Parameter]
+    public EventCallback<List<string>> TagsChanged { get; set; }
+
+    /// <summary>
+    /// Whether the input is disabled
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether the input is required
+    /// </summary>
+    [Parameter]
+    public bool Required { get; set; }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newTag))
+        {
+            await AddTag();
+        }
+        else if (e.Key == "Backspace" && string.IsNullOrWhiteSpace(newTag) && Tags.Any())
+        {
+            await RemoveLastTag();
+        }
+    }
+
+    private async Task AddTag()
+    {
+        var trimmedTag = newTag.Trim();
+        
+        if (!string.IsNullOrWhiteSpace(trimmedTag) && !Tags.Contains(trimmedTag, StringComparer.OrdinalIgnoreCase))
+        {
+            Tags.Add(trimmedTag);
+            await TagsChanged.InvokeAsync(Tags);
+            newTag = string.Empty;
+        }
+    }
+
+    private async Task RemoveTag(string tag)
+    {
+        Tags.Remove(tag);
+        await TagsChanged.InvokeAsync(Tags);
+    }
+
+    private async Task RemoveLastTag()
+    {
+        if (Tags.Any())
+        {
+            Tags.RemoveAt(Tags.Count - 1);
+            await TagsChanged.InvokeAsync(Tags);
+        }
+    }
+}

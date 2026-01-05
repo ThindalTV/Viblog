@@ -1,0 +1,221 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@using Vilog.Admin.Components
+@using Vilog.Admin.Services
+@inject AdminAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<HeadContent>
+    <link rel="stylesheet" href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/all.css" />
+    <link rel="stylesheet" href="@Assets["admin.css"]" />
+    <script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js"></script>
+</HeadContent>
+
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized Context="authContext">
+            <div class="admin-container">
+                <aside class="admin-sidebar @(_expanded ? "expanded" : "collapsed")">
+                    <div class="sidebar-header">
+                        <div class="logo">
+                            <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                            @if (_expanded)
+                            {
+                                <span class="logo-text">Admin<strong>K</strong></span>
+                            }
+                        </div>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <div class="nav-section">
+                            <div class="nav-section-title">@(_expanded ? "Navigation" : "")</div>
+                            @foreach (var item in _navigationItems)
+                            {
+                                <a href="@item.Url" 
+                                   class="nav-item @(IsSelected(item) ? "active" : "")">
+                                    <TelerikSvgIcon Icon="@item.Icon" />
+                                    @if (_expanded)
+                                    {
+                                        <span class="nav-item-text">@item.Text</span>
+                                    }
+                                </a>
+                            }
+                        </div>
+
+                        <div class="nav-section">
+                            <div class="nav-section-title">@(_expanded ? "Tools" : "")</div>
+                            @foreach (var item in _toolsItems)
+                            {
+                                <a href="@item.Url" 
+                                   class="nav-item @(IsSelected(item) ? "active" : "")">
+                                    <TelerikSvgIcon Icon="@item.Icon" />
+                                    @if (_expanded)
+                                    {
+                                        <span class="nav-item-text">@item.Text</span>
+                                    }
+                                </a>
+                            }
+                        </div>
+
+                        <div class="nav-section">
+                            <div class="nav-section-title">@(_expanded ? "Stats" : "")</div>
+                            <div class="stats-widget">
+                                <div class="stat-item">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                    @if (_expanded)
+                                    {
+                                        <div class="stat-content">
+                                            <div class="stat-label">September Earnings</div>
+                                            <div class="stat-value">$1158</div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="stat-item">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                    @if (_expanded)
+                                    {
+                                        <div class="stat-content">
+                                            <div class="stat-label">August Earnings</div>
+                                            <div class="stat-value">$1901</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </aside>
+
+                <div class="admin-main">
+                    <header class="admin-header">
+                        <div class="header-left">
+                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                         Icon="@(_expanded ? SvgIcon.ChevronDoubleLeft : SvgIcon.Menu)"
+                                         OnClick="@((MouseEventArgs args) => _expanded = !_expanded)">
+                            </TelerikButton>
+                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                         Icon="@SvgIcon.X">
+                            </TelerikButton>
+                            <div class="search-box">
+                                <TelerikSvgIcon Icon="@SvgIcon.Search" />
+                                <input type="text" placeholder="Search..." />
+                            </div>
+                        </div>
+                        
+                        <div class="header-right">
+                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                         Icon="@SvgIcon.Pencil">
+                            </TelerikButton>
+                            <div class="notification-badge">
+                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                             Icon="@SvgIcon.Envelop">
+                                </TelerikButton>
+                                <span class="badge">4</span>
+                            </div>
+                            <div class="notification-badge">
+                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                             Icon="@SvgIcon.Bell">
+                                </TelerikButton>
+                                <span class="badge">1</span>
+                            </div>
+                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                         Icon="@SvgIcon.GlobeOutline">
+                            </TelerikButton>
+                            <div class="user-menu">
+                                <img src="https://via.placeholder.com/32" alt="User" class="user-avatar" />
+                                <span class="user-name">@authContext.User.Identity?.Name</span>
+                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                             Icon="@SvgIcon.ChevronDown">
+                                </TelerikButton>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="admin-breadcrumb">
+                        <a href="/admin">Home</a>
+                        <span class="separator">/</span>
+                        <span>@GetCurrentPageName()</span>
+                    </div>
+
+                    <main class="admin-content">
+                        <MessageDisplay />
+                        <Dialog />
+                        @Body
+                    </main>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            @Body
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<ReconnectModal />
+
+@code {
+    private bool _expanded = true;
+    private DrawerItem? _selectedItem;
+
+    private List<DrawerItem> _navigationItems = new()
+    {
+        new DrawerItem { Text = "Dashboard", Icon = SvgIcon.Grid, Url = "/admin" },
+        new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/admin/posts" },
+        new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/admin/pages" },
+        new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/analytics" },
+        new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/admin/settings" }
+    };
+
+    private List<DrawerItem> _toolsItems = new()
+    {
+        new DrawerItem { Text = "Sales Statistics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/sales" },
+        new DrawerItem { Text = "Layout Templates", Icon = SvgIcon.TemplateManager, Url = "/admin/templates" },
+        new DrawerItem { Text = "Management Tools", Icon = SvgIcon.Gear, Url = "/admin/management" },
+        new DrawerItem { Text = "Forms", Icon = SvgIcon.FileAdd, Url = "/admin/forms" }
+    };
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    private bool IsSelected(DrawerItem item)
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var targetPath = item.Url.TrimStart('/');
+        return currentPath.Equals(targetPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetCurrentPageName()
+    {
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        
+        var item = _navigationItems.FirstOrDefault(i => 
+            currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
+            ?? _toolsItems.FirstOrDefault(i => 
+                currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+        
+        return item?.Text ?? "Dashboard";
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthStateProvider.MarkUserAsLoggedOut();
+        Navigation.NavigateTo("/admin/login", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    public class DrawerItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public ISvgIcon? Icon { get; set; }
+        public string Url { get; set; } = string.Empty;
+    }
+}

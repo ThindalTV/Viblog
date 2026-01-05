@@ -1,0 +1,49 @@
+<div class="checkbox-input-wrapper">
+    <label class="checkbox-label">
+        <input type="checkbox" 
+               class="checkbox-input"
+               checked="@Value"
+               @onchange="HandleChange"
+               disabled="@Disabled"
+               required="@Required" />
+        <span class="checkbox-text">@Label</span>
+    </label>
+</div>
+
+@code {
+    /// <summary>
+    /// Label text to display next to the checkbox
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// The checkbox value
+    /// </summary>
+    [Parameter]
+    public bool Value { get; set; }
+
+    /// <summary>
+    /// Event callback when value changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Whether the checkbox is disabled
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether the checkbox is required
+    /// </summary>
+    [Parameter]
+    public bool Required { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        Value = e.Value as bool? ?? false;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

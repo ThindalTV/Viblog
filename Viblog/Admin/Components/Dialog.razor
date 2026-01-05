@@ -1,0 +1,125 @@
+@using Vilog.Admin.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject IDialogService DialogService
+@implements IDisposable
+
+@if (DialogService.CurrentDialog != null)
+{
+    var dialog = DialogService.CurrentDialog;
+    
+    <dialog @ref="_dialogElement" class="dialog">
+        <div class="dialog-content" @onclick:stopPropagation="true">
+            @if (!string.IsNullOrWhiteSpace(dialog.Title))
+            {
+                <h2 class="dialog-title">@dialog.Title</h2>
+            }
+            
+            <div class="dialog-body">
+                <p>@dialog.Message</p>
+            </div>
+            
+            <div class="dialog-actions">
+                @if (dialog.ShowCancel)
+                {
+                    <button type="button" class="btn-dialog-cancel" @onclick="HandleCancel" @onclick:stopPropagation="true">
+                        @dialog.CancelText
+                    </button>
+                }
+                @if (dialog.ShowConfirm)
+                {
+                    <button type="button" class="btn-dialog-confirm" @onclick="HandleConfirm" @onclick:stopPropagation="true">
+                        @dialog.ConfirmText
+                    </button>
+                }
+            </div>
+        </div>
+    </dialog>
+}
+
+@code {
+    private ElementReference _dialogElement;
+    private bool _isShowing = false;
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnDialogChanged += HandleDialogChanged;
+    }
+
+    private async void HandleDialogChanged(object? sender, EventArgs e)
+    {
+        await InvokeAsync(async () =>
+        {
+            if (DialogService.CurrentDialog != null && !_isShowing)
+            {
+                _isShowing = true;
+                StateHasChanged();
+                await ShowDialogAsync();
+            }
+            else if (DialogService.CurrentDialog == null && _isShowing)
+            {
+                await CloseDialogAsync();
+                _isShowing = false;
+                StateHasChanged();
+            }
+        });
+    }
+
+    private async Task ShowDialogAsync()
+    {
+        await Task.Delay(50); // Increased delay to ensure dialog element is fully rendered
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.dialog')?.showModal()");
+        }
+        catch
+        {
+            // Dialog element might not be ready yet
+        }
+    }
+
+    private async Task CloseDialogAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.dialog')?.close()");
+        }
+        catch
+        {
+            // Dialog might already be closed
+        }
+    }
+
+    private async Task HandleConfirm()
+    {
+        if (DialogService.CurrentDialog?.OnConfirmAsync != null)
+        {
+            await DialogService.CurrentDialog.OnConfirmAsync.Invoke();
+        }
+        else
+        {
+            DialogService.CurrentDialog?.OnConfirm?.Invoke();
+        }
+        DialogService.Close();
+    }
+
+    private async Task HandleCancel()
+    {
+        if (DialogService.CurrentDialog?.OnCancelAsync != null)
+        {
+            await DialogService.CurrentDialog.OnCancelAsync.Invoke();
+        }
+        else
+        {
+            DialogService.CurrentDialog?.OnCancel?.Invoke();
+        }
+        DialogService.Close();
+    }
+
+    public void Dispose()
+    {
+        DialogService.OnDialogChanged -= HandleDialogChanged;
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

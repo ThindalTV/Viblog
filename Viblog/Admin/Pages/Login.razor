@@ -1,0 +1,82 @@
+@page "/admin/login"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+
+<div class="admin-login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2>Admin Login</h2>
+            <p class="login-subtitle">Sign in to access your dashboard</p>
+        </div>
+        <div class="login-body">
+            <form method="post" action="/admin/api/login">
+                <AntiforgeryToken />
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input id="email" 
+                           name="email"
+                           type="email"
+                           class="form-input" 
+                           placeholder="admin@example.com"
+                           autocomplete="email"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input id="password" 
+                           name="password"
+                           type="password"
+                           class="form-input" 
+                           placeholder="Enter your password"
+                           autocomplete="current-password"
+                           required />
+                </div>
+
+                <div class="form-group remember-me">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               name="rememberMe"
+                               class="checkbox-input" />
+                        <span class="checkbox-text">Remember me</span>
+                    </label>
+                </div>
+
+                @if (_showError)
+                {
+                    <div class="error-message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        </svg>
+                        <span>Invalid email or password. Please try again.</span>
+                    </div>
+                }
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-login">
+                        <span>Sign In</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? ErrorParam { get; set; }
+    
+    private bool _showError => ErrorParam == "invalid";
+}

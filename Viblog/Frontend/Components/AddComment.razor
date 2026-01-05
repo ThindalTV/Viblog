@@ -1,0 +1,187 @@
+@using System.ComponentModel.DataAnnotations
+@using Vilog.Frontend.Infrastructure
+@inject ICommentFacade CommentFacade
+@inject NavigationManager Navigation
+
+<div class="add-comment">
+    <h3 class="add-comment-title">
+        @if (ParentComment != null)
+        {
+            <span>Reply to @ParentComment.AuthorName</span>
+        }
+        else
+        {
+            <span>Leave a Comment</span>
+        }
+    </h3>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="error-message" role="alert">
+            @_errorMessage
+        </div>
+    }
+
+    @if (_isSubmitting)
+    {
+        <div class="submitting-message">
+            <p>Submitting your comment...</p>
+        </div>
+    }
+    else if (_isSuccess)
+    {
+        <div class="success-message" role="status">
+            <p>Thank you! Your comment has been submitted and is awaiting moderation.</p>
+            <button type="button" class="reset-button" @onclick="ResetForm">
+                Add another comment
+            </button>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="addComment" class="comment-form">
+            <DataAnnotationsValidator />
+            
+            <div class="form-group">
+                <label for="name" class="form-label">Name *</label>
+                <InputText id="name" @bind-Value="_model.Name" class="form-input" placeholder="Your name" />
+                <ValidationMessage For="() => _model.Name" class="validation-message" />
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email *</label>
+                <InputText id="email" type="email" @bind-Value="_model.Email" class="form-input" placeholder="your@email.com" />
+                <ValidationMessage For="() => _model.Email" class="validation-message" />
+                <small class="form-help">Your email will not be published</small>
+            </div>
+
+            <div class="form-group">
+                <label for="website" class="form-label">Website</label>
+                <InputText id="website" type="url" @bind-Value="_model.Website" class="form-input" placeholder="https://yoursite.com" />
+                <ValidationMessage For="() => _model.Website" class="validation-message" />
+            </div>
+
+            <div class="form-group">
+                <label for="comment" class="form-label">Comment *</label>
+                <InputTextArea id="comment" @bind-Value="_model.Content" class="form-textarea" rows="5" placeholder="Share your thoughts..." />
+                <ValidationMessage For="() => _model.Content" class="validation-message" />
+            </div>
+
+            @if (ParentComment != null)
+            {
+                <div class="reply-info">
+                    <p>Replying to @ParentComment.AuthorName</p>
+                    <button type="button" class="cancel-reply-button" @onclick="CancelReply">
+                        Cancel Reply
+                    </button>
+                </div>
+            }
+
+            <div class="form-actions">
+                <button type="submit" class="submit-button" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Submitting..." : "Submit Comment")
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The slug of the blog post
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Slug { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The parent comment if this is a reply
+    /// </summary>
+    [Parameter]
+    public CommentViewModel? ParentComment { get; set; }
+
+    /// <summary>
+    /// Event callback when comment is successfully submitted
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCommentSubmitted { get; set; }
+
+    /// <summary>
+    /// Event callback when reply is cancelled
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancelReply { get; set; }
+
+    private AddCommentModel _model = new();
+    private bool _isSubmitting;
+    private bool _isSuccess;
+    private string? _errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        _isSubmitting = true;
+        _errorMessage = null;
+
+        try
+        {
+            var success = await CommentFacade.AddCommentAsync(
+                Slug,
+                _model.Name!,
+                _model.Email!,
+                _model.Website,
+                _model.Content!,
+                ParentComment?.Id,
+                null, // IP address - could be obtained from HttpContext
+                null, // User agent - could be obtained from HttpContext
+                null, // User ID - would come from authentication
+                CancellationToken.None);
+
+            if (success)
+            {
+                _isSuccess = true;
+                await OnCommentSubmitted.InvokeAsync();
+            }
+            else
+            {
+                _errorMessage = "Unable to submit comment. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            _errorMessage = "An error occurred while submitting your comment. Please try again later.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        _model = new();
+        _isSuccess = false;
+        _errorMessage = null;
+    }
+
+    private async Task CancelReply()
+    {
+        await OnCancelReply.InvokeAsync();
+    }
+
+    private class AddCommentModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters")]
+        public string? Name { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string? Email { get; set; }
+
+        [Url(ErrorMessage = "Invalid website URL")]
+        public string? Website { get; set; }
+
+        [Required(ErrorMessage = "Comment content is required")]
+        [StringLength(5000, MinimumLength = 1, ErrorMessage = "Comment must be between 1 and 5000 characters")]
+        public string? Content { get; set; }
+    }
+}

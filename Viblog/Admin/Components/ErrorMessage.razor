@@ -1,0 +1,60 @@
+@using Vilog.Shared.Utilities
+@inject IWebHostEnvironment Environment
+
+@if (!string.IsNullOrWhiteSpace(Message))
+{
+    <div class="error-message">
+        <div class="error-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="16" r="1" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="error-content">
+            <p class="error-message-text">@Message</p>
+            
+            @if (Environment.IsDevelopment() && Exception != null && ShowDetails)
+            {
+                <details class="error-details">
+                    <summary>Debug Details (Development Only)</summary>
+                    <pre class="error-stack">@GetExceptionDetails()</pre>
+                </details>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The user-friendly error message to display
+    /// </summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>
+    /// The exception to display (optional, only shown in development)
+    /// </summary>
+    [Parameter]
+    public Exception? Exception { get; set; }
+
+    /// <summary>
+    /// Whether to show detailed exception information (default: true)
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails { get; set; } = true;
+
+    /// <summary>
+    /// Whether to include stack trace in details (default: true)
+    /// </summary>
+    [Parameter]
+    public bool IncludeStackTrace { get; set; } = true;
+
+    private string GetExceptionDetails()
+    {
+        if (Exception == null)
+            return string.Empty;
+
+        return ExceptionHelper.GetDetailedMessage(Exception, includeStackTrace: IncludeStackTrace);
+    }
+}

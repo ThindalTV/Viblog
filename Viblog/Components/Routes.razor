@@ -1,0 +1,21 @@
+﻿@using Vilog.Frontend
+@using Vilog.Admin
+@inject NavigationManager Navigation
+
+@if (IsAdminRoute())
+{
+    <AdminRoutes />
+}
+else
+{
+    <FrontendRoutes />
+}
+
+@code {
+    private bool IsAdminRoute()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var path = uri.AbsolutePath;
+        return path.StartsWith("/admin", StringComparison.OrdinalIgnoreCase);
+    }
+}

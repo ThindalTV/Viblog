@@ -1,0 +1,71 @@
+@using Vilog.Frontend.Components.Metadata
+@using Vilog.Shared.Configuration
+@using Microsoft.Extensions.Options
+@using static Vilog.Frontend.Components.Metadata.StructuredData
+
+@inject IOptions<SiteMetadata> SiteMetadataOptions
+@inject NavigationManager Navigation
+
+<SeoHead 
+    Title="@Title"
+    Description="@(Description ?? SiteMetadataOptions.Value.DefaultDescription)"
+    CanonicalUrl="@GetCanonicalUrl()"
+    OgType="website"
+    ImageUrl="@(ImageUrl ?? SiteMetadataOptions.Value.DefaultImageUrl)">
+    
+    <StructuredData Type="StructuredDataType.CollectionPage" 
+                  Url="@GetCanonicalUrl()" 
+                  PageTitle="@Title" 
+                  PageDescription="@Description" />
+    
+    @if (BreadcrumbItems != null && BreadcrumbItems.Any())
+    {
+        <StructuredData Type="StructuredDataType.Breadcrumb" 
+                      BreadcrumbItems="@BreadcrumbItems.Select(b => (b.Label, b.Url)).ToList()" />
+    }
+    
+    @ChildContent
+</SeoHead>
+
+@code {
+    /// <summary>
+    /// Page title (e.g., "Posts in Category: Technology")
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional page description
+    /// </summary>
+    [Parameter]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Optional custom canonical URL (defaults to current URL)
+    /// </summary>
+    [Parameter]
+    public string? CanonicalUrl { get; set; }
+
+    /// <summary>
+    /// Optional custom image URL
+    /// </summary>
+    [Parameter]
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// Optional breadcrumb items for navigation schema
+    /// </summary>
+    [Parameter]
+    public List<Breadcrumb.BreadcrumbItem>? BreadcrumbItems { get; set; }
+
+    /// <summary>
+    /// Additional structured data or head content
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetCanonicalUrl()
+    {
+        return CanonicalUrl ?? Navigation.Uri;
+    }
+}

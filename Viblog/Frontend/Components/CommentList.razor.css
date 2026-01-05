@@ -1,0 +1,25 @@
+.comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e0e0e0;
+}
+
+.comments-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #1a1a1a;
+}
+
+.comments-list {
+    margin-bottom: 2rem;
+}
+
+.no-comments {
+    color: #666;
+    font-style: italic;
+    padding: 2rem;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 8px;
+}

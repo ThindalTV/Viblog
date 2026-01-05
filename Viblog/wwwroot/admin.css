@@ -1,0 +1,51 @@
+/* Vilog Admin - Global Styles */
+/* Only truly global admin styles that aren't component-specific */
+
+/* Import variables */
+@import 'styles/variables.css';
+
+/* Note: Component-specific styles have been moved to isolated .razor.css files */
+/* This file now contains only shared admin utilities and global overrides */
+
+/* Shared Admin Page Styles */
+.admin-page {
+    max-width: 1600px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #37474f;
+    margin: 0;
+}
+
+.page-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.page-content {
+    /* Content area styling */
+}
+
+.placeholder-text {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #90a4ae;
+    font-size: 1.1rem;
+}
+
+/* Card styles used across admin pages */
+.card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}

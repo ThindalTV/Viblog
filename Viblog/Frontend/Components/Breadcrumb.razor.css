@@ -1,0 +1,55 @@
+/* Breadcrumb Component Isolated Styles */
+
+.breadcrumb {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-item:not(:last-child)::after {
+    content: '›';
+    margin: 0 0.5rem;
+    color: #929292;
+    font-size: 1.25rem;
+}
+
+.breadcrumb-item a {
+    color: #555555;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #1a1a1a;
+    text-decoration: underline;
+}
+
+.breadcrumb-item span {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640.98px) {
+    .breadcrumb-list {
+        font-size: 0.8rem;
+    }
+
+    .breadcrumb-item:not(:last-child)::after {
+        margin: 0 0.375rem;
+        font-size: 1.125rem;
+    }
+}

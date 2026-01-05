@@ -1,0 +1,72 @@
+@using Vilog.Frontend.Models
+
+@if (Show)
+{
+    <div class="profile-header">
+        <div class="profile-cards">
+            <div class="profile-bio-card">
+                <h2 class="profile-role">@Role</h2>
+                <div class="profile-bio">
+                    @Bio
+                </div>
+                @if (SocialLinks != null && SocialLinks.Any())
+                {
+                    <div class="profile-social-links">
+                        @foreach (var link in SocialLinks)
+                        {
+                            <a href="@link.Url" 
+                               target="_blank" 
+                               rel="noopener noreferrer" 
+                               aria-label="@link.Label"
+                               class="social-link">
+                                @((MarkupString)link.Icon)
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+            
+            <div class="profile-image-card">
+                <img src="@ImageUrl" alt="@ImageAlt" class="profile-image" />
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Whether to show the profile header
+    /// </summary>
+    [Parameter]
+    public bool Show { get; set; } = true;
+
+    /// <summary>
+    /// Role or tagline
+    /// </summary>
+    [Parameter]
+    public string Role { get; set; } = "Developer Consultant Educator";
+
+    /// <summary>
+    /// Bio content (supports markup)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Bio { get; set; }
+
+    /// <summary>
+    /// Profile image URL
+    /// </summary>
+    [Parameter]
+    public string ImageUrl { get; set; } = "/images/profile.jpg";
+
+    /// <summary>
+    /// Alt text for the profile image
+    /// </summary>
+    [Parameter]
+    public string ImageAlt { get; set; } = "Profile photo";
+
+    /// <summary>
+    /// Social media links
+    /// </summary>
+    [Parameter]
+    public List<SocialLink>? SocialLinks { get; set; }
+}

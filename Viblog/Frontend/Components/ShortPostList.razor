@@ -1,0 +1,44 @@
+@using Vilog.Shared.Data.Entities
+
+@if (Posts?.Any() == true)
+{
+    <section class="short-post-list">
+        <h3>@Title</h3>
+        <div class="short-post-list-grid">
+            @foreach (var post in Posts)
+            {
+                <article class="short-post-card">
+                    @if (post.IsFeatured)
+                    {
+                        <span class="featured-badge">Featured</span>
+                    }
+                    <h4 class="short-post-title">
+                        <a href="/post/@(post.PublishedAt.Year)/@post.Slug">@post.Title</a>
+                    </h4>
+                    <p class="short-post-excerpt">@post.Short</p>
+                    <div class="short-post-meta">
+                        <span class="post-date">@post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                        @if (post.ReadingTimeMinutes > 0)
+                        {
+                            <span class="reading-time">@post.ReadingTimeMinutes min read</span>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>
+    /// The list of blog posts to display
+    /// </summary>
+    [Parameter]
+    public IEnumerable<BlogPost>? Posts { get; set; }
+
+    /// <summary>
+    /// The section title (e.g., "Related Posts", "Latest Posts")
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = "Related Posts";
+}

@@ -1,0 +1,129 @@
+/* ProfileHeader Component Isolated Styles */
+
+.profile-header {
+    padding: 0 0 3rem 0;
+}
+
+.profile-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.profile-bio-card,
+.profile-image-card {
+    background-color: rgba(248, 248, 248, 1);
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.profile-bio-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-role {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1a1a1a;
+    line-height: 1.2;
+}
+
+.profile-bio {
+    color: #333333;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.profile-bio p {
+    margin: 0 0 1rem 0;
+}
+
+.profile-bio p:last-child {
+    margin-bottom: 0;
+}
+
+.profile-social-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: auto;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: #1a1a1a;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.social-link:hover {
+    transform: translateY(-3px);
+    color: #7873f5;
+}
+
+.social-link svg {
+    width: 28px;
+    height: 28px;
+}
+
+.profile-image-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 110, 196, 0.15) 0%, rgba(79, 172, 254, 0.15) 100%);
+}
+
+.profile-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0.5rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 0 0 2rem 0;
+    }
+
+    .profile-cards {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .profile-bio-card,
+    .profile-image-card {
+        padding: 2rem;
+    }
+
+    .profile-role {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .profile-header {
+        padding: 0 0 1.5rem 0;
+    }
+
+    .profile-bio-card,
+    .profile-image-card {
+        padding: 1.5rem;
+    }
+
+    .profile-role {
+        font-size: 1.25rem;
+    }
+
+    .profile-bio {
+        font-size: 0.95rem;
+    }
+}

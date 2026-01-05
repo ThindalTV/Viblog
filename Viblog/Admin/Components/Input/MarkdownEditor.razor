@@ -1,0 +1,123 @@
+@using Vilog.Admin.Components.Input
+
+<div class="markdown-editor">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="editor-label">@Label</label>
+    }
+
+    <div class="editor-container">
+        <div class="editor-panel">
+            <div class="panel-header">Edit</div>
+            <TextInput Value="@Markdown"
+                      ValueChanged="@HandleMarkdownChanged"
+                      Multiline="true"
+                      Rows="@Rows"
+                      Placeholder="@Placeholder"
+                      Disabled="@Disabled"
+                      Required="@Required" />
+        </div>
+        
+        <div class="preview-panel">
+            <div class="panel-header">Preview</div>
+            <div class="preview-container">
+                @if (!string.IsNullOrWhiteSpace(RenderedContent))
+                {
+                    @((MarkupString)RenderedContent)
+                }
+                else
+                {
+                    <p class="preview-empty">Nothing to preview yet. Start writing in the editor.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Label text to display above the editor
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Placeholder text for the markdown input
+    /// </summary>
+    [Parameter]
+    public string Placeholder { get; set; } = "Write your markdown content here...";
+
+    /// <summary>
+    /// Number of rows for the textarea
+    /// </summary>
+    [Parameter]
+    public int Rows { get; set; } = 20;
+
+    /// <summary>
+    /// Whether the editor is disabled
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether the input is required
+    /// </summary>
+    [Parameter]
+    public bool Required { get; set; }
+
+    /// <summary>
+    /// The markdown content
+    /// </summary>
+    [Parameter]
+    public string Markdown { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Event callback when markdown changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> MarkdownChanged { get; set; }
+
+    /// <summary>
+    /// The rendered HTML content
+    /// </summary>
+    [Parameter]
+    public string RenderedContent { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Event callback when rendered content changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> RenderedContentChanged { get; set; }
+
+    private async Task HandleMarkdownChanged(string newMarkdown)
+    {
+        // Update markdown value
+        Markdown = newMarkdown;
+        await MarkdownChanged.InvokeAsync(newMarkdown);
+
+        // Generate rendered content
+        await RenderMarkdown(newMarkdown);
+    }
+
+    private async Task RenderMarkdown(string markdown)
+    {
+        // TODO: Integrate a proper markdown library (e.g., Markdig)
+        // For now, just wrap content in paragraphs as a placeholder
+        if (!string.IsNullOrWhiteSpace(markdown))
+        {
+            var paragraphs = markdown
+                .Split(["\n\n", "\r\n\r\n"], StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => $"<p>{System.Net.WebUtility.HtmlEncode(p.Trim())}</p>");
+            
+            var rendered = string.Join("\n", paragraphs);
+            RenderedContent = rendered;
+            await RenderedContentChanged.InvokeAsync(rendered);
+        }
+        else
+        {
+            // When content is empty, set to null (not empty string) for "short" posts
+            RenderedContent = string.Empty;
+            await RenderedContentChanged.InvokeAsync(string.Empty);
+        }
+    }
+}

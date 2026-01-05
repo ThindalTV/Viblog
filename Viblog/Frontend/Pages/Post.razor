@@ -1,0 +1,243 @@
+@page "/post/{year:int}/{slug}"
+@layout Vilog.Frontend.Layout.BlogLayout
+@using Vilog.Frontend.Components
+@using Vilog.Frontend.Components.Metadata
+@using Vilog.Frontend.Infrastructure
+@using Vilog.Shared.Data.Entities
+
+@inject IBlogPostDetailFacade BlogPostDetailFacade
+@inject ICommentFacade CommentFacade
+@inject NavigationManager Navigation
+
+@if (_isLoading)
+{
+    <div class="post-loading">
+        <p class="loading-message">Loading post...</p>
+    </div>
+}
+else if (_errorMessage != null)
+{
+    <div class="post-error">
+        <h2>Error</h2>
+        <p class="error-message">@_errorMessage</p>
+        <a href="/" class="back-link">? Back to Home</a>
+    </div>
+}
+else if (_post == null)
+{
+    <div class="post-not-found">
+        <h2>Post Not Found</h2>
+        <p>The post you're looking for doesn't exist or has been removed.</p>
+        <a href="/posts" class="back-link">? View All Posts</a>
+    </div>
+}
+else
+{
+    <PostSeoHead Post="@_post" CanonicalUrl="@GetCanonicalUrl()" BreadcrumbItems="@_breadcrumbItems" />
+
+    <Breadcrumb Items="_breadcrumbItems" />
+
+    <article class="post-detail">
+        @if (_post.IsFeatured)
+        {
+            <span class="featured-badge">Featured</span>
+        }
+
+        <header class="post-header">
+            <h1 class="post-detail-title">@_post.Title</h1>
+            
+            <div class="post-detail-meta">
+                <span class="post-author">By @_post.AuthorName</span>
+                <span class="post-date">@_post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                @if (_post.ReadingTimeMinutes > 0)
+                {
+                    <span class="reading-time">@_post.ReadingTimeMinutes min read</span>
+                }
+                @if (_post.ViewCount > 0)
+                {
+                    <span class="view-count">@_post.ViewCount views</span>
+                }
+            </div>
+
+            @if (_post.CategoryNames.Any())
+            {
+                <div class="post-categories">
+                    @foreach (var category in _post.CategoryNames)
+                    {
+                        <a href="/category/@Uri.EscapeDataString(category)" class="category">@category</a>
+                    }
+                </div>
+            }
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(_post.FeaturedImageUrl))
+        {
+            <div class="post-featured-image">
+                <img src="@_post.FeaturedImageUrl" 
+                     alt="@(_post.FeaturedImageAlt ?? _post.Title)" />
+            </div>
+        }
+
+        <div class="post-content">
+            @((MarkupString)_post.Content)
+        </div>
+
+        <SocialShare Title="@_post.Title" Url="@GetCanonicalUrl()" />
+
+        <ShortPostList Posts="_relatedPosts" Title="Related Posts" />
+
+        @if (_post.Tags.Any())
+        {
+            <footer class="post-footer">
+                <div class="post-tags-section">
+                    <h3>Tags</h3>
+                    <div class="post-tags">
+                        @foreach (var tag in _post.Tags)
+                        {
+                            <a href="/tag/@Uri.EscapeDataString(tag)" class="tag">@tag</a>
+                        }
+                    </div>
+                </div>
+            </footer>
+        }
+
+        @if (_post.AllowComments)
+        {
+            <section class="comments-section-wrapper">
+                <CommentList Comments="_comments" OnReply="HandleReply" />
+                <AddComment Slug="@Slug" 
+                           ParentComment="_replyToComment" 
+                           OnCommentSubmitted="HandleCommentSubmitted"
+                           OnCancelReply="HandleCancelReply" />
+            </section>
+        }
+
+        <div class="post-navigation">
+            <a href="/posts" class="back-link">? View All Posts</a>
+        </div>
+    </article>
+}
+
+@code {
+    private BlogPost? _post;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+    private List<BlogPost> _relatedPosts = new();
+    private IEnumerable<CommentViewModel> _comments = Enumerable.Empty<CommentViewModel>();
+    private CommentViewModel? _replyToComment;
+
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Year { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPostAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Slug))
+        {
+            await LoadPostAsync();
+        }
+    }
+
+    private async Task LoadPostAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            _post = await BlogPostDetailFacade.GetPostBySlugAsync(Slug);
+
+            if (_post == null)
+            {
+                // Redirect to 404 page when post not found
+                Navigation.NavigateTo("/not-found");
+                return;
+            }
+
+            BuildBreadcrumbs();
+
+            // Load related posts
+            var related = await BlogPostDetailFacade.GetRelatedPostsAsync(Slug, maxPosts: 3);
+            _relatedPosts = related.ToList();
+
+            // Load comments
+            await LoadCommentsAsync();
+
+            // Increment view count if post is found
+            // Fire and forget - don't wait for view count update
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await BlogPostDetailFacade.IncrementViewCountAsync(_post.Id, _post.PartitionKey);
+                }
+                catch
+                {
+                    // Silently fail - view count is not critical
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load the blog post. Please try again later.";
+            // In production, log the exception
+            // Logger.LogError(ex, "Error loading post with slug: {Slug}", Slug);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadCommentsAsync()
+    {
+        try
+        {
+            _comments = await CommentFacade.GetApprovedCommentsAsync(Slug);
+        }
+        catch
+        {
+            // Silently fail - comments are not critical
+            _comments = Enumerable.Empty<CommentViewModel>();
+        }
+    }
+
+    private void HandleReply(CommentViewModel comment)
+    {
+        _replyToComment = comment;
+    }
+
+    private void HandleCancelReply()
+    {
+        _replyToComment = null;
+    }
+
+    private async Task HandleCommentSubmitted()
+    {
+        // Reload comments to show pending message
+        await LoadCommentsAsync();
+        _replyToComment = null;
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Label = "Posts", Url = "/posts" },
+            new() { Label = _post!.Title, Url = $"/post/{Slug}" }
+        };
+    }
+
+    private string GetCanonicalUrl()
+    {
+        return $"{Navigation.BaseUri}post/{Slug}";
+    }
+}

@@ -1,0 +1,109 @@
+@using Vilog.Admin.Services
+@using Vilog.Shared.Utilities
+@inject IWebHostEnvironment Environment
+@inject IMessageService MessageService
+@implements IDisposable
+
+@if (MessageService.CurrentMessage != null)
+{
+    var msg = MessageService.CurrentMessage;
+    var cssClass = GetCssClass(msg.Type);
+    var icon = GetIcon(msg.Type);
+    
+    <div class="message-display @cssClass">
+        <div class="message-icon">
+            @((MarkupString)icon)
+        </div>
+        <div class="message-content">
+            <p class="message-text">@msg.Message</p>
+            
+            @if (Environment.IsDevelopment() && msg.Exception != null && msg.ShowDetails)
+            {
+                <details class="message-details">
+                    <summary>Debug Details (Development Only)</summary>
+                    <pre class="message-stack">@GetExceptionDetails(msg)</pre>
+                </details>
+            }
+        </div>
+        <button type="button" class="message-close" @onclick="HandleClose" aria-label="Close message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        MessageService.OnMessageChanged += HandleMessageChanged;
+    }
+
+    private void HandleMessageChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleClose()
+    {
+        MessageService.Clear();
+    }
+
+    private static string GetCssClass(MessageType type)
+    {
+        return type switch
+        {
+            MessageType.Success => "message-success",
+            MessageType.Info => "message-info",
+            MessageType.Warning => "message-warning",
+            MessageType.Error => "message-error",
+            _ => "message-info"
+        };
+    }
+
+    private static string GetIcon(MessageType type)
+    {
+        return type switch
+        {
+            MessageType.Success => """
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                """,
+            MessageType.Info => """
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                """,
+            MessageType.Warning => """
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 20H22L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                """,
+            MessageType.Error => """
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                </svg>
+                """,
+            _ => ""
+        };
+    }
+
+    private static string GetExceptionDetails(MessageInfo msg)
+    {
+        if (msg.Exception == null)
+            return string.Empty;
+
+        return ExceptionHelper.GetDetailedMessage(msg.Exception, includeStackTrace: msg.IncludeStackTrace);
+    }
+
+    public void Dispose()
+    {
+        MessageService.OnMessageChanged -= HandleMessageChanged;
+    }
+}
