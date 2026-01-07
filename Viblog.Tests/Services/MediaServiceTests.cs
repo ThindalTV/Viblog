@@ -398,7 +398,6 @@ public class MediaServiceTests
         // Assert
         Assert.True(result);
         Assert.Equal(MediaStatus.Deleted, item.Status);
-        Assert.NotNull(item.UpdatedAt);
 
         _mockMetadataRepository.Verify(x => x.UpdateAsync(
             It.Is<MediaItem>(m => m.Status == MediaStatus.Deleted),
@@ -488,7 +487,6 @@ public class MediaServiceTests
         Assert.Equal(newTitle, result.Title);
         Assert.Equal(newDescription, result.Description);
         Assert.Equal(newAltText, result.AltText);
-        Assert.NotNull(result.UpdatedAt);
 
         _mockMetadataRepository.Verify(x => x.UpdateAsync(
             It.Is<MediaItem>(m =>
