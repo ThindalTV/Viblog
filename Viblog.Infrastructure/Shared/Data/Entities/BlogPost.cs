@@ -66,11 +66,6 @@ public class BlogPost : BaseEntity
     public bool IsFeatured { get; set; }
 
     /// <summary>
-    /// Indicates whether comments are allowed on this post
-    /// </summary>
-    public bool AllowComments { get; set; } = true;
-
-    /// <summary>
     /// Number of views for this post
     /// </summary>
     public int ViewCount { get; set; }
@@ -96,11 +91,6 @@ public class BlogPost : BaseEntity
     public List<string> MediaUrls { get; set; } = new();
 
     /// <summary>
-    /// Comments associated with this blog post
-    /// </summary>
-    public List<Comment> Comments { get; set; } = new();
-
-    /// <summary>
     /// Meta description for SEO purposes
     /// </summary>
     public string? MetaDescription { get; set; }
@@ -114,16 +104,6 @@ public class BlogPost : BaseEntity
     /// Estimated reading time in minutes
     /// </summary>
     public int ReadingTimeMinutes { get; set; }
-
-    /// <summary>
-    /// Number of comments on this post
-    /// </summary>
-    public int CommentCount { get; set; }
-
-    /// <summary>
-    /// Last comment date and time
-    /// </summary>
-    public DateTimeOffset? LastCommentAt { get; set; }
 
     /// <summary>
     /// Lowercase concatenated searchable content for efficient searching.

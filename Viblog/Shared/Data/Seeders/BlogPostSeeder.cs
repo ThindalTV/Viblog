@@ -46,7 +46,6 @@ public static class BlogPostSeeder
             PublishedAt = now.AddDays(-5),
             IsPublished = true,
             IsFeatured = true,
-            AllowComments = true,
             ViewCount = 245,
             Tags = new List<string> { "Blazor", ".NET 10", "Web Development", "Server-Side" },
             CategoryIds = new List<string> { "blazor", "dotnet" },
@@ -57,42 +56,6 @@ public static class BlogPostSeeder
             UpdatedAt = now.AddDays(-5)
         };
         post1.UpdatePartitionKey(); // Set partition key based on publication year
-
-        var comment1 = new Comment
-        {
-            Id = Guid.NewGuid().ToString(),
-            AuthorName = "John Developer",
-            AuthorEmail = "john@example.com",
-            AuthorWebsite = "https://johndeveloper.com",
-            Content = "Great article! The new features in Blazor Server .NET 10 are really impressive. I especially like the performance improvements.",
-            CreatedAt = now.AddDays(-4),
-            IsApproved = true
-        };
-
-        var comment2 = new Comment
-        {
-            Id = Guid.NewGuid().ToString(),
-            AuthorName = "Sarah Tech",
-            AuthorEmail = "sarah@example.com",
-            Content = "Thanks for sharing this! One question - how does the new component lifecycle compare to the previous version?",
-            CreatedAt = now.AddDays(-3),
-            IsApproved = true
-        };
-
-        var comment3 = new Comment
-        {
-            Id = Guid.NewGuid().ToString(),
-            ParentCommentId = comment2.Id,
-            AuthorName = "System Administrator",
-            AuthorEmail = "admin@example.com",
-            Content = "Good question! The lifecycle has been optimized for better predictability. I'll write a detailed post about this soon.",
-            CreatedAt = now.AddDays(-2),
-            IsApproved = true
-        };
-
-        post1.Comments = new List<Comment> { comment1, comment2, comment3 };
-        post1.CommentCount = 3;
-        post1.LastCommentAt = now.AddDays(-2);
 
         posts.Add(post1);
 
@@ -112,7 +75,6 @@ public static class BlogPostSeeder
             PublishedAt = now.AddDays(-12),
             IsPublished = true,
             IsFeatured = true,
-            AllowComments = true,
             ViewCount = 432,
             Tags = new List<string> { "CosmosDB", "Azure", "Entity Framework", "Scalability" },
             CategoryIds = new List<string> { "azure", "databases" },
@@ -120,31 +82,7 @@ public static class BlogPostSeeder
             MetaDescription = "Best practices for building scalable applications with CosmosDB",
             ReadingTimeMinutes = 12,
             CreatedAt = now.AddDays(-12),
-            UpdatedAt = now.AddDays(-12),
-            Comments = new List<Comment>
-            {
-                new Comment
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AuthorName = "Michael Cloud",
-                    AuthorEmail = "michael@example.com",
-                    Content = "This is exactly what I needed! We're migrating to CosmosDB next quarter and this guide is invaluable.",
-                    CreatedAt = now.AddDays(-10),
-                    IsApproved = true
-                },
-                new Comment
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AuthorName = "Emily Data",
-                    AuthorEmail = "emily@example.com",
-                    AuthorWebsite = "https://emilydata.blog",
-                    Content = "Could you elaborate on partition key strategies? That's where I'm struggling the most.",
-                    CreatedAt = now.AddDays(-8),
-                    IsApproved = true
-                }
-            },
-            CommentCount = 2,
-            LastCommentAt = now.AddDays(-8)
+            UpdatedAt = now.AddDays(-12)
         };
         post2.UpdatePartitionKey();
         posts.Add(post2);
@@ -165,7 +103,6 @@ public static class BlogPostSeeder
             PublishedAt = now.AddDays(-18),
             IsPublished = true,
             IsFeatured = true,
-            AllowComments = true,
             ViewCount = 389,
             Tags = new List<string> { "CSS", "Responsive Design", "Web Development", "Frontend" },
             CategoryIds = new List<string> { "frontend", "css" },
@@ -278,7 +215,6 @@ public static class BlogPostSeeder
             PublishedAt = publishedAt,
             IsPublished = true,
             IsFeatured = false,
-            AllowComments = true,
             ViewCount = viewCount,
             Tags = tags.ToList(),
             CategoryIds = categories.ToList(),

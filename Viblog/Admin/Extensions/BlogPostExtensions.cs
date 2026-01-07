@@ -35,7 +35,6 @@ public static class BlogPostExtensions
                 PublishedAt = post.PublishedAt,
                 IsPublished = post.IsPublished,
                 IsFeatured = post.IsFeatured,
-                AllowComments = post.AllowComments,
                 Tags = [.. post.Tags],
                 CategoryIds = [.. post.CategoryIds]
             };
@@ -67,7 +66,6 @@ public static class BlogPostExtensions
                 PublishedAt = model.PublishedAt,
                 IsPublished = model.IsPublished,
                 IsFeatured = model.IsFeatured,
-                AllowComments = model.AllowComments,
                 Tags = model.Tags,
                 CategoryIds = model.CategoryIds
             };

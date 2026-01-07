@@ -119,9 +119,6 @@ else
                     <CheckboxInput @bind-Value="_model.IsFeatured"
                                  Label="Featured Post" />
 
-                    <CheckboxInput @bind-Value="_model.AllowComments"
-                                 Label="Allow Comments" />
-
                     <TagInput @bind-Tags="_model.Tags"
                               Label="Tags"
                               HelpText="Press Enter to add a tag" />
@@ -184,7 +181,6 @@ else
             // Initialize with defaults for new post
             _model = new BlogPostModel
             {
-                AllowComments = true,
                 PublishedAt = DateTimeOffset.Now,
                 AuthorName = userName
             };

@@ -130,25 +130,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Property(p => p.CategoryIds);
             b.Property(p => p.CategoryNames);
             b.Property(p => p.MediaUrls);
-            
-            // Configure owned Comments collection
-            b.OwnsMany(p => p.Comments, c =>
-            {
-                c.Property(cm => cm.Id);
-                c.Property(cm => cm.UserId);
-                c.Property(cm => cm.AuthorName);
-                c.Property(cm => cm.AuthorEmail);
-                c.Property(cm => cm.AuthorWebsite);
-                c.Property(cm => cm.Content);
-                c.Property(cm => cm.CreatedAt);
-                c.Property(cm => cm.UpdatedAt);
-                c.Property(cm => cm.IsApproved);
-                c.Property(cm => cm.IsSpam);
-                c.Property(cm => cm.IsDeleted);
-                c.Property(cm => cm.ParentCommentId);
-                c.Property(cm => cm.IpAddress);
-                c.Property(cm => cm.UserAgent);
-            });
         });
 
         builder.Entity<MediaItem>(b =>

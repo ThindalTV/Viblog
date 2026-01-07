@@ -4,7 +4,6 @@
 @using Viblog.Frontend.Components.Metadata
 
 @inject IBlogPostDetailFacade BlogPostDetailFacade
-@inject ICommentFacade CommentFacade
 @inject NavigationManager Navigation
 
 @if (_isLoading)
@@ -99,17 +98,6 @@ else
             </footer>
         }
 
-        @if (_post.AllowComments)
-        {
-            <section class="comments-section-wrapper">
-                <CommentList Comments="_comments" OnReply="HandleReply" />
-                <AddComment Slug="@Slug" 
-                           ParentComment="_replyToComment" 
-                           OnCommentSubmitted="HandleCommentSubmitted"
-                           OnCancelReply="HandleCancelReply" />
-            </section>
-        }
-
         <div class="post-navigation">
             <a href="/posts" class="back-link">? View All Posts</a>
         </div>
@@ -122,8 +110,6 @@ else
     private string? _errorMessage;
     private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
     private List<BlogPost> _relatedPosts = new();
-    private IEnumerable<CommentViewModel> _comments = Enumerable.Empty<CommentViewModel>();
-    private CommentViewModel? _replyToComment;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -166,9 +152,6 @@ else
             var related = await BlogPostDetailFacade.GetRelatedPostsAsync(Slug, maxPosts: 3);
             _relatedPosts = related.ToList();
 
-            // Load comments
-            await LoadCommentsAsync();
-
             // Increment view count if post is found
             // Fire and forget - don't wait for view count update
             _ = Task.Run(async () =>
@@ -193,36 +176,6 @@ else
         {
             _isLoading = false;
         }
-    }
-
-    private async Task LoadCommentsAsync()
-    {
-        try
-        {
-            _comments = await CommentFacade.GetApprovedCommentsAsync(Slug);
-        }
-        catch
-        {
-            // Silently fail - comments are not critical
-            _comments = Enumerable.Empty<CommentViewModel>();
-        }
-    }
-
-    private void HandleReply(CommentViewModel comment)
-    {
-        _replyToComment = comment;
-    }
-
-    private void HandleCancelReply()
-    {
-        _replyToComment = null;
-    }
-
-    private async Task HandleCommentSubmitted()
-    {
-        // Reload comments to show pending message
-        await LoadCommentsAsync();
-        _replyToComment = null;
     }
 
     private void BuildBreadcrumbs()
