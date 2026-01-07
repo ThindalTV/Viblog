@@ -1,4 +1,4 @@
-using SixLabors.ImageSharp;
+using SkiaSharp;
 using Viblog.Infrastructure.Shared.Services;
 
 namespace Viblog.Shared.Services;
@@ -60,7 +60,7 @@ public class MetadataExtractorService : IMetadataExtractorService
     }
 
     /// <summary>
-    /// Extract metadata from image files using ImageSharp
+    /// Extract metadata from image files using SkiaSharp
     /// </summary>
     private async Task ExtractImageMetadataAsync(
         Stream fileStream,
@@ -69,39 +69,35 @@ public class MetadataExtractorService : IMetadataExtractorService
     {
         try
         {
-            using var image = await Image.LoadAsync(fileStream, cancellationToken);
-
-            metadata["Width"] = image.Width.ToString();
-            metadata["Height"] = image.Height.ToString();
-            metadata["AspectRatio"] = (image.Width / (double)image.Height).ToString("F2");
-
-            // Extract EXIF data if available
-            var exifProfile = image.Metadata.ExifProfile;
-            if (exifProfile != null)
+            // SkiaSharp is synchronous, but we keep async signature for consistency
+            await Task.Run(() =>
             {
-                // Extract common EXIF tags
-                if (exifProfile.TryGetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.Make, out var make))
+                using var codec = SKCodec.Create(fileStream);
+
+                if (codec == null)
                 {
-                    metadata["CameraMake"] = make.Value?.ToString() ?? string.Empty;
+                    _logger.LogWarning("Failed to create codec for image stream");
+                    return;
                 }
 
-                if (exifProfile.TryGetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.Model, out var model))
+                // Extract basic dimensions
+                metadata["Width"] = codec.Info.Width.ToString();
+                metadata["Height"] = codec.Info.Height.ToString();
+                metadata["AspectRatio"] = (codec.Info.Width / (double)codec.Info.Height).ToString("F2");
+
+                // Extract color type info
+                metadata["ColorType"] = codec.Info.ColorType.ToString();
+                metadata["AlphaType"] = codec.Info.AlphaType.ToString();
+
+                // Extract EXIF data if available
+                var exifOrientation = codec.EncodedOrigin;
+                if (exifOrientation != SKEncodedOrigin.Default && exifOrientation != SKEncodedOrigin.TopLeft)
                 {
-                    metadata["CameraModel"] = model.Value?.ToString() ?? string.Empty;
+                    metadata["Orientation"] = exifOrientation.ToString();
                 }
 
-                if (exifProfile.TryGetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.DateTime, out var dateTime))
-                {
-                    metadata["DateTaken"] = dateTime.Value?.ToString() ?? string.Empty;
-                }
-
-                if (exifProfile.TryGetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.Orientation, out var orientation))
-                {
-                    metadata["Orientation"] = orientation.Value.ToString();
-                }
-            }
-
-            _logger.LogInformation("Extracted image metadata: {Width}x{Height}", image.Width, image.Height);
+                _logger.LogInformation("Extracted image metadata: {Width}x{Height}", codec.Info.Width, codec.Info.Height);
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -120,7 +116,7 @@ public class MetadataExtractorService : IMetadataExtractorService
             // Placeholder for video metadata extraction
             // In production, you would use a library like FFMpegCore or MediaInfo
             metadata["VideoFormat"] = "Unknown";
-            
+
             _logger.LogInformation("Video metadata extraction not fully implemented - placeholder data added");
         }
         catch (Exception ex)
@@ -140,7 +136,7 @@ public class MetadataExtractorService : IMetadataExtractorService
             // Placeholder for PDF metadata extraction
             // In production, you would use a library like PdfSharp or iTextSharp
             metadata["DocumentType"] = "PDF";
-            
+
             _logger.LogInformation("PDF metadata extraction not fully implemented - placeholder data added");
         }
         catch (Exception ex)
