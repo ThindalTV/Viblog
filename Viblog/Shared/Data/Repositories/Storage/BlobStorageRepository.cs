@@ -1,8 +1,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Shared.Data.Repositories.Storage;
 

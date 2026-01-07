@@ -1,10 +1,7 @@
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Viblog.Frontend.Infrastructure;
-using Viblog.Shared.Models.Feeds;
+using Viblog.Infrastructure.Frontend.Facades;
 
 namespace Viblog.Api.Endpoints;
 

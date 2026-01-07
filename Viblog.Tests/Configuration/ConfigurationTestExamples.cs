@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Viblog.Shared.Configuration;
-using Xunit;
 
 namespace Viblog.Tests.Configuration;
 

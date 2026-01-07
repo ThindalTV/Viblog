@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Viblog.Shared.Data;
-using Viblog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Shared.Data.Seeders;
 

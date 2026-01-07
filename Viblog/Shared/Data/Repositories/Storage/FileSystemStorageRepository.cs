@@ -1,5 +1,4 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Shared.Data.Repositories.Storage;
 

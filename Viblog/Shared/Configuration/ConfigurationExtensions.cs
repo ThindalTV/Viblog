@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-
 namespace Viblog.Shared.Configuration;
 
 /// <summary>

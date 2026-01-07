@@ -1,9 +1,10 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Viblog.Shared.Data.Repositories;
 using Viblog.Shared.Data.Repositories.Storage;
 using Viblog.Shared.Facades;
 using Viblog.Shared.Services;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Shared.Facades;
 
 namespace Viblog.Shared.Extensions;
 

@@ -1,8 +1,4 @@
-using Moq;
 using Viblog.Frontend.Facades;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Infrastructure;
 
 namespace Viblog.Tests.Facades;
 

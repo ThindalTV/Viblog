@@ -1,5 +1,3 @@
-using Viblog.Shared.Data.Common;
-
 namespace Viblog.Tests.Common;
 
 public class PagedResultTests

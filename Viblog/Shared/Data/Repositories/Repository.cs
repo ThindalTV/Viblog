@@ -1,7 +1,8 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Shared.Data.Repositories;
 

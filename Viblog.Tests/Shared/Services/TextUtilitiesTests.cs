@@ -1,6 +1,3 @@
-using Viblog.Shared.Services;
-using Xunit;
-
 namespace Viblog.Tests.Shared.Services;
 
 /// <summary>

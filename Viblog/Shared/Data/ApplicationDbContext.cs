@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Viblog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Shared.Data;
 

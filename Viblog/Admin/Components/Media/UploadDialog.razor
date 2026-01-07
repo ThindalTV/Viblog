@@ -1,5 +1,3 @@
-@using Viblog.Shared.Facades
-@using Viblog.Shared.Data.Entities
 @inject IMediaFacade MediaFacade
 @inject ILogger<UploadDialog> Logger
 
@@ -56,11 +54,7 @@
                                     </div>
                                 </div>
                                 
-                                @if (!file.IsComplete && !file.HasError)
-                                {
-                                    <TelerikProgressBar Value="@file.Progress" Max="100" />
-                                }
-                                
+
                                 @if (file.HasError)
                                 {
                                     <div class="error-message">@file.ErrorMessage</div>

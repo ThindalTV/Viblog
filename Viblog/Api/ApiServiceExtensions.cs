@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Viblog.Api.Endpoints;
 
 namespace Viblog.Api;

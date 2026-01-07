@@ -3,6 +3,10 @@
     <File Path=".github/copilot-instructions.md" />
   </Folder>
   <Folder Name="/Pipelines/" />
+  <Folder Name="/Viblog.Data/">
+    <Project Path="Viblog.Data/Viblog.Data.CosmosDb/Viblog.Data.CosmosDb.csproj" Id="ba1aca08-92ca-4e0c-956f-cd4df8827ead" />
+  </Folder>
+  <Project Path="Viblog.Infrastructure/Viblog.Infrastructure.csproj" Id="c636cffb-d7d4-400f-ad80-f08ba8516cb4" />
   <Project Path="Viblog.Tests/Viblog.Tests.csproj" />
   <Project Path="Viblog/Viblog.csproj" />
 </Solution>

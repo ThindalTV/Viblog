@@ -19,8 +19,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Admin\Infrastructure\" />
     <Folder Include="Admin\Pages\Media\" />
+    <Folder Include="Shared\Data\Common\" />
+    <Folder Include="Shared\Data\Entities\" />
     <Folder Include="Shared\Data\Migrations\" />
+    <Folder Include="Shared\Infrastructure\" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
-using Viblog.Frontend.Infrastructure;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Frontend.Facades;
 

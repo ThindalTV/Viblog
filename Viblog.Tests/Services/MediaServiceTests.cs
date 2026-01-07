@@ -1,9 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Moq;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Services;
-using Xunit;
 
 namespace Viblog.Tests.Services;
 

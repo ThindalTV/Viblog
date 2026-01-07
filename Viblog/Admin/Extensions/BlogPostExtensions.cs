@@ -1,5 +1,5 @@
 using Viblog.Admin.Models;
-using Viblog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Admin.Extensions;
 

@@ -1,8 +1,5 @@
 using Microsoft.Extensions.Options;
-using Moq;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Models.Sitemap;
-using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Api.Endpoints;
 

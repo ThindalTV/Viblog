@@ -1,9 +1,3 @@
-using Moq;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Services;
-
 namespace Viblog.Tests.Services;
 
 public class BlogSearchServiceTests

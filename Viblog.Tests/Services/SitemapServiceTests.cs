@@ -1,10 +1,5 @@
 using Microsoft.Extensions.Options;
-using Moq;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Services;
 

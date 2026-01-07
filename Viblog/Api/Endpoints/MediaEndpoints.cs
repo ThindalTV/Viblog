@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Facades;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Facades;
 
 namespace Viblog.Api.Endpoints;
 

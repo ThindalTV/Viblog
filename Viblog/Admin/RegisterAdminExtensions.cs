@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
-using Viblog.Admin.Infrastructure;
+using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Admin.Services;
 
 namespace Viblog.Admin;

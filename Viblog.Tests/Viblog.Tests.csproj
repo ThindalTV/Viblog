@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Viblog\Viblog.csproj" />
+    <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
-using Viblog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Data.Repositories;
 
 namespace Viblog.Shared.Data;

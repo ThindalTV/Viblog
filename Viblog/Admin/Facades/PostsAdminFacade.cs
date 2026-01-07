@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
-using Viblog.Admin.Infrastructure;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Facades;
 

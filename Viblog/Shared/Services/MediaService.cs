@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Logging;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Services;
 using Viblog.Shared.Helpers;
 
 namespace Viblog.Shared.Services;

@@ -1,8 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Infrastructure;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Services;
 
 namespace Viblog.Shared.Services;
 

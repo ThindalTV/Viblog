@@ -1,12 +1,10 @@
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Models.Sitemap;
+using Viblog.Infrastructure.Shared.Services;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Models.Sitemap;
-using Viblog.Shared.Services;
 
 namespace Viblog.Api.Endpoints;
 

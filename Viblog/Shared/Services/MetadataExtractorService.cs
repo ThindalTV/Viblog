@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Metadata;
+using Viblog.Infrastructure.Shared.Services;
 
 namespace Viblog.Shared.Services;
 

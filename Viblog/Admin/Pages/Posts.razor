@@ -1,9 +1,6 @@
 @page "/admin/posts"
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
-@using Viblog.Admin.Infrastructure
-@using Viblog.Shared.Data.Entities
-@using Viblog.Shared.Data.Common
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavigationManager
 

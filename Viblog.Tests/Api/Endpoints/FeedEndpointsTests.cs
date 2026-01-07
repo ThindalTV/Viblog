@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Moq;
-using Viblog.Frontend.Infrastructure;
-using Viblog.Shared.Models.Feeds;
-
 namespace Viblog.Tests.Api.Endpoints;
 
 /// <summary>

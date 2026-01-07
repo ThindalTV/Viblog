@@ -1,11 +1,11 @@
 using System.Xml;
 using Microsoft.Extensions.Options;
-using Viblog.Frontend.Infrastructure;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Models.Feeds;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Models.Feeds;
 
 namespace Viblog.Frontend.Facades;
 

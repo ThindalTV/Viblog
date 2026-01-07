@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Options;
 using Viblog.Shared.Configuration;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Models.Sitemap;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Models.Sitemap;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Shared.Data.Common;
 
 namespace Viblog.Shared.Services;
 
@@ -37,7 +39,7 @@ public class SitemapService : ISitemapService
 
         // Get all published posts
         var posts = await _blogPostRepository.GetPublishedPostsAsync(
-            new Shared.Data.Common.PagingParameters { PageSize = 10000 },
+            new PagingParameters { PageSize = 10000 },
             cancellationToken);
 
         // Blog posts

@@ -1,5 +1,5 @@
 ﻿using Viblog.Frontend.Facades;
-using Viblog.Frontend.Infrastructure;
+using Viblog.Infrastructure.Frontend.Facades;
 
 namespace Viblog.Frontend;
 

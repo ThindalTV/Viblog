@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Logging;
-using Viblog.Shared.Data.Common;
-using Viblog.Shared.Data.Entities;
-using Viblog.Shared.Data.Repositories;
-using Viblog.Shared.Services;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Shared.Facades;
 
 namespace Viblog.Shared.Facades;
 
@@ -277,5 +277,48 @@ public class MediaFacade : IMediaFacade
         CancellationToken cancellationToken = default)
     {
         return await _metadataRepository.GetAllFolderPathsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<string>> GetFolderPathsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await GetAllFolderPathsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<MediaItem?> GetByIdAsync(
+        string id,
+        string partitionKey,
+        CancellationToken cancellationToken = default)
+    {
+        return await _metadataRepository.GetByIdAsync(id, partitionKey, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<MediaItem?> UpdateMetadataAsync(
+        string id,
+        string partitionKey,
+        string? title,
+        string? description,
+        string? altText,
+        CancellationToken cancellationToken = default)
+    {
+        return await _mediaService.UpdateMetadataAsync(
+            id,
+            partitionKey,
+            title,
+            description,
+            altText,
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> GetPublicUrlAsync(
+        MediaItem mediaItem,
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await _mediaService.GetPublicUrlAsync(mediaItem, expiration, cancellationToken);
     }
 }
