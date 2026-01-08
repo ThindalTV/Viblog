@@ -178,7 +178,7 @@ public class BlogPostListFacadeTests
         return new BlogPost
         {
             Id = id.ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = $"Content for {title}",

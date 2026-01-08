@@ -192,7 +192,7 @@ public class BlogPostDetailFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = $"Post for {slug}",
             Slug = slug,
             Content = "Test content",

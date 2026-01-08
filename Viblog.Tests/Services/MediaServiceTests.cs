@@ -85,7 +85,7 @@ public class MediaServiceTests
         Assert.Equal(1080, result.Height);
         Assert.Equal(MediaStatus.Available, result.Status);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.PartitionKey);
+        Assert.NotNull(result.GroupKey);
 
         _mockStorageRepository.Verify(x => x.UploadAsync(
             fileName, It.IsAny<Stream>(), mimeType, folderPath, It.IsAny<CancellationToken>()), Times.Once);
@@ -232,7 +232,7 @@ public class MediaServiceTests
 
         // Assert
         Assert.NotNull(capturedItem);
-        Assert.Equal(expectedPartitionKey, capturedItem.PartitionKey);
+        Assert.Equal(expectedPartitionKey, capturedItem.GroupKey);
     }
 
     [Theory]
@@ -292,7 +292,7 @@ public class MediaServiceTests
         var expectedItem = new MediaItem
         {
             Id = id,
-            PartitionKey = partitionKey,
+            GroupKey = partitionKey,
             FileName = "test.jpg",
             MimeType = "image/jpeg"
         };
@@ -375,7 +375,7 @@ public class MediaServiceTests
         var item = new MediaItem
         {
             Id = id,
-            PartitionKey = partitionKey,
+            GroupKey = partitionKey,
             FileName = "test.jpg",
             Status = MediaStatus.Available
         };
@@ -460,7 +460,7 @@ public class MediaServiceTests
         var existingItem = new MediaItem
         {
             Id = id,
-            PartitionKey = partitionKey,
+            GroupKey = partitionKey,
             FileName = "test.jpg",
             Title = "Old Title",
             Description = "Old Description",
@@ -526,7 +526,7 @@ public class MediaServiceTests
         var existingItem = new MediaItem
         {
             Id = id,
-            PartitionKey = partitionKey,
+            GroupKey = partitionKey,
             FileName = "test.jpg",
             Title = "Existing Title",
             Description = "Existing Description",

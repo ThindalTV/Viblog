@@ -42,18 +42,6 @@ public interface IMediaStorageRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Move a file to a new location in storage
-    /// </summary>
-    /// <param name="currentStoragePath">Current storage path</param>
-    /// <param name="newFolderPath">New virtual folder path</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>New storage result with updated path and URL</returns>
-    Task<MediaStorageResult> MoveAsync(
-        string currentStoragePath,
-        string newFolderPath,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Get a public URL for accessing the file
     /// </summary>
     /// <param name="storagePath">Storage path of the file</param>

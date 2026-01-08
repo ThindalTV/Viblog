@@ -269,7 +269,7 @@ public class BlogSearchFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = content,

@@ -9,20 +9,6 @@ namespace Viblog.Infrastructure.Shared.Data.Repositories;
 public interface IMediaMetadataRepository : IRepository<MediaItem>
 {
     /// <summary>
-    /// Get media items in a specific folder with paging and filtering
-    /// </summary>
-    /// <param name="folderPath">The folder path to query</param>
-    /// <param name="pagingParameters">Paging parameters</param>
-    /// <param name="mimeTypeFilter">Optional MIME type filter (e.g., "image/*")</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Paged result with media items</returns>
-    Task<PagedResult<MediaItem>> GetItemsInFolderAsync(
-        string folderPath,
-        PagingParameters pagingParameters,
-        string? mimeTypeFilter = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Get media items by type (MIME type pattern)
     /// </summary>
     /// <param name="mimeTypePattern">MIME type pattern (e.g., "image/*", "application/pdf")</param>
@@ -79,11 +65,27 @@ public interface IMediaMetadataRepository : IRepository<MediaItem>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get all unique folder paths from the media library
+    /// Get all unique date-based folders (yyyyMM format) that contain media items
     /// </summary>
+    /// <param name="mediaTypeFilter">Optional media type filter (Image, Video, Audio, etc.)</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of unique folder paths</returns>
-    Task<List<string>> GetAllFolderPathsAsync(
+    /// <returns>List of date folders in descending order (newest first)</returns>
+    Task<List<string>> GetDateFoldersAsync(
+        MediaTypeCategory? mediaTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get media items from a specific date folder with optional type filtering
+    /// </summary>
+    /// <param name="dateFolder">Date folder in yyyyMM format</param>
+    /// <param name="mediaTypeFilter">Optional media type filter</param>
+    /// <param name="pagingParameters">Paging parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paged result with media items</returns>
+    Task<PagedResult<MediaItem>> GetItemsByDateFolderAsync(
+        string dateFolder,
+        MediaTypeCategory? mediaTypeFilter,
+        PagingParameters pagingParameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>

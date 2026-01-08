@@ -73,7 +73,7 @@ public class MediaItem : BaseEntity
     /// <summary>
     /// Additional metadata stored as key-value pairs
     /// </summary>
-    public Dictionary<string, string> AdditionalMetadata { get; set; } = new();
+    public Dictionary<string, string> AdditionalMetadata { get; set; } = [];
 
     /// <summary>
     /// Number of times this media item is referenced
@@ -105,6 +105,6 @@ public class MediaItem : BaseEntity
     /// </summary>
     public void UpdatePartitionKey()
     {
-        PartitionKey = CreatedAt.ToString("yyyy-MM");
+        GroupKey = CreatedAt.ToString("yyyy-MM");
     }
 }

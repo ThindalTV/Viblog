@@ -11,9 +11,9 @@ public abstract class BaseEntity
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>
-    /// Partition key for CosmosDB
+    /// Groupkey or partition key for the entity
     /// </summary>
-    public string PartitionKey { get; set; } = string.Empty;
+    public string GroupKey { get; set; } = string.Empty;
 
     /// <summary>
     /// Timestamp when the entity was created

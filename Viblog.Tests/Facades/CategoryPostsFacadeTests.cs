@@ -218,7 +218,7 @@ public class CategoryPostsFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = categoryId,
+            GroupKey = categoryId,
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = $"Content for {title}",

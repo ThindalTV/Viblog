@@ -1,3 +1,4 @@
+using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Infrastructure.Shared.Services;
@@ -83,6 +84,42 @@ public interface IMediaService
     Task<string> GetPublicUrlAsync(
         MediaItem mediaItem,
         TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all date folders that contain media items
+    /// </summary>
+    /// <param name="mediaTypeFilter">Optional media type filter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of date folders in yyyyMM format, sorted newest first</returns>
+    Task<List<string>> GetDateFoldersAsync(
+        MediaTypeCategory? mediaTypeFilter = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get media items from a specific date folder
+    /// </summary>
+    /// <param name="dateFolder">Date folder in yyyyMM format</param>
+    /// <param name="mediaTypeFilter">Optional media type filter</param>
+    /// <param name="pagingParameters">Paging parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paged result with media items</returns>
+    Task<PagedResult<MediaItem>> GetItemsByDateFolderAsync(
+        string dateFolder,
+        MediaTypeCategory? mediaTypeFilter,
+        PagingParameters pagingParameters,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Search media items by filename, title, or description
+    /// </summary>
+    /// <param name="searchTerm">Search term</param>
+    /// <param name="pagingParameters">Paging parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paged result with matching media items</returns>
+    Task<PagedResult<MediaItem>> SearchAsync(
+        string searchTerm,
+        PagingParameters pagingParameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>

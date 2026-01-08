@@ -1,3 +1,4 @@
+using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Infrastructure.Shared.Services;
 using Viblog.Shared.Services;
 
@@ -25,10 +26,9 @@ public static class ServiceExtensions
         // Register text utilities
         services.AddScoped<ITextUtilities, TextUtilities>();
 
-        // Additional blog services can be registered here as they are created
-        // Example:
-        // services.AddScoped<IBlogPostService, BlogPostService>();
-        // services.AddScoped<ICategoryService, CategoryService>();
+        // Register media services
+        services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<IMetadataExtractorService, MetadataExtractorService>();
 
         return services;
     }

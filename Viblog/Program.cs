@@ -7,6 +7,7 @@ using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
 using Viblog.Shared.Extensions;
+using Viblog.Data.CosmosDb.Data.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,6 @@ static async Task SeedDatabaseAsync(WebApplication app)
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("Checking if database seeding is needed...");
-    await Viblog.Shared.Data.Seeders.BlogPostSeeder.SeedAsync(dbContext);
+    await BlogPostSeeder.SeedAsync(dbContext);
     logger.LogInformation("Database seeding completed.");
 }

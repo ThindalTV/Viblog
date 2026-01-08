@@ -309,7 +309,7 @@ public class FeedFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = title,
             Slug = slug,
             Content = content,

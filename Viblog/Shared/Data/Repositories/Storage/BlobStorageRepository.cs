@@ -2,6 +2,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Helpers;
 
 namespace Viblog.Shared.Data.Repositories.Storage;
 
@@ -45,15 +46,27 @@ public class BlobStorageRepository : IMediaStorageRepository
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
 
-            // Generate storage path with date-based structure: yyyy/MM/filename
+            // Determine media type category and get folder name
+            var category = MediaTypeHelper.GetCategory(mimeType, fileName);
+            var categoryFolder = MediaTypeHelper.GetFolderName(category);
+
+            // Generate storage path: category/yyyy/MM/filename with collision handling
             var now = DateTimeOffset.UtcNow;
-            var storagePath = $"{now:yyyy}/{now:MM}/{Path.GetFileNameWithoutExtension(fileName)}_{Guid.NewGuid():N}{Path.GetExtension(fileName)}";
-            
-            // Apply folder path if not root
-            if (!string.IsNullOrWhiteSpace(folderPath) && folderPath != "/")
-            {
-                storagePath = $"{folderPath.TrimStart('/')}/{storagePath}";
-            }
+            var datePath = $"{now:yyyy}/{now:MM}";
+            var baseFileName = Path.GetFileNameWithoutExtension(fileName);
+            var extension = Path.GetExtension(fileName);
+
+            // Sanitize filename
+            baseFileName = SanitizeFileName(baseFileName);
+
+            // Try to find an available filename (handle collisions)
+            var storagePath = await FindAvailableFileNameAsync(
+                containerClient,
+                categoryFolder,
+                datePath,
+                baseFileName,
+                extension,
+                cancellationToken);
 
             var blobClient = containerClient.GetBlobClient(storagePath);
 
@@ -98,6 +111,56 @@ public class BlobStorageRepository : IMediaStorageRepository
         }
     }
 
+    /// <summary>
+    /// Find an available filename by checking for collisions and adding a number suffix
+    /// </summary>
+    private async Task<string> FindAvailableFileNameAsync(
+        BlobContainerClient containerClient,
+        string categoryFolder,
+        string datePath,
+        string baseFileName,
+        string extension,
+        CancellationToken cancellationToken)
+    {
+        // Try the original filename first
+        var storagePath = $"{categoryFolder}/{datePath}/{baseFileName}{extension}";
+        var blobClient = containerClient.GetBlobClient(storagePath);
+
+        if (!await blobClient.ExistsAsync(cancellationToken))
+        {
+            return storagePath;
+        }
+
+        // File exists, try with incrementing numbers
+        var counter = 1;
+        while (counter < 1000) // Prevent infinite loop
+        {
+            storagePath = $"{categoryFolder}/{datePath}/{baseFileName}{counter}{extension}";
+            blobClient = containerClient.GetBlobClient(storagePath);
+
+            if (!await blobClient.ExistsAsync(cancellationToken))
+            {
+                return storagePath;
+            }
+
+            counter++;
+        }
+
+        // If we still can't find a unique name after 1000 attempts, fall back to GUID
+        storagePath = $"{categoryFolder}/{datePath}/{baseFileName}_{Guid.NewGuid():N}{extension}";
+        return storagePath;
+    }
+
+    /// <summary>
+    /// Sanitize filename to remove invalid characters
+    /// </summary>
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+        return string.IsNullOrWhiteSpace(sanitized) ? "file" : sanitized;
+    }
+
     /// <inheritdoc/>
     public async Task<Stream> DownloadAsync(
         string storagePath,
@@ -140,71 +203,6 @@ public class BlobStorageRepository : IMediaStorageRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete file from blob storage: {StoragePath}", storagePath);
-            throw;
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task<MediaStorageResult> MoveAsync(
-        string currentStoragePath,
-        string newFolderPath,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var sourceBlobClient = containerClient.GetBlobClient(currentStoragePath);
-
-            // Generate new storage path maintaining the filename
-            var fileName = Path.GetFileName(currentStoragePath);
-            var newStoragePath = string.IsNullOrWhiteSpace(newFolderPath) || newFolderPath == "/"
-                ? fileName
-                : $"{newFolderPath.TrimStart('/')}/{fileName}";
-
-            var destinationBlobClient = containerClient.GetBlobClient(newStoragePath);
-
-            // Copy to new location
-            await destinationBlobClient.StartCopyFromUriAsync(sourceBlobClient.Uri, cancellationToken: cancellationToken);
-
-            // Wait for copy to complete
-            BlobProperties properties;
-            do
-            {
-                await Task.Delay(100, cancellationToken);
-                properties = await destinationBlobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
-            }
-            while (properties.CopyStatus == CopyStatus.Pending);
-
-            if (properties.CopyStatus != CopyStatus.Success)
-            {
-                throw new InvalidOperationException($"Failed to copy blob. Copy status: {properties.CopyStatus}");
-            }
-
-            // Delete original
-            await sourceBlobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
-
-            // Get file size from properties
-            var fileSize = properties.ContentLength;
-
-            // Generate public URL
-            var publicUrl = _cdnUrl != null
-                ? $"{_cdnUrl.TrimEnd('/')}/{newStoragePath}"
-                : destinationBlobClient.Uri.ToString();
-
-            _logger.LogInformation("Moved file in blob storage from {CurrentPath} to {NewPath}", 
-                currentStoragePath, newStoragePath);
-
-            return new MediaStorageResult
-            {
-                StoragePath = newStoragePath,
-                PublicUrl = publicUrl,
-                FileSize = fileSize
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to move file in blob storage: {CurrentPath} to {NewPath}", 
-                currentStoragePath, newFolderPath);
             throw;
         }
     }

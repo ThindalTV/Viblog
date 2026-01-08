@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Helpers;
 
 namespace Viblog.Data.CosmosDb.Data.Repositories;
 
@@ -12,42 +13,6 @@ public class MediaMetadataRepository : Repository<MediaItem>, IMediaMetadataRepo
 {
     public MediaMetadataRepository(ApplicationDbContext context) : base(context)
     {
-    }
-
-    /// <inheritdoc/>
-    public async Task<PagedResult<MediaItem>> GetItemsInFolderAsync(
-        string folderPath,
-        PagingParameters pagingParameters,
-        string? mimeTypeFilter = null,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(pagingParameters);
-
-        var query = _dbSet
-            .Where(m => !m.IsDeleted && m.FolderPath == folderPath);
-
-        // Apply MIME type filter if specified
-        if (!string.IsNullOrWhiteSpace(mimeTypeFilter))
-        {
-            if (mimeTypeFilter.EndsWith("/*"))
-            {
-                // Pattern matching for type/* (e.g., image/*)
-                var prefix = mimeTypeFilter[..^1]; // Remove the asterisk
-                query = query.Where(m => m.MimeType.StartsWith(prefix));
-            }
-            else
-            {
-                // Exact match
-                query = query.Where(m => m.MimeType == mimeTypeFilter);
-            }
-        }
-
-        return await ApplyPagingAndSortingAsync(
-            query,
-            pagingParameters,
-            m => m.CreatedAt,
-            ascending: false,
-            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -165,15 +130,67 @@ public class MediaMetadataRepository : Repository<MediaItem>, IMediaMetadataRepo
     }
 
     /// <inheritdoc/>
-    public async Task<List<string>> GetAllFolderPathsAsync(
+    public async Task<List<string>> GetDateFoldersAsync(
+        MediaTypeCategory? mediaTypeFilter = null,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Where(m => !m.IsDeleted)
-            .Select(m => m.FolderPath)
-            .Distinct()
-            .OrderBy(f => f)
+        var query = _dbSet.Where(m => !m.IsDeleted);
+
+        // Apply media type filter if specified
+        if (mediaTypeFilter.HasValue)
+        {
+            var categoryFolder = MediaTypeHelper.GetFolderName(mediaTypeFilter.Value);
+            query = query.Where(m => m.StoragePath.StartsWith(categoryFolder + "/"));
+        }
+
+        // Extract date folders from storage paths and return distinct sorted list
+        var dateFolders = await query
+            .Select(m => m.StoragePath)
             .ToListAsync(cancellationToken);
+
+        return dateFolders
+            .Select(path => MediaTypeHelper.ExtractDateFolder(path))
+            .Where(dateFolder => dateFolder != null)
+            .Distinct()
+            .OrderByDescending(df => df)
+            .ToList()!;
+    }
+
+    /// <inheritdoc/>
+    public async Task<PagedResult<MediaItem>> GetItemsByDateFolderAsync(
+        string dateFolder,
+        MediaTypeCategory? mediaTypeFilter,
+        PagingParameters pagingParameters,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dateFolder);
+        ArgumentNullException.ThrowIfNull(pagingParameters);
+
+        // Parse date folder (yyyyMM format)
+        if (dateFolder.Length != 6 || !int.TryParse(dateFolder, out _))
+        {
+            throw new ArgumentException("Date folder must be in yyyyMM format", nameof(dateFolder));
+        }
+
+        var year = dateFolder[..4];
+        var month = dateFolder[4..];
+        var datePattern = $"/{year}/{month}/";
+
+        var query = _dbSet.Where(m => !m.IsDeleted && m.StoragePath.Contains(datePattern));
+
+        // Apply media type filter if specified
+        if (mediaTypeFilter.HasValue)
+        {
+            var categoryFolder = MediaTypeHelper.GetFolderName(mediaTypeFilter.Value);
+            query = query.Where(m => m.StoragePath.StartsWith(categoryFolder + "/"));
+        }
+
+        return await ApplyPagingAndSortingAsync(
+            query,
+            pagingParameters,
+            m => m.CreatedAt,
+            ascending: false,
+            cancellationToken);
     }
 
     /// <inheritdoc/>

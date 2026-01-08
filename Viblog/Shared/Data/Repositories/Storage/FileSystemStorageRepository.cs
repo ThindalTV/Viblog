@@ -155,69 +155,6 @@ public class FileSystemStorageRepository : IMediaStorageRepository
     }
 
     /// <inheritdoc/>
-    public Task<MediaStorageResult> MoveAsync(
-        string currentStoragePath,
-        string newFolderPath,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var currentFullPath = Path.Combine(_basePath, currentStoragePath.Replace('/', Path.DirectorySeparatorChar));
-
-            if (!File.Exists(currentFullPath))
-            {
-                throw new FileNotFoundException($"File not found: {currentStoragePath}", currentFullPath);
-            }
-
-            // Build new directory path
-            var fileName = Path.GetFileName(currentFullPath);
-            var newDirectoryPath = _basePath;
-            
-            if (!string.IsNullOrWhiteSpace(newFolderPath) && newFolderPath != "/")
-            {
-                newDirectoryPath = Path.Combine(newDirectoryPath, newFolderPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            }
-
-            // Create directory if it doesn't exist
-            if (!Directory.Exists(newDirectoryPath))
-            {
-                Directory.CreateDirectory(newDirectoryPath);
-                _logger.LogInformation("Created directory: {DirectoryPath}", newDirectoryPath);
-            }
-
-            // Move file
-            var newFullPath = Path.Combine(newDirectoryPath, fileName);
-            File.Move(currentFullPath, newFullPath, overwrite: false);
-
-            // Get file size
-            var fileInfo = new FileInfo(newFullPath);
-            var fileSize = fileInfo.Length;
-
-            // Build new storage path
-            var newStoragePath = Path.GetRelativePath(_basePath, newFullPath).Replace(Path.DirectorySeparatorChar, '/');
-
-            // Generate public URL
-            var publicUrl = $"{_baseUrl.TrimEnd('/')}/{newStoragePath}";
-
-            _logger.LogInformation("Moved file in file system from {CurrentPath} to {NewPath}", 
-                currentStoragePath, newStoragePath);
-
-            return Task.FromResult(new MediaStorageResult
-            {
-                StoragePath = newStoragePath,
-                PublicUrl = publicUrl,
-                FileSize = fileSize
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to move file in file system: {CurrentPath} to {NewPath}", 
-                currentStoragePath, newFolderPath);
-            throw;
-        }
-    }
-
-    /// <inheritdoc/>
     public Task<string> GetPublicUrlAsync(
         string storagePath,
         TimeSpan? expiration = null,

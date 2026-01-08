@@ -13,18 +13,15 @@ public class MediaFacade : IMediaFacade
 {
     private readonly IMediaService _mediaService;
     private readonly IMediaMetadataRepository _metadataRepository;
-    private readonly IMediaStorageRepository _storageRepository;
     private readonly ILogger<MediaFacade> _logger;
 
     public MediaFacade(
         IMediaService mediaService,
         IMediaMetadataRepository metadataRepository,
-        IMediaStorageRepository storageRepository,
         ILogger<MediaFacade> logger)
     {
         _mediaService = mediaService;
         _metadataRepository = metadataRepository;
-        _storageRepository = storageRepository;
         _logger = logger;
     }
 
@@ -100,22 +97,10 @@ public class MediaFacade : IMediaFacade
 
     /// <inheritdoc/>
     public async Task<PagedResult<MediaItem>> GetMediaItemsAsync(
-        string? folderPath = null,
-        string? mimeTypeFilter = null,
-        PagingParameters? pagingParameters = null,
+        string? mimeTypeFilter,
+        PagingParameters pagingParameters,
         CancellationToken cancellationToken = default)
     {
-        pagingParameters ??= new PagingParameters { PageNumber = 1, PageSize = 50 };
-
-        if (!string.IsNullOrWhiteSpace(folderPath))
-        {
-            return await _metadataRepository.GetItemsInFolderAsync(
-                folderPath,
-                pagingParameters,
-                mimeTypeFilter,
-                cancellationToken);
-        }
-
         if (!string.IsNullOrWhiteSpace(mimeTypeFilter))
         {
             return await _metadataRepository.GetItemsByTypeAsync(
@@ -130,86 +115,6 @@ public class MediaFacade : IMediaFacade
             ascending: false,
             includeDeleted: false,
             cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public async Task<MediaItem?> MoveToFolderAsync(
-        string id,
-        string partitionKey,
-        string newFolderPath,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var mediaItem = await _metadataRepository.GetByIdAsync(id, partitionKey, cancellationToken);
-
-            if (mediaItem == null)
-            {
-                _logger.LogWarning("Media item not found for move: {Id}", id);
-                return null;
-            }
-
-            // Move in storage
-            var storageResult = await _storageRepository.MoveAsync(
-                mediaItem.StoragePath,
-                newFolderPath,
-                cancellationToken);
-
-            // Update metadata
-            mediaItem.StoragePath = storageResult.StoragePath;
-            mediaItem.PublicUrl = storageResult.PublicUrl;
-            mediaItem.FolderPath = string.IsNullOrWhiteSpace(newFolderPath) ? "/" : newFolderPath;
-
-            await _metadataRepository.UpdateAsync(mediaItem, cancellationToken);
-            await _metadataRepository.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Moved media item {Id} to folder {FolderPath}", id, newFolderPath);
-
-            return mediaItem;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to move media item: {Id}", id);
-            throw;
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task<int> BulkMoveAsync(
-        IEnumerable<MediaItem> items,
-        string newFolderPath,
-        CancellationToken cancellationToken = default)
-    {
-        var itemList = items.ToList();
-        var movedCount = 0;
-
-        _logger.LogInformation("Starting bulk move of {Count} items to {FolderPath}", itemList.Count, newFolderPath);
-
-        foreach (var item in itemList)
-        {
-            try
-            {
-                var result = await MoveToFolderAsync(
-                    item.Id,
-                    item.PartitionKey,
-                    newFolderPath,
-                    cancellationToken);
-
-                if (result != null)
-                {
-                    movedCount++;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to move item during bulk move: {Id}", item.Id);
-                // Continue with other items
-            }
-        }
-
-        _logger.LogInformation("Completed bulk move: {MovedCount}/{TotalCount} items moved", movedCount, itemList.Count);
-
-        return movedCount;
     }
 
     /// <inheritdoc/>
@@ -242,7 +147,7 @@ public class MediaFacade : IMediaFacade
                 {
                     var success = await _mediaService.DeleteAsync(
                         item.Id,
-                        item.PartitionKey,
+                        item.GroupKey,
                         cancellationToken);
 
                     if (success)
@@ -273,20 +178,6 @@ public class MediaFacade : IMediaFacade
     }
 
     /// <inheritdoc/>
-    public async Task<List<string>> GetAllFolderPathsAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return await _metadataRepository.GetAllFolderPathsAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public async Task<List<string>> GetFolderPathsAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return await GetAllFolderPathsAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
     public async Task<MediaItem?> GetByIdAsync(
         string id,
         string partitionKey,
@@ -304,13 +195,7 @@ public class MediaFacade : IMediaFacade
         string? altText,
         CancellationToken cancellationToken = default)
     {
-        return await _mediaService.UpdateMetadataAsync(
-            id,
-            partitionKey,
-            title,
-            description,
-            altText,
-            cancellationToken);
+        return await _mediaService.UpdateMetadataAsync(id, partitionKey, title, description, altText, cancellationToken);
     }
 
     /// <inheritdoc/>

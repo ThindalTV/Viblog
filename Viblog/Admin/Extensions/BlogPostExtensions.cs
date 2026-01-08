@@ -22,7 +22,7 @@ public static class BlogPostExtensions
             return new BlogPostModel
             {
                 Id = post.Id,
-                PartitionKey = post.PartitionKey,
+                PartitionKey = post.GroupKey,
                 Title = post.Title,
                 Slug = post.Slug,
                 Short = post.Short,
@@ -74,8 +74,8 @@ public static class BlogPostExtensions
             if (!string.IsNullOrWhiteSpace(model.Id))
             {
                 post.Id = model.Id;
-                post.PartitionKey = model.PartitionKey ?? post.GetPublicationYear();
             }
+
             // For new posts, partition key will be set by repository's UpdatePartitionKey() method
 
             return post;

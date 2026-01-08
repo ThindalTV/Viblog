@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Viblog.Data.CosmosDb.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
@@ -19,7 +20,7 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        entity.UpdatePartitionKey(); // Ensure partition key is set based on publication date
+        entity.SetPartitionKey(); // Ensure partition key is set based on publication date
         entity.UpdateSearchIndex();
         await base.AddAsync(entity, cancellationToken);
     }
@@ -32,7 +33,7 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
         var entityList = entities.ToList();
         foreach (var entity in entityList)
         {
-            entity.UpdatePartitionKey(); // Ensure partition key is set based on publication date
+            entity.SetPartitionKey(); // Ensure partition key is set based on publication date
             entity.UpdateSearchIndex();
         }
 
@@ -44,7 +45,7 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        entity.UpdatePartitionKey(); // Update partition key based on published state
+        entity.SetPartitionKey(); // Update partition key based on published state
         entity.UpdateSearchIndex();
         return base.UpdateAsync(entity, cancellationToken);
     }
@@ -252,7 +253,7 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
     {
         if (post?.Tags == null || !post.Tags.Any())
         {
-            return Enumerable.Empty<BlogPost>();
+            return [];
         }
 
         // Find posts that share at least one tag, excluding the current post
@@ -280,7 +281,7 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
         ArgumentException.ThrowIfNullOrWhiteSpace(currentPartitionKey);
 
         var post = await _dbSet.FirstOrDefaultAsync(
-            p => p.Id == postId && p.PartitionKey == currentPartitionKey,
+            p => p.Id == postId && p.GroupKey == currentPartitionKey,
             cancellationToken);
 
         if (post == null)
@@ -291,9 +292,9 @@ public class BlogPostRepository : Repository<BlogPost>, IBlogPostRepository
         var oldPublishedAt = post.PublishedAt;
         post.PublishedAt = newPublishedAt;
         
-        var oldPartitionKey = post.PartitionKey;
-        post.UpdatePartitionKey();
-        var newPartitionKey = post.PartitionKey;
+        var oldPartitionKey = post.GroupKey;
+        post.SetPartitionKey();
+        var newPartitionKey = post.GroupKey;
 
         // If partition key hasn't changed, just update normally
         if (oldPartitionKey == newPartitionKey)

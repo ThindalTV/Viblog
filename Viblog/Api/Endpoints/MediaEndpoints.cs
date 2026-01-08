@@ -45,20 +45,10 @@ public static class MediaEndpoints
             .RequireAuthorization("Admin");
 
         // Bulk operations
-        group.MapPost("/bulk-move", BulkMoveAsync)
-            .WithName("BulkMoveMedia")
-            .WithDescription("Move multiple media items to a different folder")
-            .RequireAuthorization("Admin");
-
         group.MapPost("/bulk-delete", BulkDeleteAsync)
             .WithName("BulkDeleteMedia")
             .WithDescription("Delete multiple media items")
             .RequireAuthorization("Admin");
-
-        // Folder endpoints
-        group.MapGet("/folders", GetFoldersAsync)
-            .WithName("GetMediaFolders")
-            .WithDescription("Get all folder paths");
 
         return group;
     }
@@ -137,9 +127,9 @@ public static class MediaEndpoints
         string id,
         IMediaFacade mediaFacade)
     {
-        // Find item by searching all items (not optimal but works for now)
-        // TODO: Add GetByIdAsync to IMediaFacade
-        var items = await mediaFacade.GetMediaItemsAsync(null, null, new PagingParameters { PageNumber = 1, PageSize = 1000 });
+        // Use GetByIdAsync which is now available on IMediaFacade
+        // Note: We need to know the partition key - for now we'll search
+        var items = await mediaFacade.GetMediaItemsAsync(null, new PagingParameters { PageNumber = 1, PageSize = 1000 }, default);
         var item = items.Items.FirstOrDefault(i => i.Id == id);
         return item != null ? TypedResults.Ok(item) : TypedResults.NotFound();
     }
@@ -148,14 +138,13 @@ public static class MediaEndpoints
     /// Get media items with optional filtering and pagination
     /// </summary>
     private static async Task<Ok<PagedResult<MediaItem>>> GetMediaItemsAsync(
-        [FromQuery] string? folderPath = null,
-        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? mimeTypeFilter = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         IMediaFacade mediaFacade = default!)
     {
         var paging = new PagingParameters { PageNumber = page, PageSize = pageSize };
-        var result = await mediaFacade.GetMediaItemsAsync(folderPath, searchTerm, paging);
+        var result = await mediaFacade.GetMediaItemsAsync(mimeTypeFilter, paging, default);
         return TypedResults.Ok(result);
     }
 
@@ -170,8 +159,8 @@ public static class MediaEndpoints
     {
         try
         {
-            // Find the item first
-            var items = await mediaFacade.GetMediaItemsAsync(null, null, new PagingParameters { PageNumber = 1, PageSize = 1000 });
+            // Find the item first to get the partition key
+            var items = await mediaFacade.GetMediaItemsAsync(null, new PagingParameters { PageNumber = 1, PageSize = 1000 }, default);
             var item = items.Items.FirstOrDefault(i => i.Id == id);
             
             if (item == null)
@@ -179,14 +168,14 @@ public static class MediaEndpoints
                 return TypedResults.NotFound();
             }
 
-            item.Title = request.Title;
-            item.Description = request.Description;
-            item.AltText = request.AltText;
+            var updated = await mediaFacade.UpdateMetadataAsync(
+                id,
+                item.GroupKey,
+                request.Title,
+                request.Description,
+                request.AltText);
 
-            // Note: MediaFacade doesn't have UpdateMetadataAsync yet - this will need to be added
-            // For now, this is a placeholder
-
-            return TypedResults.Ok(item);
+            return updated != null ? TypedResults.Ok(updated) : TypedResults.NotFound();
         }
         catch (Exception ex)
         {
@@ -205,8 +194,8 @@ public static class MediaEndpoints
     {
         try
         {
-            // Find the item first
-            var items = await mediaFacade.GetMediaItemsAsync(null, null, new PagingParameters { PageNumber = 1, PageSize = 1000 });
+            // Find the item first to get the partition key
+            var items = await mediaFacade.GetMediaItemsAsync(null, new PagingParameters { PageNumber = 1, PageSize = 1000 }, default);
             var item = items.Items.FirstOrDefault(i => i.Id == id);
             
             if (item == null)
@@ -214,44 +203,14 @@ public static class MediaEndpoints
                 return TypedResults.NotFound();
             }
 
-            await mediaFacade.BulkDeleteAsync(new List<MediaItem> { item });
+            var success = await mediaFacade.DeleteAsync(id, item.GroupKey);
 
-            return TypedResults.NoContent();
+            return success ? TypedResults.NoContent() : TypedResults.NotFound();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error deleting item: {Id}", id);
             return TypedResults.BadRequest($"Delete failed: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Move multiple items to a new folder
-    /// </summary>
-    private static async Task<Results<Ok<int>, BadRequest<string>>> BulkMoveAsync(
-        [FromBody] BulkMoveRequest request,
-        IMediaFacade mediaFacade,
-        ILogger<IMediaFacade> logger)
-    {
-        try
-        {
-            // Find all items
-            var allItems = await mediaFacade.GetMediaItemsAsync(null, null, new PagingParameters { PageNumber = 1, PageSize = 1000 });
-            var items = allItems.Items.Where(i => request.ItemIds.Contains(i.Id)).ToList();
-
-            if (items.Count == 0)
-            {
-                return TypedResults.BadRequest("No valid items found to move");
-            }
-
-            var count = await mediaFacade.BulkMoveAsync(items, request.TargetFolderPath);
-
-            return TypedResults.Ok(count);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error moving items to folder: {Folder}", request.TargetFolderPath);
-            return TypedResults.BadRequest($"Move failed: {ex.Message}");
         }
     }
 
@@ -266,7 +225,7 @@ public static class MediaEndpoints
         try
         {
             // Find all items
-            var allItems = await mediaFacade.GetMediaItemsAsync(null, null, new PagingParameters { PageNumber = 1, PageSize = 1000 });
+            var allItems = await mediaFacade.GetMediaItemsAsync(null, new PagingParameters { PageNumber = 1, PageSize = 1000 }, default);
             var items = allItems.Items.Where(i => request.ItemIds.Contains(i.Id)).ToList();
 
             if (items.Count == 0)
@@ -284,16 +243,6 @@ public static class MediaEndpoints
             return TypedResults.BadRequest($"Delete failed: {ex.Message}");
         }
     }
-
-    /// <summary>
-    /// Get all folder paths
-    /// </summary>
-    private static async Task<Ok<List<string>>> GetFoldersAsync(
-        IMediaFacade mediaFacade)
-    {
-        var folders = await mediaFacade.GetAllFolderPathsAsync();
-        return TypedResults.Ok(folders);
-    }
 }
 
 /// <summary>
@@ -303,13 +252,6 @@ public record UpdateMetadataRequest(
     string? Title,
     string? Description,
     string? AltText);
-
-/// <summary>
-/// Request model for bulk move operation
-/// </summary>
-public record BulkMoveRequest(
-    List<string> ItemIds,
-    string TargetFolderPath);
 
 /// <summary>
 /// Request model for bulk delete operation

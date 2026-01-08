@@ -127,7 +127,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseEnti
         if (tracked != null)
         {
             // Check if partition key has changed (Cosmos DB doesn't allow partition key updates)
-            if (tracked.Entity.PartitionKey != entity.PartitionKey)
+            if (tracked.Entity.GroupKey != entity.GroupKey)
             {
                 // For Cosmos DB: partition key change requires delete + add
                 _dbSet.Remove(tracked.Entity);

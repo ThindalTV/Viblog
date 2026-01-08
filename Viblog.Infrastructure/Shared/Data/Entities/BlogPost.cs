@@ -73,22 +73,22 @@ public class BlogPost : BaseEntity
     /// <summary>
     /// List of tags associated with the post
     /// </summary>
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = [];
 
     /// <summary>
     /// List of category IDs this post belongs to
     /// </summary>
-    public List<string> CategoryIds { get; set; } = new();
+    public List<string> CategoryIds { get; set; } = [];
 
     /// <summary>
     /// List of category names (denormalized for display)
     /// </summary>
-    public List<string> CategoryNames { get; set; } = new();
+    public List<string> CategoryNames { get; set; } = [];
 
     /// <summary>
     /// URLs to connected media (images, videos, etc.)
     /// </summary>
-    public List<string> MediaUrls { get; set; } = new();
+    public List<string> MediaUrls { get; set; } = [];
 
     /// <summary>
     /// Meta description for SEO purposes
@@ -110,24 +110,6 @@ public class BlogPost : BaseEntity
     /// Includes title, short description, content, tags, and category names.
     /// </summary>
     public string SearchIndex { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets the publication year for partitioning purposes
-    /// </summary>
-    /// <returns>Year as string, or "draft" if unpublished</returns>
-    public string GetPublicationYear()
-    {
-        return IsPublished ? PublishedAt.Year.ToString() : "draft";
-    }
-
-    /// <summary>
-    /// Sets the partition key based on the publication date.
-    /// Should be called before saving a new post or when the publication date changes.
-    /// </summary>
-    public void UpdatePartitionKey()
-    {
-        PartitionKey = GetPublicationYear();
-    }
 
     /// <summary>
     /// Updates the search index with current post content

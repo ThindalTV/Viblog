@@ -319,7 +319,7 @@ public class ArchiveFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = $"{year}-{month:D2}",
+            GroupKey = $"{year}-{month:D2}",
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = $"Content for {title}",

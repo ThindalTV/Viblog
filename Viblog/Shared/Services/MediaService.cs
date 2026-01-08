@@ -1,3 +1,4 @@
+using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Infrastructure.Shared.Services;
@@ -203,6 +204,66 @@ public class MediaService : IMediaService
             mediaItem.StoragePath,
             expiration,
             cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<string>> GetDateFoldersAsync(
+        MediaTypeCategory? mediaTypeFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _metadataRepository.GetDateFoldersAsync(mediaTypeFilter, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get date folders");
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<PagedResult<MediaItem>> GetItemsByDateFolderAsync(
+        string dateFolder,
+        MediaTypeCategory? mediaTypeFilter,
+        PagingParameters pagingParameters,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dateFolder);
+        ArgumentNullException.ThrowIfNull(pagingParameters);
+
+        try
+        {
+            return await _metadataRepository.GetItemsByDateFolderAsync(
+                dateFolder,
+                mediaTypeFilter,
+                pagingParameters,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get media items for date folder: {DateFolder}", dateFolder);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<PagedResult<MediaItem>> SearchAsync(
+        string searchTerm,
+        PagingParameters pagingParameters,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pagingParameters);
+
+        try
+        {
+            return await _metadataRepository.SearchAsync(searchTerm, pagingParameters, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to search media items: {SearchTerm}", searchTerm);
+            throw;
+        }
     }
 
     /// <inheritdoc/>

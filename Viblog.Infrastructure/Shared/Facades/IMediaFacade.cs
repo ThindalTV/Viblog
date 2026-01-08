@@ -41,43 +41,15 @@ public interface IMediaFacade
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get media items with folder filtering and paging
+    /// Get media items with optional MIME type filtering and paging
     /// </summary>
-    /// <param name="folderPath">Optional folder path filter</param>
     /// <param name="mimeTypeFilter">Optional MIME type filter</param>
     /// <param name="pagingParameters">Paging parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paged result of media items</returns>
     Task<PagedResult<MediaItem>> GetMediaItemsAsync(
-        string? folderPath,
         string? mimeTypeFilter,
         PagingParameters pagingParameters,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Move media item to a new folder
-    /// </summary>
-    /// <param name="id">Media item ID</param>
-    /// <param name="partitionKey">Partition key</param>
-    /// <param name="newFolderPath">New folder path</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Updated media item or null if not found</returns>
-    Task<MediaItem?> MoveToFolderAsync(
-        string id,
-        string partitionKey,
-        string newFolderPath,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Bulk move multiple media items to a new folder
-    /// </summary>
-    /// <param name="items">Media items to move</param>
-    /// <param name="newFolderPath">New folder path</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Number of items successfully moved</returns>
-    Task<int> BulkMoveAsync(
-        IEnumerable<MediaItem> items,
-        string newFolderPath,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -112,22 +84,6 @@ public interface IMediaFacade
     Task<PagedResult<MediaItem>> SearchAsync(
         string searchTerm,
         PagingParameters pagingParameters,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get all unique folder paths
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of folder paths</returns>
-    Task<List<string>> GetFolderPathsAsync(
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get all unique folder paths (alias for GetFolderPathsAsync)
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of folder paths</returns>
-    Task<List<string>> GetAllFolderPathsAsync(
         CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -122,7 +122,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<BlogPost>(b =>
         {
             b.ToContainer("BlogPosts");
-            b.HasPartitionKey(p => p.PartitionKey);
+            b.HasPartitionKey(p => p.GroupKey);
             b.HasNoDiscriminator();
             
             // Configure list properties
@@ -135,7 +135,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<MediaItem>(b =>
         {
             b.ToContainer("MediaItems");
-            b.HasPartitionKey(m => m.PartitionKey);
+            b.HasPartitionKey(m => m.GroupKey);
             b.HasNoDiscriminator();
             
             // Configure dictionary property for additional metadata

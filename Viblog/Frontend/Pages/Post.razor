@@ -158,7 +158,7 @@ else
             {
                 try
                 {
-                    await BlogPostDetailFacade.IncrementViewCountAsync(_post.Id, _post.PartitionKey);
+                    await BlogPostDetailFacade.IncrementViewCountAsync(_post.Id, _post.GroupKey);
                 }
                 catch
                 {

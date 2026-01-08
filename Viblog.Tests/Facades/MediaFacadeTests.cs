@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace Viblog.Tests.Facades;
 
@@ -9,7 +10,6 @@ public class MediaFacadeTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
     private readonly Mock<IMediaMetadataRepository> _mockMetadataRepository;
-    private readonly Mock<IMediaStorageRepository> _mockStorageRepository;
     private readonly Mock<ILogger<MediaFacade>> _mockLogger;
     private readonly MediaFacade _facade;
 
@@ -17,13 +17,11 @@ public class MediaFacadeTests
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockMetadataRepository = new Mock<IMediaMetadataRepository>();
-        _mockStorageRepository = new Mock<IMediaStorageRepository>();
         _mockLogger = new Mock<ILogger<MediaFacade>>();
 
         _facade = new MediaFacade(
             _mockMediaService.Object,
             _mockMetadataRepository.Object,
-            _mockStorageRepository.Object,
             _mockLogger.Object);
     }
 
@@ -43,62 +41,71 @@ public class MediaFacadeTests
         var folderPath = "/uploads";
         var uploadedBy = "test-user";
 
+        // Setup specific returns for each file
         _mockMediaService
             .Setup(x => x.UploadAsync(
-                It.IsAny<string>(),
+                "file1.jpg",
                 It.IsAny<Stream>(),
-                It.IsAny<string>(),
+                "image/jpeg",
                 folderPath,
                 uploadedBy,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string fileName, Stream stream, string mimeType, string folder, string? user, CancellationToken ct) =>
-                new MediaItem
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    FileName = fileName,
-                    MimeType = mimeType,
-                    FolderPath = folder,
-                    UploadedBy = user
-                });
+            .ReturnsAsync(new MediaItem { FileName = "file1.jpg", MimeType = "image/jpeg" });
+
+        _mockMediaService
+            .Setup(x => x.UploadAsync(
+                "file2.png",
+                It.IsAny<Stream>(),
+                "image/png",
+                folderPath,
+                uploadedBy,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MediaItem { FileName = "file2.png", MimeType = "image/png" });
+
+        _mockMediaService
+            .Setup(x => x.UploadAsync(
+                "file3.pdf",
+                It.IsAny<Stream>(),
+                "application/pdf",
+                folderPath,
+                uploadedBy,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MediaItem { FileName = "file3.pdf", MimeType = "application/pdf" });
 
         // Act
-        var results = await _facade.BulkUploadAsync(files, folderPath, uploadedBy);
+        var result = await _facade.BulkUploadAsync(files, folderPath, uploadedBy);
 
         // Assert
-        Assert.Equal(3, results.Count);
-        Assert.All(results, item =>
-        {
-            Assert.Equal(folderPath, item.FolderPath);
-            Assert.Equal(uploadedBy, item.UploadedBy);
-        });
-
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        Assert.Equal("file1.jpg", result[0].FileName);
+        Assert.Equal("file2.png", result[1].FileName);
+        Assert.Equal("file3.pdf", result[2].FileName);
+        
+        // Verify each file was uploaded with correct parameters
         _mockMediaService.Verify(x => x.UploadAsync(
-            It.IsAny<string>(),
+            "file1.jpg",
             It.IsAny<Stream>(),
-            It.IsAny<string>(),
+            "image/jpeg",
             folderPath,
             uploadedBy,
-            It.IsAny<CancellationToken>()), Times.Exactly(3));
-    }
-
-    [Fact]
-    public async Task BulkUploadAsync_WithEmptyList_ReturnsEmptyList()
-    {
-        // Arrange
-        var files = new List<(string FileName, Stream FileStream, string MimeType)>();
-
-        // Act
-        var results = await _facade.BulkUploadAsync(files, "/", null);
-
-        // Assert
-        Assert.Empty(results);
+            It.IsAny<CancellationToken>()), Times.Once);
+            
         _mockMediaService.Verify(x => x.UploadAsync(
-            It.IsAny<string>(),
+            "file2.png",
             It.IsAny<Stream>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            "image/png",
+            folderPath,
+            uploadedBy,
+            It.IsAny<CancellationToken>()), Times.Once);
+            
+        _mockMediaService.Verify(x => x.UploadAsync(
+            "file3.pdf",
+            It.IsAny<Stream>(),
+            "application/pdf",
+            folderPath,
+            uploadedBy,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -106,53 +113,19 @@ public class MediaFacadeTests
     #region GetMediaItemsAsync Tests
 
     [Fact]
-    public async Task GetMediaItemsAsync_WithFolderFilter_CallsGetItemsInFolderAsync()
+    public async Task GetMediaItemsAsync_WithMimeFilter_ReturnsFilteredResults()
     {
         // Arrange
-        var folderPath = "/images";
+        var mimeTypeFilter = "image/*";
         var paging = new PagingParameters { PageNumber = 1, PageSize = 10 };
-
-        var expectedResult = new PagedResult<MediaItem>
+        var expectedItems = new List<MediaItem>
         {
-            Items = new List<MediaItem>
-            {
-                new() { Id = "1", FileName = "img1.jpg", FolderPath = "/images" },
-                new() { Id = "2", FileName = "img2.jpg", FolderPath = "/images" }
-            },
-            TotalCount = 2,
-            PageNumber = 1,
-            PageSize = 10
+            new() { FileName = "test1.jpg", MimeType = "image/jpeg" },
+            new() { FileName = "test2.png", MimeType = "image/png" }
         };
-
-        _mockMetadataRepository
-            .Setup(x => x.GetItemsInFolderAsync(folderPath, paging, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResult);
-
-        // Act
-        var result = await _facade.GetMediaItemsAsync(folderPath, null, paging);
-
-        // Assert
-        Assert.Equal(2, result.TotalCount);
-        Assert.All(result.Items, item => Assert.Equal("/images", item.FolderPath));
-
-        _mockMetadataRepository.Verify(x => x.GetItemsInFolderAsync(
-            folderPath, paging, null, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetMediaItemsAsync_WithMimeTypeFilter_CallsGetItemsByTypeAsync()
-    {
-        // Arrange
-        var mimeTypeFilter = "image/";
-        var paging = new PagingParameters { PageNumber = 1, PageSize = 10 };
-
-        var expectedResult = new PagedResult<MediaItem>
-        {
-            Items = new List<MediaItem>
-            {
-                new() { Id = "1", FileName = "img1.jpg", MimeType = "image/jpeg" },
-                new() { Id = "2", FileName = "img2.png", MimeType = "image/png" }
-            },
+        var expectedResult = new PagedResult<MediaItem> 
+        { 
+            Items = expectedItems, 
             TotalCount = 2,
             PageNumber = 1,
             PageSize = 10
@@ -163,86 +136,111 @@ public class MediaFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.GetMediaItemsAsync(null, mimeTypeFilter, paging);
+        var result = await _facade.GetMediaItemsAsync(mimeTypeFilter, paging);
 
         // Assert
+        Assert.NotNull(result);
         Assert.Equal(2, result.TotalCount);
-        Assert.All(result.Items, item => Assert.StartsWith("image/", item.MimeType));
-
+        Assert.Equal(2, result.Items.ToList().Count);
+        Assert.Equal("test1.jpg", result.Items.First().FileName);
+        Assert.Equal("test2.png", result.Items.Last().FileName);
+        
         _mockMetadataRepository.Verify(x => x.GetItemsByTypeAsync(
-            mimeTypeFilter, paging, It.IsAny<CancellationToken>()), Times.Once);
+            mimeTypeFilter,
+            paging,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // Note: GetAllAsync with no filters is already tested indirectly through
-    // the other GetMediaItemsAsync tests. This specific test removed due to
-    // mock setup complexity with expression parameters.
+    [Fact]
+    public async Task GetMediaItemsAsync_WithoutFilters_ReturnsAllResults()
+    {
+        // Arrange
+        var paging = new PagingParameters { PageNumber = 1, PageSize = 10 };
+        var expectedItems = new List<MediaItem>
+        {
+            new() { FileName = "file1.jpg", MimeType = "image/jpeg" },
+            new() { FileName = "file2.pdf", MimeType = "application/pdf" }
+        };
+        var expectedResult = new PagedResult<MediaItem> 
+        { 
+            Items = expectedItems, 
+            TotalCount = 2,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        _mockMetadataRepository
+            .Setup(x => x.GetAllAsync(
+                It.IsAny<PagingParameters>(),
+                It.IsAny<Expression<Func<MediaItem, object>>>(),
+                It.IsAny<bool>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _facade.GetMediaItemsAsync(null, paging);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount);
+        Assert.Equal("file1.jpg", result.Items.First().FileName);
+        Assert.Equal("file2.pdf", result.Items.Last().FileName);
+        
+        _mockMetadataRepository.Verify(x => x.GetAllAsync(
+            It.IsAny<PagingParameters>(),
+            It.IsAny<Expression<Func<MediaItem, object>>>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     #endregion
 
-    #region BulkMoveAsync Tests
+    #region DeleteAsync Tests
 
     [Fact]
-    public async Task BulkMoveAsync_WithValidItems_MovesAllItems()
+    public async Task DeleteAsync_WithValidId_ReturnsTrue()
     {
         // Arrange
-        var targetFolderPath = "/archive";
-        var items = new List<MediaItem>
-        {
-            new() { Id = "1", FileName = "file1.jpg", FolderPath = "/images", PartitionKey = "2024-01", StoragePath = "2024/01/file1.jpg", PublicUrl = "https://cdn.example.com/file1.jpg" },
-            new() { Id = "2", FileName = "file2.jpg", FolderPath = "/images", PartitionKey = "2024-01", StoragePath = "2024/01/file2.jpg", PublicUrl = "https://cdn.example.com/file2.jpg" },
-            new() { Id = "3", FileName = "file3.jpg", FolderPath = "/documents", PartitionKey = "2024-01", StoragePath = "2024/01/file3.jpg", PublicUrl = "https://cdn.example.com/file3.jpg" }
-        };
+        var id = "test-id";
+        var partitionKey = "test-key";
 
-        var storageResult = new MediaStorageResult
-        {
-            StoragePath = "archive/file.jpg",
-            PublicUrl = "https://cdn.example.com/archive/file.jpg",
-            FileSize = 1024
-        };
-
-        // BulkMoveAsync calls MoveToFolderAsync for each item
-        // MoveToFolderAsync gets the item, moves in storage, updates it, and saves
-        _mockMetadataRepository
-            .Setup(x => x.GetByIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string id, string pk, CancellationToken _) =>
-                items.FirstOrDefault(i => i.Id == id && i.PartitionKey == pk));
-
-        _mockStorageRepository
-            .Setup(x => x.MoveAsync(It.IsAny<string>(), targetFolderPath, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(storageResult);
-
-        _mockMetadataRepository
-            .Setup(x => x.UpdateAsync(It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _mockMetadataRepository
-            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
+        _mockMediaService
+            .Setup(x => x.DeleteAsync(id, partitionKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _facade.BulkMoveAsync(items, targetFolderPath);
+        var result = await _facade.DeleteAsync(id, partitionKey);
 
         // Assert
-        Assert.Equal(3, result);
-
-        _mockMetadataRepository.Verify(x => x.UpdateAsync(
-            It.IsAny<MediaItem>(),
-            It.IsAny<CancellationToken>()), Times.Exactly(3));
+        Assert.True(result);
+        _mockMediaService.Verify(x => x.DeleteAsync(
+            id, 
+            partitionKey, 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task BulkMoveAsync_WithEmptyList_ReturnsZero()
+    public async Task DeleteAsync_WithInvalidId_ReturnsFalse()
     {
         // Arrange
-        var items = new List<MediaItem>();
+        var id = "invalid-id";
+        var partitionKey = "test-key";
+
+        _mockMediaService
+            .Setup(x => x.DeleteAsync(id, partitionKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         // Act
-        var result = await _facade.BulkMoveAsync(items, "/archive");
+        var result = await _facade.DeleteAsync(id, partitionKey);
 
         // Assert
-        Assert.Equal(0, result);
-        _mockMetadataRepository.Verify(x => x.UpdateAsync(
-            It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.False(result);
+        _mockMediaService.Verify(x => x.DeleteAsync(
+            id, 
+            partitionKey, 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -250,18 +248,26 @@ public class MediaFacadeTests
     #region BulkDeleteAsync Tests
 
     [Fact]
-    public async Task BulkDeleteAsync_WithValidItems_DeletesAllItems()
+    public async Task BulkDeleteAsync_WithMultipleItems_DeletesAll()
     {
         // Arrange
         var items = new List<MediaItem>
         {
-            new() { Id = "1", PartitionKey = "2024-01", FileName = "file1.jpg" },
-            new() { Id = "2", PartitionKey = "2024-01", FileName = "file2.jpg" },
-            new() { Id = "3", PartitionKey = "2024-02", FileName = "file3.jpg" }
+            new() { Id = "id1", GroupKey = "key1" },
+            new() { Id = "id2", GroupKey = "key2" },
+            new() { Id = "id3", GroupKey = "key3" }
         };
 
         _mockMediaService
-            .Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.DeleteAsync("id1", "key1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+            
+        _mockMediaService
+            .Setup(x => x.DeleteAsync("id2", "key2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+            
+        _mockMediaService
+            .Setup(x => x.DeleteAsync("id3", "key3", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -269,24 +275,52 @@ public class MediaFacadeTests
 
         // Assert
         Assert.Equal(3, result);
-
+        
+        // Verify each item was deleted with specific IDs
         _mockMediaService.Verify(x => x.DeleteAsync(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+            "id1",
+            "key1",
+            It.IsAny<CancellationToken>()), Times.Once);
+            
+        _mockMediaService.Verify(x => x.DeleteAsync(
+            "id2",
+            "key2",
+            It.IsAny<CancellationToken>()), Times.Once);
+            
+        _mockMediaService.Verify(x => x.DeleteAsync(
+            "id3",
+            "key3",
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task BulkDeleteAsync_WithEmptyList_ReturnsZero()
+    public async Task BulkDeleteAsync_WithPartialFailure_ReturnsSuccessCount()
     {
         // Arrange
-        var items = new List<MediaItem>();
+        var items = new List<MediaItem>
+        {
+            new() { Id = "id1", GroupKey = "key1" },
+            new() { Id = "id2", GroupKey = "key2" },
+            new() { Id = "id3", GroupKey = "key3" }
+        };
+
+        _mockMediaService
+            .Setup(x => x.DeleteAsync("id1", "key1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+            
+        _mockMediaService
+            .Setup(x => x.DeleteAsync("id2", "key2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false); // This one fails
+            
+        _mockMediaService
+            .Setup(x => x.DeleteAsync("id3", "key3", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _facade.BulkDeleteAsync(items);
 
         // Assert
-        Assert.Equal(0, result);
-        _mockMediaService.Verify(x => x.DeleteAsync(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Equal(2, result); // Only 2 succeeded
     }
 
     #endregion
@@ -294,20 +328,19 @@ public class MediaFacadeTests
     #region SearchAsync Tests
 
     [Fact]
-    public async Task SearchAsync_WithValidTerm_ReturnsResults()
+    public async Task SearchAsync_WithSearchTerm_ReturnsMatchingResults()
     {
         // Arrange
-        var searchTerm = "test";
+        var searchTerm = "vacation";
         var paging = new PagingParameters { PageNumber = 1, PageSize = 10 };
-
-        var expectedResult = new PagedResult<MediaItem>
+        var expectedItems = new List<MediaItem>
         {
-            Items = new List<MediaItem>
-            {
-                new() { Id = "1", FileName = "test-file.jpg", Title = "Image" },
-                new() { Id = "2", FileName = "another-test.png", Title = "Photo" }
-            },
-            TotalCount = 2,
+            new() { FileName = "vacation2023.jpg", Title = "Summer Vacation", MimeType = "image/jpeg" }
+        };
+        var expectedResult = new PagedResult<MediaItem> 
+        { 
+            Items = expectedItems, 
+            TotalCount = 1,
             PageNumber = 1,
             PageSize = 10
         };
@@ -320,194 +353,53 @@ public class MediaFacadeTests
         var result = await _facade.SearchAsync(searchTerm, paging);
 
         // Assert
-        Assert.Equal(2, result.TotalCount);
-
-        _mockMetadataRepository.Verify(x => x.SearchAsync(
-            searchTerm, paging, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    #endregion
-
-    #region GetAllFolderPathsAsync Tests
-
-    [Fact]
-    public async Task GetAllFolderPathsAsync_ReturnsUniqueFolderPaths()
-    {
-        // Arrange
-        var expectedPaths = new List<string> { "/images", "/documents", "/videos" };
-
-        _mockMetadataRepository
-            .Setup(x => x.GetAllFolderPathsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedPaths);
-
-        // Act
-        var result = await _facade.GetAllFolderPathsAsync();
-
-        // Assert
-        Assert.Equal(3, result.Count);
-        Assert.Contains("/images", result);
-        Assert.Contains("/documents", result);
-        Assert.Contains("/videos", result);
-
-        _mockMetadataRepository.Verify(x => x.GetAllFolderPathsAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetAllFolderPathsAsync_WithNoItems_ReturnsEmptyList()
-    {
-        // Arrange
-        _mockMetadataRepository
-            .Setup(x => x.GetAllFolderPathsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<string>());
-
-        // Act
-        var result = await _facade.GetAllFolderPathsAsync();
-
-        // Assert
-        Assert.Empty(result);
-    }
-
-    #endregion
-
-    #region MoveToFolderAsync Tests
-
-    [Fact]
-    public async Task MoveToFolderAsync_WithValidItem_UpdatesFolderPath()
-    {
-        // Arrange
-        var id = "test-id";
-        var partitionKey = "2024-01";
-        var newFolderPath = "/archive";
-
-        var item = new MediaItem
-        {
-            Id = id,
-            PartitionKey = partitionKey,
-            FolderPath = "/images",
-            FileName = "test.jpg",
-            StoragePath = "2024/01/test.jpg",
-            PublicUrl = "https://cdn.example.com/2024/01/test.jpg"
-        };
-
-        var storageResult = new MediaStorageResult
-        {
-            StoragePath = "archive/test.jpg",
-            PublicUrl = "https://cdn.example.com/archive/test.jpg",
-            FileSize = 1024
-        };
-
-        _mockMetadataRepository
-            .Setup(x => x.GetByIdAsync(id, partitionKey, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(item);
-
-        _mockStorageRepository
-            .Setup(x => x.MoveAsync(item.StoragePath, newFolderPath, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(storageResult);
-
-        _mockMetadataRepository
-            .Setup(x => x.UpdateAsync(It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _mockMetadataRepository
-            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
-
-        // Act
-        var result = await _facade.MoveToFolderAsync(id, partitionKey, newFolderPath);
-
-        // Assert
         Assert.NotNull(result);
-        Assert.Equal(newFolderPath, result.FolderPath);
-        Assert.Equal(storageResult.StoragePath, result.StoragePath);
-        Assert.Equal(storageResult.PublicUrl, result.PublicUrl);
-
-        _mockStorageRepository.Verify(x => x.MoveAsync(
-            "2024/01/test.jpg", newFolderPath, It.IsAny<CancellationToken>()), Times.Once);
-        _mockMetadataRepository.Verify(x => x.UpdateAsync(
-            It.Is<MediaItem>(m => m.FolderPath == newFolderPath),
+        Assert.Equal(1, result.TotalCount);
+        Assert.Single(result.Items);
+        Assert.Equal("vacation2023.jpg", result.Items.First().FileName);
+        Assert.Equal("Summer Vacation", result.Items.First().Title);
+        
+        _mockMetadataRepository.Verify(x => x.SearchAsync(
+            searchTerm, 
+            paging, 
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task MoveToFolderAsync_WithNonExistentItem_ReturnsNull()
+    public async Task SearchAsync_WithNoMatches_ReturnsEmptyResult()
     {
         // Arrange
-        var id = "non-existent";
-        var partitionKey = "2024-01";
-
-        _mockMetadataRepository
-            .Setup(x => x.GetByIdAsync(id, partitionKey, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MediaItem?)null);
-
-        // Act
-        var result = await _facade.MoveToFolderAsync(id, partitionKey, "/archive");
-
-        // Assert
-        Assert.Null(result);
-        _mockMetadataRepository.Verify(x => x.UpdateAsync(
-            It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    #endregion
-
-    #region UploadAsync Tests
-
-    [Fact]
-    public async Task UploadAsync_CallsMediaService()
-    {
-        // Arrange
-        var fileName = "test.jpg";
-        using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
-        var mimeType = "image/jpeg";
-        var folderPath = "/images";
-        var uploadedBy = "user";
-
-        var expectedItem = new MediaItem
-        {
-            Id = "test-id",
-            FileName = fileName,
-            MimeType = mimeType
+        var searchTerm = "nonexistent";
+        var paging = new PagingParameters { PageNumber = 1, PageSize = 10 };
+        var expectedResult = new PagedResult<MediaItem> 
+        { 
+            Items = new List<MediaItem>(), 
+            TotalCount = 0,
+            PageNumber = 1,
+            PageSize = 10
         };
 
-        _mockMediaService
-            .Setup(x => x.UploadAsync(fileName, stream, mimeType, folderPath, uploadedBy, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedItem);
+        _mockMetadataRepository
+            .Setup(x => x.SearchAsync(searchTerm, paging, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.UploadAsync(fileName, stream, mimeType, folderPath, uploadedBy);
+        var result = await _facade.SearchAsync(searchTerm, paging);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(fileName, result.FileName);
-
-        _mockMediaService.Verify(x => x.UploadAsync(
-            fileName, stream, mimeType, folderPath, uploadedBy, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(0, result.TotalCount);
+        Assert.Empty(result.Items);
+        
+        _mockMetadataRepository.Verify(x => x.SearchAsync(
+            searchTerm, 
+            paging, 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
 
-    #region DeleteAsync Tests
-
-    [Fact]
-    public async Task DeleteAsync_CallsMediaService()
-    {
-        // Arrange
-        var id = "test-id";
-        var partitionKey = "2024-01";
-
-        _mockMediaService
-            .Setup(x => x.DeleteAsync(id, partitionKey, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _facade.DeleteAsync(id, partitionKey);
-
-        // Assert
-        Assert.True(result);
-
-        _mockMediaService.Verify(x => x.DeleteAsync(
-            id, partitionKey, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    #endregion
+    // Note: Tests for folder-based operations (GetItemsInFolderAsync, MoveToFolderAsync,
+    // BulkMoveAsync, GetAllFolderPathsAsync) have been removed as these operations are
+    // no longer supported with the date-based automatic folder structure.
 }
