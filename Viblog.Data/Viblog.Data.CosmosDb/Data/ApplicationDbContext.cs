@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Viblog.Infrastructure.Shared.Data.Entities;
 
-namespace Viblog.Shared.Data;
+namespace Viblog.Data.CosmosDb.Data;
 
 /// <summary>
 /// Application database context configured for CosmosDB

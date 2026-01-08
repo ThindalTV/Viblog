@@ -4,10 +4,10 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Shared.Data.Repositories;
+namespace Viblog.Data.CosmosDb.Data.Repositories;
 
 /// <summary>
-/// Generic base repository implementation providing basic CRUD operations
+/// CosmosDB-specific generic base repository implementation providing basic CRUD operations
 /// </summary>
 /// <typeparam name="TEntity">The entity type that inherits from BaseEntity</typeparam>
 public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseEntity

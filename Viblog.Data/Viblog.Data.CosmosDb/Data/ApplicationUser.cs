@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Viblog.Shared.Data;
+namespace Viblog.Data.CosmosDb.Data;
 
 /// <summary>
 /// Application user entity extending ASP.NET Core Identity

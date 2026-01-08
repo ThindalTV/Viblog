@@ -3,10 +3,10 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Shared.Data.Repositories;
+namespace Viblog.Data.CosmosDb.Data.Repositories;
 
 /// <summary>
-/// Repository implementation for media metadata operations
+/// CosmosDB-specific repository implementation for media metadata operations
 /// </summary>
 public class MediaMetadataRepository : Repository<MediaItem>, IMediaMetadataRepository
 {

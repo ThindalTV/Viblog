@@ -1,4 +1,3 @@
-using Viblog.Shared.Data.Repositories;
 using Viblog.Shared.Data.Repositories.Storage;
 using Viblog.Shared.Facades;
 using Viblog.Shared.Services;
@@ -43,8 +42,8 @@ public static class ServiceCollectionExtensions
                     $"Unknown media storage provider: {provider}. Supported providers: BlobStorage, FileSystem");
         }
 
-        // Register metadata repository
-        services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
+        // Note: IMediaMetadataRepository is now registered by the data provider library
+        // (e.g., Viblog.Data.CosmosDb.AddCosmosDbRepositories())
 
         // Register services
         services.AddScoped<IMetadataExtractorService, MetadataExtractorService>();

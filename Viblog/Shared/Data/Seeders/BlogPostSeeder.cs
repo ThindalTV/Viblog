@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Viblog.Data.CosmosDb.Data;
 using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Shared.Data.Seeders;

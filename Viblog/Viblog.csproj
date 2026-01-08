@@ -12,22 +12,19 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
     <PackageReference Include="Telerik.UI.for.Blazor" Version="12.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
     <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Admin\Infrastructure\" />
     <Folder Include="Admin\Pages\Media\" />
-    <Folder Include="Shared\Data\Common\" />
-    <Folder Include="Shared\Data\Entities\" />
-    <Folder Include="Shared\Data\Migrations\" />
     <Folder Include="Shared\Infrastructure\" />
   </ItemGroup>
 
