@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
+    <ProjectReference Include="..\Viblog.Data\Viblog.Data.Filesystem\Viblog.Data.Filesystem.csproj" />
     <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
   </ItemGroup>
 

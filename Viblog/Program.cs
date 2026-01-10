@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Viblog.Components;
-using Viblog.Data.CosmosDb;
+using Viblog.Data.Filesystem;
 using Viblog.Frontend;
 using Viblog.Api;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
 using Viblog.Shared.Extensions;
-using Viblog.Data.CosmosDb.Data.Seeders;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +18,8 @@ builder.Services.AddViblogConfiguration(builder.Configuration);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Configure CosmosDB with repositories
-builder.Services.AddCosmosDbDataAccess(builder.Configuration, builder.Environment.IsDevelopment());
+// Configure Filesystem Data Access (replacing CosmosDB)
+builder.Services.AddFilesystemDataAccess(builder.Configuration);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -36,9 +36,6 @@ builder.Services.AddViblogFrontend();
 builder.Services.AddViblogAdmin();
 
 var app = builder.Build();
-
-// Ensure database and containers are created
-await app.Services.EnsureCosmosDbCreatedAsync();
 
 // Seed database with sample data if empty
 await SeedDatabaseAsync(app);
@@ -59,13 +56,25 @@ app.UseHttpsRedirection();
 
 // Configure static file serving for media files
 var mediaBasePath = builder.Configuration["MediaStorage:FileSystem:BasePath"];
-if (!string.IsNullOrEmpty(mediaBasePath) && Directory.Exists(mediaBasePath))
+if (!string.IsNullOrEmpty(mediaBasePath))
 {
-    app.UseStaticFiles(new StaticFileOptions
+    // Ensure the path is absolute
+    var absoluteMediaPath = Path.IsPathRooted(mediaBasePath) 
+        ? mediaBasePath 
+        : Path.GetFullPath(mediaBasePath);
+
+    if (Directory.Exists(absoluteMediaPath))
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(mediaBasePath),
-        RequestPath = "/media"
-    });
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(absoluteMediaPath),
+            RequestPath = "/media"
+        });
+    }
+    else
+    {
+        app.Logger.LogWarning("Media storage path does not exist: {Path}. Static file serving for media will not be configured.", absoluteMediaPath);
+    }
 }
 
 app.UseViblogFrontend();
@@ -92,10 +101,14 @@ app.Run();
 static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<Viblog.Data.CosmosDb.Data.ApplicationDbContext>();
+    var blogPostRepository = scope.ServiceProvider.GetRequiredService<Viblog.Infrastructure.Shared.Data.Repositories.IBlogPostRepository>();
+    var filesystemOptions = scope.ServiceProvider.GetRequiredService<IOptions<Viblog.Data.Filesystem.Configuration.FilesystemStorageOptions>>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("Checking if database seeding is needed...");
-    await BlogPostSeeder.SeedAsync(dbContext);
-    logger.LogInformation("Database seeding completed.");
+    await Viblog.Data.Filesystem.Data.Seeders.BlogPostSeeder.SeedAsync(
+        blogPostRepository, 
+        logger, 
+        filesystemOptions);
+    logger.LogInformation("Database seeding check completed.");
 }

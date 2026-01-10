@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Viblog Filesystem Storage - Runtime Data Only
+Viblog/data/entities/
+Viblog/data/files/
+

@@ -1,0 +1,197 @@
+/* File Selector Component */
+.file-selector {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--color-background);
+    overflow: hidden;
+}
+
+/* Search Section */
+.search-section {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.search-section input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.upload-btn .icon {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* Media Grid Container */
+.media-grid-container {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.loading-overlay p {
+    color: var(--color-text-secondary);
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.empty-state p {
+    margin: 0.5rem 0;
+}
+
+.empty-state button {
+    margin-top: 1rem;
+}
+
+/* Media Grid */
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    padding-bottom: 1rem;
+}
+
+.media-item {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--color-border);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--color-surface);
+}
+
+.media-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.media-item.selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Media Thumbnail */
+.media-thumbnail {
+    aspect-ratio: 1;
+    background: var(--color-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.media-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--color-background);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Media Info */
+.media-info {
+    padding: 0.75rem;
+}
+
+.media-filename {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.media-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.pagination button {
+    padding: 0.5rem 1rem;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .media-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .search-section {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .media-grid-container {
+        padding: 1rem;
+    }
+}

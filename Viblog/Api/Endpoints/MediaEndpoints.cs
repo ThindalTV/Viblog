@@ -25,6 +25,12 @@ public static class MediaEndpoints
             .RequireAuthorization("Admin")
             .DisableAntiforgery(); // Required for file uploads
 
+        group.MapPost("/upload/remove", RemoveUploadedFileAsync)
+            .WithName("RemoveUploadedMedia")
+            .WithDescription("Remove a recently uploaded file")
+            .RequireAuthorization("Admin")
+            .DisableAntiforgery();
+
         // CRUD endpoints
         group.MapGet("/{id}", GetMediaItemAsync)
             .WithName("GetMediaItem")
@@ -54,11 +60,12 @@ public static class MediaEndpoints
     }
 
     /// <summary>
-    /// Upload a file to the media library
+    /// Upload a file to the media library (Telerik Upload compatible)
     /// </summary>
     private static async Task<Results<Ok<MediaItem>, BadRequest<string>>> UploadFileAsync(
-        IFormFile file,
+        [FromForm] IFormFile file,
         [FromQuery] string? folderPath,
+        [FromQuery] string? uploadedBy,
         [FromQuery] string? title,
         [FromQuery] string? description,
         [FromQuery] string? altText,
@@ -101,7 +108,7 @@ public static class MediaEndpoints
                 file.FileName,
                 stream,
                 file.ContentType,
-                folderPath ?? "/");
+                folderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM"));
 
             // Update metadata if provided
             if (!string.IsNullOrEmpty(title))
@@ -111,12 +118,60 @@ public static class MediaEndpoints
             if (!string.IsNullOrEmpty(altText))
                 result.AltText = altText;
 
+            logger.LogInformation("File uploaded successfully: {FileName} by {UploadedBy}", file.FileName, uploadedBy ?? "Anonymous");
+
             return TypedResults.Ok(result);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error uploading file: {FileName}", file?.FileName);
             return TypedResults.BadRequest($"Upload failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Remove a file from the media library (Telerik Upload compatible)
+    /// </summary>
+    private static async Task<Results<Ok, NotFound, BadRequest<string>>> RemoveUploadedFileAsync(
+        [FromForm] string file,
+        IMediaFacade mediaFacade,
+        ILogger<IMediaFacade> logger)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                return TypedResults.BadRequest("No file name provided");
+            }
+
+            // The file parameter from Telerik Upload contains the original filename
+            // We need to find the media item by filename and delete it
+            logger.LogInformation("Remove request for file: {FileName}", file);
+
+            // Search for the file by name
+            var allItems = await mediaFacade.GetMediaItemsAsync(null, new PagingParameters { PageNumber = 1, PageSize = 1000 }, default);
+            var item = allItems.Items.FirstOrDefault(i => i.FileName == file);
+
+            if (item == null)
+            {
+                logger.LogWarning("File not found for removal: {FileName}", file);
+                return TypedResults.NotFound();
+            }
+
+            var success = await mediaFacade.DeleteAsync(item.Id, item.GroupKey);
+
+            if (success)
+            {
+                logger.LogInformation("File removed successfully: {FileName}", file);
+                return TypedResults.Ok();
+            }
+
+            return TypedResults.BadRequest($"Failed to remove file: {file}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error removing file: {FileName}", file);
+            return TypedResults.BadRequest($"Remove failed: {ex.Message}");
         }
     }
 

@@ -1,0 +1,144 @@
+/* Media Upload Dialog */
+.upload-dialog-content {
+    padding: 1rem;
+    min-height: 300px;
+}
+
+/* Upload Instructions */
+.upload-instructions {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.upload-instructions p {
+    margin: 0.5rem 0;
+}
+
+.upload-instructions strong {
+    color: var(--color-primary);
+}
+
+.upload-hint {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.upload-size-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Success Messages */
+.success-messages {
+    margin-top: 1rem;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--color-success-light, #d4edda);
+    border: 1px solid var(--color-success, #28a745);
+    border-radius: 0.25rem;
+    color: var(--color-success-dark, #155724);
+    font-size: 0.875rem;
+}
+
+.success-message:last-child {
+    margin-bottom: 0;
+}
+
+.success-icon {
+    color: var(--color-success, #28a745);
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Error Messages */
+.error-messages {
+    margin-top: 1rem;
+}
+
+.error-message {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--color-error-light, #f8d7da);
+    border: 1px solid var(--color-error, #dc3545);
+    border-radius: 0.25rem;
+    color: var(--color-error-dark, #721c24);
+    font-size: 0.875rem;
+}
+
+.error-message:last-child {
+    margin-bottom: 0;
+}
+
+/* Telerik Upload Styling Customization */
+::deep .k-upload {
+    border: 2px dashed var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    min-height: 200px;
+}
+
+::deep .k-upload-dropzone {
+    padding: 2rem;
+}
+
+::deep .k-upload-button {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+::deep .k-upload-button:hover {
+    opacity: 0.9;
+}
+
+::deep .k-upload-files {
+    margin-top: 1rem;
+}
+
+::deep .k-file {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+}
+
+::deep .k-file-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+::deep .k-file-size {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+::deep .k-upload-status {
+    font-size: 0.75rem;
+}
+
+::deep .k-upload-status-total {
+    color: var(--color-primary);
+}
+
+::deep .k-file-success .k-upload-status {
+    color: var(--color-success, #28a745);
+}
+
+::deep .k-file-error .k-upload-status {
+    color: var(--color-error, #dc3545);
+}

@@ -1,0 +1,81 @@
+@using Viblog.Admin.Models
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Helpers
+
+<div class="folder-selector">
+    <!-- File Type Filter -->
+    <div class="filter-section">
+        <label>File Type:</label>
+        <select @bind="SelectedMediaType" @bind:after="OnFilterChanged">
+            <option value="">All Files</option>
+            @foreach (var type in Enum.GetValues<MediaTypeCategory>())
+            {
+                <option value="@type">@MediaTypeHelper.GetDisplayName(type)</option>
+            }
+        </select>
+    </div>
+
+    <!-- Date Folders List -->
+    <div class="date-folders">
+        <h3>Uploads By Date</h3>
+        @if (IsLoading && !DateFolders.Any())
+        {
+            <p class="loading-message">Loading...</p>
+        }
+        else if (!DateFolders.Any())
+        {
+            <p class="no-folders">No uploads yet</p>
+        }
+        else
+        {
+            <ul class="date-folder-list">
+                @foreach (var folder in DateFolders)
+                {
+                    <li class="@(folder.DateFolder == SelectedDateFolder ? "active" : "")"
+                        @onclick="() => OnDateFolderSelected(folder.DateFolder)">
+                        <span class="folder-name">@folder.DisplayName</span>
+                        <span class="item-count">@folder.ItemCount</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public MediaTypeCategory? SelectedMediaType { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaTypeCategory?> SelectedMediaTypeChanged { get; set; }
+
+    [Parameter]
+    public string? SelectedDateFolder { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedDateFolderChanged { get; set; }
+
+    [Parameter]
+    public List<DateFolderInfo> DateFolders { get; set; } = [];
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback OnFilterChangedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnDateFolderSelectedCallback { get; set; }
+
+    private async Task OnFilterChanged()
+    {
+        await SelectedMediaTypeChanged.InvokeAsync(SelectedMediaType);
+        await OnFilterChangedCallback.InvokeAsync();
+    }
+
+    private async Task OnDateFolderSelected(string dateFolder)
+    {
+        await SelectedDateFolderChanged.InvokeAsync(dateFolder);
+        await OnDateFolderSelectedCallback.InvokeAsync(dateFolder);
+    }
+}

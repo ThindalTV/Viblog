@@ -52,6 +52,14 @@ public static class RegisterAdminExtensions
                     options.Cookie.Name = "Viblog.Admin.Auth";
                 });
 
+            // Configure authorization policies
+            collection.AddAuthorizationBuilder()
+                .AddPolicy("Admin", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
+                });
+
             return collection;
         }
     }

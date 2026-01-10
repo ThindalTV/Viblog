@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Shared.Data.Repositories.Storage;
+namespace Viblog.Data.Filesystem.Storage;
 
 /// <summary>
 /// File system implementation of media storage repository
@@ -216,7 +218,7 @@ public class FileSystemStorageRepository : IMediaStorageRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get file size from file system: {StoragePath}", storagePath);
+            _logger.LogError(ex, "Failed to get file size: {StoragePath}", storagePath);
             throw;
         }
     }

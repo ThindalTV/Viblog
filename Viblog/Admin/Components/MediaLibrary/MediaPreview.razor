@@ -1,0 +1,118 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+@inject ILogger<MediaPreview> Logger
+
+<div class="media-preview">
+    @if (SelectedItem == null)
+    {
+        <div class="no-selection">
+            <p>Select a file to view details</p>
+        </div>
+    }
+    else
+    {
+        <div class="preview-header">
+            <h3>File Details</h3>
+            <button class="btn-close" @onclick="OnClose">×</button>
+        </div>
+        
+        <div class="preview-content">
+            <div class="preview-image">
+                @if (SelectedItem.PreviewUrl != null)
+                {
+                    <img src="@SelectedItem.PublicUrl" alt="@SelectedItem.AltText" />
+                }
+                else
+                {
+                    <div class="no-preview">
+                        <span>@Path.GetExtension(SelectedItem.FileName)</span>
+                    </div>
+                }
+            </div>
+            
+            <div class="preview-info">
+                <div class="info-row">
+                    <label>Filename:</label>
+                    <span>@SelectedItem.FileName</span>
+                </div>
+                <div class="info-row">
+                    <label>Size:</label>
+                    <span>@FormatFileSize(SelectedItem.FileSize)</span>
+                </div>
+                <div class="info-row">
+                    <label>Type:</label>
+                    <span>@SelectedItem.MimeType</span>
+                </div>
+                <div class="info-row">
+                    <label>Uploaded:</label>
+                    <span>@SelectedItem.CreatedAt.ToString("MMMM d, yyyy h:mm tt")</span>
+                </div>
+                @if (SelectedItem.Width.HasValue && SelectedItem.Height.HasValue)
+                {
+                    <div class="info-row">
+                        <label>Dimensions:</label>
+                        <span>@SelectedItem.Width × @SelectedItem.Height</span>
+                    </div>
+                }
+                <div class="info-row url-row">
+                    <label>URL:</label>
+                    <input type="text" 
+                           readonly 
+                           value="@SelectedItem.PublicUrl" 
+                           @onclick="() => OnCopyUrl(SelectedItem.PublicUrl)" 
+                           title="Click to copy" />
+                </div>
+            </div>
+            
+            <div class="preview-actions">
+                <button class="btn-primary" @onclick="() => OnCopyUrl(SelectedItem.PublicUrl)">
+                    Copy URL
+                </button>
+                <button class="btn-danger" @onclick="OnDeleteRequested">
+                    Delete
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public MediaItem? SelectedItem { get; set; }
+
+    [Parameter]
+    public EventCallback OnCloseCallback { get; set; }
+
+    [Parameter]
+    public EventCallback OnDeleteRequestedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyUrlCallback { get; set; }
+
+    private async Task OnClose()
+    {
+        await OnCloseCallback.InvokeAsync();
+    }
+
+    private async Task OnDeleteRequested()
+    {
+        await OnDeleteRequestedCallback.InvokeAsync();
+    }
+
+    private async Task OnCopyUrl(string url)
+    {
+        await OnCopyUrlCallback.InvokeAsync(url);
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

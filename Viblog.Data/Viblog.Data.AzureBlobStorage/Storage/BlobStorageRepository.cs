@@ -1,10 +1,12 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Infrastructure.Shared.Helpers;
 
-namespace Viblog.Shared.Data.Repositories.Storage;
+namespace Viblog.Data.AzureBlobStorage.Storage;
 
 /// <summary>
 /// Azure Blob Storage implementation of media storage repository
@@ -278,17 +280,17 @@ public class BlobStorageRepository : IMediaStorageRepository
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             var blobClient = containerClient.GetBlobClient(storagePath);
 
-            if (!await blobClient.ExistsAsync(cancellationToken))
+            if (!await blobClient.ExistsAsync())
             {
                 return null;
             }
 
-            var properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
+            var properties = await blobClient.GetPropertiesAsync();
             return properties.Value.ContentLength;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get file size from blob storage: {StoragePath}", storagePath);
+            _logger.LogError(ex, "Failed to get file size for blob: {StoragePath}", storagePath);
             throw;
         }
     }

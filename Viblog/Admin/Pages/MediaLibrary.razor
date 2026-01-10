@@ -3,9 +3,9 @@
 @layout AdminLayout
 @using Viblog.Admin.Layout
 @using Viblog.Admin.Models
+@using Viblog.Admin.Components.MediaLibrary
 @using Viblog.Infrastructure.Shared.Data.Common
 @using Viblog.Infrastructure.Shared.Data.Entities
-@using Viblog.Infrastructure.Shared.Helpers
 @using Viblog.Infrastructure.Shared.Services
 @inject IMediaService MediaService
 @inject ILogger<MediaLibrary> Logger
@@ -15,209 +15,51 @@
 <div class="media-library">
     <div class="media-library-header">
         <h1>Media Library</h1>
-        
-        <!-- File Type Filter -->
-        <div class="filter-section">
-            <label>File Type:</label>
-            <select @bind="_viewModel.SelectedMediaType" @bind:after="OnFilterChangedAsync">
-                <option value="">All Files</option>
-                @foreach (var type in Enum.GetValues<MediaTypeCategory>())
-                {
-                    <option value="@type">@MediaTypeHelper.GetDisplayName(type)</option>
-                }
-            </select>
-        </div>
-
-        <!-- Search -->
-        <div class="search-section">
-            <input type="text" 
-                   placeholder="Search files..." 
-                   @bind="_viewModel.SearchTerm" 
-                   @bind:after="OnSearchChangedAsync" />
-        </div>
-
-        <!-- Upload Button -->
-        <div class="upload-section">
-            <button class="btn-primary" @onclick="ShowUploadDialog">
-                <span class="icon">+</span> Upload Files
-            </button>
-        </div>
     </div>
 
     <div class="media-library-content">
-        <!-- Date Folders Sidebar -->
-        <div class="date-folders-sidebar">
-            <h3>Uploads By Date</h3>
-            @if (_viewModel.IsLoading && !_viewModel.DateFolders.Any())
-            {
-                <p>Loading...</p>
-            }
-            else if (!_viewModel.DateFolders.Any())
-            {
-                <p class="no-folders">No uploads yet</p>
-            }
-            else
-            {
-                <ul class="date-folder-list">
-                    @foreach (var folder in _viewModel.DateFolders)
-                    {
-                        <li class="@(folder.DateFolder == _viewModel.SelectedDateFolder ? "active" : "")"
-                            @onclick="() => SelectDateFolderAsync(folder.DateFolder)">
-                            <span class="folder-name">@folder.DisplayName</span>
-                            <span class="item-count">@folder.ItemCount</span>
-                        </li>
-                    }
-                </ul>
-            }
+        <!-- Left Column: Folder Selector (1/4 width, full height) -->
+        <FolderSelector @bind-SelectedMediaType="_viewModel.SelectedMediaType"
+                       @bind-SelectedDateFolder="_viewModel.SelectedDateFolder"
+                       DateFolders="_viewModel.DateFolders"
+                       IsLoading="_viewModel.IsLoading"
+                       OnFilterChangedCallback="OnFilterChangedAsync"
+                       OnDateFolderSelectedCallback="SelectDateFolderAsync" />
+
+        <!-- Right Column: File Selector and Preview -->
+        <div class="media-library-right">
+            <!-- File Selector (3/4 height) -->
+            <FileSelector @bind-SearchTerm="_viewModel.SearchTerm"
+                         @bind-SelectedItem="_viewModel.SelectedItem"
+                         SelectedMediaType="_viewModel.SelectedMediaType"
+                         MediaItems="_viewModel.MediaItems"
+                         IsLoading="_viewModel.IsLoading"
+                         CurrentPage="_viewModel.CurrentPage"
+                         PageSize="_viewModel.PageSize"
+                         TotalCount="_viewModel.TotalCount"
+                         OnSearchChangedCallback="OnSearchChangedAsync"
+                         OnItemSelectedCallback="SelectItem"
+                         OnUploadRequestedCallback="ShowUploadDialog"
+                         OnPreviousPageCallback="PreviousPageAsync"
+                         OnNextPageCallback="NextPageAsync" />
+
+            <!-- Media Preview (1/4 height) -->
+            <MediaPreview SelectedItem="_viewModel.SelectedItem"
+                         OnCloseCallback="CloseDetails"
+                         OnDeleteRequestedCallback="DeleteSelectedItemAsync"
+                         OnCopyUrlCallback="CopyToClipboard" />
         </div>
-
-        <!-- Media Grid -->
-        <div class="media-grid-container">
-            @if (_viewModel.IsLoading)
-            {
-                <div class="loading-overlay">
-                    <p>Loading...</p>
-                </div>
-            }
-            else if (!_viewModel.MediaItems.Any())
-            {
-                <div class="empty-state">
-                    <p>No media files found</p>
-                    @if (!string.IsNullOrWhiteSpace(_viewModel.SearchTerm))
-                    {
-                        <p>Try a different search term</p>
-                    }
-                    else if (_viewModel.SelectedMediaType.HasValue)
-                    {
-                        <p>Try selecting a different file type</p>
-                    }
-                    else
-                    {
-                        <button class="btn-primary" @onclick="ShowUploadDialog">Upload Your First File</button>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="media-grid">
-                    @foreach (var item in _viewModel.MediaItems)
-                    {
-                        <div class="media-item" @onclick="() => SelectItem(item)">
-                            <div class="media-thumbnail">
-                                @if (item.PreviewUrl != null)
-                                {
-                                    <img src="@item.PreviewUrl" alt="@item.AltText" loading="lazy" />
-                                }
-                                else
-                                {
-                                    <div class="no-preview">
-                                        <span>@Path.GetExtension(item.FileName)</span>
-                                    </div>
-                                }
-                            </div>
-                            <div class="media-info">
-                                <div class="media-filename" title="@item.FileName">@item.FileName</div>
-                                <div class="media-meta">
-                                    <span class="file-size">@FormatFileSize(item.FileSize)</span>
-                                    <span class="upload-date">@item.CreatedAt.ToString("MMM d, yyyy")</span>
-                                </div>
-                            </div>
-                            @if (_viewModel.SelectedItem?.Id == item.Id)
-                            {
-                                <div class="selected-indicator"></div>
-                            }
-                        </div>
-                    }
-                </div>
-
-                <!-- Pagination -->
-                @if (_viewModel.TotalCount > _viewModel.PageSize)
-                {
-                    <div class="pagination">
-                        <button class="btn-secondary" 
-                                disabled="@(_viewModel.CurrentPage <= 1)"
-                                @onclick="PreviousPageAsync">
-                            Previous
-                        </button>
-                        
-                        <span class="page-info">
-                            Page @_viewModel.CurrentPage of @Math.Ceiling((double)_viewModel.TotalCount / _viewModel.PageSize)
-                        </span>
-                        
-                        <button class="btn-secondary" 
-                                disabled="@(_viewModel.CurrentPage >= Math.Ceiling((double)_viewModel.TotalCount / _viewModel.PageSize))"
-                                @onclick="NextPageAsync">
-                            Next
-                        </button>
-                    </div>
-                }
-            }
-        </div>
-
-        <!-- Preview/Details Panel -->
-        @if (_viewModel.SelectedItem != null)
-        {
-            <div class="details-panel">
-                <div class="details-header">
-                    <h3>File Details</h3>
-                    <button class="btn-close" @onclick="CloseDetails">×</button>
-                </div>
-                
-                <div class="details-content">
-                    <div class="details-preview">
-                        @if (_viewModel.SelectedItem.PreviewUrl != null)
-                        {
-                            <img src="@_viewModel.SelectedItem.PublicUrl" alt="@_viewModel.SelectedItem.AltText" />
-                        }
-                    </div>
-                    
-                    <div class="details-info">
-                        <div class="info-row">
-                            <label>Filename:</label>
-                            <span>@_viewModel.SelectedItem.FileName</span>
-                        </div>
-                        <div class="info-row">
-                            <label>Size:</label>
-                            <span>@FormatFileSize(_viewModel.SelectedItem.FileSize)</span>
-                        </div>
-                        <div class="info-row">
-                            <label>Type:</label>
-                            <span>@_viewModel.SelectedItem.MimeType</span>
-                        </div>
-                        <div class="info-row">
-                            <label>Uploaded:</label>
-                            <span>@_viewModel.SelectedItem.CreatedAt.ToString("MMMM d, yyyy h:mm tt")</span>
-                        </div>
-                        @if (_viewModel.SelectedItem.Width.HasValue && _viewModel.SelectedItem.Height.HasValue)
-                        {
-                            <div class="info-row">
-                                <label>Dimensions:</label>
-                                <span>@_viewModel.SelectedItem.Width × @_viewModel.SelectedItem.Height</span>
-                            </div>
-                        }
-                        <div class="info-row">
-                            <label>URL:</label>
-                            <input type="text" readonly value="@_viewModel.SelectedItem.PublicUrl" 
-                                   @onclick="() => CopyToClipboard(_viewModel.SelectedItem.PublicUrl)" />
-                        </div>
-                    </div>
-                    
-                    <div class="details-actions">
-                        <button class="btn-primary" @onclick="() => CopyToClipboard(_viewModel.SelectedItem.PublicUrl)">
-                            Copy URL
-                        </button>
-                        <button class="btn-danger" @onclick="DeleteSelectedItemAsync">
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
     </div>
 </div>
 
+<!-- Upload Dialog -->
+<MediaUploadDialog @bind-IsVisible="_showUploadDialog"
+                  OnFilesUploaded="OnFilesUploadedAsync"
+                  UploadedBy="system" />
+
 @code {
     private readonly MediaLibraryViewModel _viewModel = new();
+    private bool _showUploadDialog = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -369,8 +211,19 @@
 
     private void ShowUploadDialog()
     {
-        // TODO: Implement upload dialog
-        Logger.LogInformation("Upload dialog requested");
+        _showUploadDialog = true;
+    }
+
+    private async Task OnFilesUploadedAsync()
+    {
+        Logger.LogInformation("Files uploaded successfully");
+        
+        // Refresh the media library to show new uploads
+        await LoadDateFoldersAsync();
+        await LoadMediaItemsAsync();
+        
+        // Close the dialog
+        _showUploadDialog = false;
     }
 
     private async Task DeleteSelectedItemAsync()
@@ -402,18 +255,5 @@
     {
         // TODO: Implement clipboard copy with JavaScript interop
         Logger.LogInformation("Copy to clipboard: {Text}", text);
-    }
-
-    private static string FormatFileSize(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len = len / 1024;
-        }
-        return $"{len:0.##} {sizes[order]}";
     }
 }

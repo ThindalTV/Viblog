@@ -1,0 +1,181 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+
+<div class="file-selector">
+    <!-- Search Section -->
+    <div class="search-section">
+        <input type="text" 
+               placeholder="Search files..." 
+               @bind="SearchTerm" 
+               @bind:after="OnSearchChanged" />
+        <button class="btn-primary upload-btn" @onclick="OnUploadRequested">
+            <span class="icon">+</span> Upload Files
+        </button>
+    </div>
+
+    <!-- Media Grid -->
+    <div class="media-grid-container">
+        @if (IsLoading)
+        {
+            <div class="loading-overlay">
+                <p>Loading...</p>
+            </div>
+        }
+        else if (!MediaItems.Any())
+        {
+            <div class="empty-state">
+                <p>No media files found</p>
+                @if (!string.IsNullOrWhiteSpace(SearchTerm))
+                {
+                    <p>Try a different search term</p>
+                }
+                else if (SelectedMediaType.HasValue)
+                {
+                    <p>Try selecting a different file type</p>
+                }
+                else
+                {
+                    <button class="btn-primary" @onclick="OnUploadRequested">Upload Your First File</button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="media-grid">
+                @foreach (var item in MediaItems)
+                {
+                    <div class="media-item @(SelectedItem?.Id == item.Id ? "selected" : "")" 
+                         @onclick="() => OnItemSelected(item)">
+                        <div class="media-thumbnail">
+                            @if (item.PreviewUrl != null)
+                            {
+                                <img src="@item.PreviewUrl" alt="@item.AltText" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="no-preview">
+                                    <span>@Path.GetExtension(item.FileName)</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="media-info">
+                            <div class="media-filename" title="@item.FileName">@item.FileName</div>
+                            <div class="media-meta">
+                                <span class="file-size">@FormatFileSize(item.FileSize)</span>
+                                <span class="upload-date">@item.CreatedAt.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (TotalCount > PageSize)
+            {
+                <div class="pagination">
+                    <button class="btn-secondary" 
+                            disabled="@(CurrentPage <= 1)"
+                            @onclick="OnPreviousPage">
+                        Previous
+                    </button>
+                    
+                    <span class="page-info">
+                        Page @CurrentPage of @Math.Ceiling((double)TotalCount / PageSize)
+                    </span>
+                    
+                    <button class="btn-secondary" 
+                            disabled="@(CurrentPage >= Math.Ceiling((double)TotalCount / PageSize))"
+                            @onclick="OnNextPage">
+                        Next
+                    </button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? SearchTerm { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SearchTermChanged { get; set; }
+
+    [Parameter]
+    public MediaTypeCategory? SelectedMediaType { get; set; }
+
+    [Parameter]
+    public List<MediaItem> MediaItems { get; set; } = [];
+
+    [Parameter]
+    public MediaItem? SelectedItem { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaItem?> SelectedItemChanged { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public int CurrentPage { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; }
+
+    [Parameter]
+    public int TotalCount { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearchChangedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaItem> OnItemSelectedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback OnUploadRequestedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback OnPreviousPageCallback { get; set; }
+
+    [Parameter]
+    public EventCallback OnNextPageCallback { get; set; }
+
+    private async Task OnSearchChanged()
+    {
+        await SearchTermChanged.InvokeAsync(SearchTerm);
+        await OnSearchChangedCallback.InvokeAsync();
+    }
+
+    private async Task OnItemSelected(MediaItem item)
+    {
+        await SelectedItemChanged.InvokeAsync(item);
+        await OnItemSelectedCallback.InvokeAsync(item);
+    }
+
+    private async Task OnUploadRequested()
+    {
+        await OnUploadRequestedCallback.InvokeAsync();
+    }
+
+    private async Task OnPreviousPage()
+    {
+        await OnPreviousPageCallback.InvokeAsync();
+    }
+
+    private async Task OnNextPage()
+    {
+        await OnNextPageCallback.InvokeAsync();
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}
