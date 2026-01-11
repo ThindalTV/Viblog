@@ -1,129 +1,145 @@
 /* ProfileHeader Component Isolated Styles */
 
-.profile-header {
-    padding: 0 0 3rem 0;
-}
-
-.profile-cards {
+.header-content {
+    color: #ffffff;
+    padding: 2rem;
     display: grid;
+    grid-column-gap: 6rem;
     grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
+    margin: -100px 10rem 0 10rem;
 }
 
-.profile-bio-card,
-.profile-image-card {
-    background-color: rgba(248, 248, 248, 1);
-    border-radius: 1rem;
-    padding: 2.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+.box {
+    background-color: #FFF;
+    border-radius: 10px;
+    box-shadow: 0 9px 30px 5px rgba(153, 153, 153, 0.2);
+    position: relative;
+    padding: 1rem 3rem 3rem 3rem;
 }
 
-.profile-bio-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+.header-presentation {
+    color: #000;
 }
 
-.profile-role {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0;
-    color: #1a1a1a;
-    line-height: 1.2;
-}
+    .header-presentation h2 {
+        margin: 0 0 1.5rem 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a1a1a;
+    }
 
-.profile-bio {
+.bio-content {
     color: #333333;
     font-size: 1rem;
     line-height: 1.7;
 }
 
-.profile-bio p {
-    margin: 0 0 1rem 0;
+    .bio-content p {
+        margin: 0 0 1rem 0;
+    }
+
+    .bio-content p:last-child {
+        margin-bottom: 0;
+    }
+
+.socials {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 0 0;
+    display: flex;
+    gap: 1.5rem;
 }
 
-.profile-bio p:last-child {
-    margin-bottom: 0;
+    .socials li {
+        margin: 0;
+    }
+
+    .socials a {
+        color: #1a1a1a;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+        .socials a:hover {
+            color: #7873f5;
+        }
+
+.header-photo {
+    aspect-ratio: 1/1;
+    max-height: contain;
+    background-size: cover;
+    padding: 0;
+    background-image: url('/img/profile.png');
 }
 
-.profile-social-links {
+.header-awards {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
     gap: 1rem;
-    align-items: center;
-    margin-top: auto;
+    flex-wrap: wrap;
 }
 
-.social-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    color: #1a1a1a;
-    transition: transform 0.2s ease, color 0.2s ease;
-}
+    .header-awards li {
+        margin: 0;
+    }
 
-.social-link:hover {
-    transform: translateY(-3px);
-    color: #7873f5;
-}
-
-.social-link svg {
-    width: 28px;
-    height: 28px;
-}
-
-.profile-image-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, rgba(255, 110, 196, 0.15) 0%, rgba(79, 172, 254, 0.15) 100%);
-}
-
-.profile-image {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 0.5rem;
-}
+    .header-awards img {
+        height: 80px;
+        width: auto;
+        display: block;
+    }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .profile-header {
-        padding: 0 0 2rem 0;
-    }
-
-    .profile-cards {
+    .header-content {
         grid-template-columns: 1fr;
         gap: 2rem;
+        margin: -50px 2rem 0 2rem;
     }
 
-    .profile-bio-card,
-    .profile-image-card {
-        padding: 2rem;
+    .box {
+        padding: 1.5rem 2rem 2rem 2rem;
     }
 
-    .profile-role {
+    .header-presentation h2 {
         font-size: 1.5rem;
+    }
+
+    .bio-content {
+        font-size: 0.95rem;
+    }
+
+    .socials {
+        gap: 1rem;
+    }
+
+    .header-awards img {
+        height: 60px;
     }
 }
 
 @media (max-width: 640px) {
-    .profile-header {
-        padding: 0 0 1.5rem 0;
+    .header-content {
+        padding: 1rem;
+        margin: -30px 1rem 0 1rem;
     }
 
-    .profile-bio-card,
-    .profile-image-card {
-        padding: 1.5rem;
+    .box {
+        padding: 1rem 1.5rem 1.5rem 1.5rem;
     }
 
-    .profile-role {
+    .header-presentation h2 {
         font-size: 1.25rem;
     }
 
-    .profile-bio {
-        font-size: 0.95rem;
+    .bio-content {
+        font-size: 0.9rem;
+    }
+
+    .header-awards img {
+        height: 50px;
     }
 }
