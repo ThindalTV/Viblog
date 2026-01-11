@@ -18,6 +18,8 @@
     min-height: 300px;
     justify-content: center;
     display: flex;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
 }
 
     .header-top h1 {
@@ -49,16 +51,11 @@
 }
 
 .blog-main {
-    background-color: #ffffff;
-    border-radius: 1.5rem;
     padding: 3rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.08), 0 20px 40px rgba(0, 0, 0, 0.06);
     min-height: 400px;
 }
 
 .blog-footer {
-    background-color: #1a1a1a;
-    color: #d7d7d7;
     text-align: center;
     padding: 2rem;
     margin-top: auto;
@@ -88,7 +85,6 @@
 
     .blog-main {
         padding: 2rem;
-        border-radius: 1rem;
     }
 }
 

@@ -1,0 +1,49 @@
+<div class="contribution box @(string.IsNullOrWhiteSpace(ImageUrl) ? "no-image" : "")">
+    <div class="contribution-content">
+        <h3 class="contribution-title">@Title</h3>
+        <div class="contribution-details">
+            @ChildContent
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(ImageUrl))
+    {
+        <div class="contribution-image">
+            <img src="@ImageUrl" alt="@ImageAlt" />
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The title of the contribution
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional image URL for the contribution
+    /// </summary>
+    [Parameter]
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// Alt text for the image (defaults to title if not provided)
+    /// </summary>
+    [Parameter]
+    public string? ImageAlt { get; set; }
+
+    /// <summary>
+    /// The content to render inside the contribution
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Use title as alt text if not explicitly provided
+        if (string.IsNullOrWhiteSpace(ImageAlt) && !string.IsNullOrWhiteSpace(Title))
+        {
+            ImageAlt = Title;
+        }
+    }
+}

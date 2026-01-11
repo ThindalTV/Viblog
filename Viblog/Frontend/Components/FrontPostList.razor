@@ -1,0 +1,65 @@
+@inject IFrontPageFacade FrontPageFacade
+
+<Section Title="Latest Posts">
+    @if (_isLoading)
+    {
+        <p class="loading-message">Loading posts...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (!_posts.Any())
+    {
+        <article class="blog-post box">
+            <h3 class="post-title">No Posts Yet</h3>
+            <p class="post-excerpt">
+                Check back soon for new content!
+            </p>
+        </article>
+    }
+    else
+    {
+        <div class="posts-grid">
+            @foreach (var post in _posts)
+            {
+                <PostCard Post="post" IsGridCard="true" />
+            }
+        </div>
+        
+        <div class="view-all-posts">
+            <a href="/posts" class="view-all-link">View All Posts ?</a>
+        </div>
+    }
+</Section>
+
+@code {
+    private IEnumerable<BlogPost> _posts = Enumerable.Empty<BlogPost>();
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
+    /// <summary>
+    /// Maximum number of posts to display on the front page
+    /// </summary>
+    [Parameter]
+    public int MaxPosts { get; set; } = 8;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _posts = await FrontPageFacade.GetFrontPagePostsAsync(maxPosts: MaxPosts);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load blog posts. Please try again later.";
+            // In production, log the exception
+            // Logger.LogError(ex, "Error loading front page posts");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

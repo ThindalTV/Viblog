@@ -1,52 +1,83 @@
-<article class="blog-post">
-    @if (Post.IsFeatured && ShowFeaturedBadge)
-    {
-        <span class="featured-badge">Featured</span>
-    }
-    <h3 class="post-title">
-        @if (HasLongFormContent)
-        {
-            <a href="/post/@(Post.PublishedAt.Year)/@Post.Slug">@Post.Title</a>
-        }
-        else
-        {
-            @Post.Title
-        }
-    </h3>
-    <div class="post-meta">
-        <span class="post-author">By @Post.AuthorName</span>
-        <span class="post-date">@Post.PublishedAt.ToString("MMMM dd, yyyy")</span>
-        @if (Post.ReadingTimeMinutes > 0)
-        {
-            <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
-        }
-    </div>
-    @if (Post.CategoryNames.Any() && ShowCategories)
-    {
-        <div class="post-categories">
-            @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
+@if (HasLongFormContent)
+{
+    <a href="/post/@(Post.PublishedAt.Year)/@Post.Slug" class="post-card-link">
+        <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
+            @if (Post.IsFeatured && ShowFeaturedBadge)
             {
-                <a href="/category/@Uri.EscapeDataString(category)" class="category-link">@category</a>
+                <span class="featured-badge">Featured</span>
+            }
+            <h3 class="post-title">@Post.Title</h3>
+            <div class="post-meta">
+                <span class="post-date">@Post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                @if (Post.ReadingTimeMinutes > 0)
+                {
+                    <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
+                }
+            </div>
+            @if (Post.CategoryNames.Any() && ShowCategories)
+            {
+                <div class="post-categories">
+                    @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
+                    {
+                        <span class="category-link">@category</span>
+                    }
+                </div>
+            }
+            <p class="post-excerpt">@Post.Short</p>
+            @if (Post.Tags.Any() && ShowTags && !IsGridCard)
+            {
+                <div class="post-tags">
+                    @foreach (var tag in Post.Tags.Take(MaxTagsToShow))
+                    {
+                        <span class="tag-link">@tag</span>
+                    }
+                </div>
+            }
+            @if (ShowReadMore)
+            {
+                <div class="post-read-more">
+                    <span class="read-more-text">Read more »</span>
+                </div>
+            }
+        </article>
+    </a>
+}
+else
+{
+    <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
+        @if (Post.IsFeatured && ShowFeaturedBadge)
+        {
+            <span class="featured-badge">Featured</span>
+        }
+        <h3 class="post-title">@Post.Title</h3>
+        <div class="post-meta">
+            <span class="post-date">@Post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+            @if (Post.ReadingTimeMinutes > 0)
+            {
+                <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
             }
         </div>
-    }
-    <p class="post-excerpt">@Post.Short</p>
-    @if (Post.Tags.Any() && ShowTags)
-    {
-        <div class="post-tags">
-            @foreach (var tag in Post.Tags.Take(MaxTagsToShow))
-            {
-                <a href="/tag/@Uri.EscapeDataString(tag)" class="tag-link">@tag</a>
-            }
-        </div>
-    }
-    @if (HasLongFormContent && ShowReadMore)
-    {
-        <div class="post-read-more">
-            <a href="/post/@(Post.PublishedAt.Year)/@Post.Slug" class="read-more-link">Read more ?</a>
-        </div>
-    }
-</article>
+        @if (Post.CategoryNames.Any() && ShowCategories)
+        {
+            <div class="post-categories">
+                @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
+                {
+                    <a href="/category/@Uri.EscapeDataString(category)" class="category-link">@category</a>
+                }
+            </div>
+        }
+        <p class="post-excerpt">@Post.Short</p>
+        @if (Post.Tags.Any() && ShowTags)
+        {
+            <div class="post-tags">
+                @foreach (var tag in Post.Tags.Take(MaxTagsToShow))
+                {
+                    <a href="/tag/@Uri.EscapeDataString(tag)" class="tag-link">@tag</a>
+                }
+            </div>
+        }
+    </article>
+}
 
 @code {
     /// <summary>
@@ -90,6 +121,12 @@
     /// </summary>
     [Parameter]
     public bool ShowReadMore { get; set; } = true;
+
+    /// <summary>
+    /// Whether this card is being displayed in a grid layout (affects styling and behavior)
+    /// </summary>
+    [Parameter]
+    public bool IsGridCard { get; set; } = false;
 
     /// <summary>
     /// Determines if the post has long-form content (Content or Markdown)

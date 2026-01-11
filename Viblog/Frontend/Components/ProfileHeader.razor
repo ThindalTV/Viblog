@@ -16,9 +16,9 @@
                         <li>
                             <a href="@link.Url" 
                                target="_blank" 
-                               rel="noopener noreferrer" 
+                               rel="nofollow noopener noreferrer" 
                                aria-label="@link.Label">
-                                @link.Label
+                                <img src="@link.Icon" alt="@link.Label" />
                             </a>
                         </li>
                     }
@@ -31,7 +31,14 @@
                 <ul class="header-awards">
                     @foreach (var award in Awards)
                     {
-                        <li><img src="@award.ImageUrl" alt="@award.AltText" title="@award.Title" /></li>
+                        <li>
+                            <a href="@award.Url" 
+                               target="_blank" 
+                               rel="nofollow noopener noreferrer" 
+                               title="@award.Title">
+                                <img src="@award.ImageUrl" alt="@award.AltText" />
+                            </a>
+                        </li>
                     }
                 </ul>
             }

@@ -1,0 +1,48 @@
+/* FrontPostList Component Isolated Styles */
+
+/* Section styling is handled by the Section component */
+
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.loading-message,
+.error-message {
+    color: #555555;
+    font-size: 1rem;
+}
+
+.view-all-posts {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.view-all-link {
+    display: inline-block;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #9b7dd4;
+    text-decoration: none;
+    padding: 1rem 2rem;
+    border: 2px solid #9b7dd4;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.view-all-link:hover {
+    background-color: #9b7dd4;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+}

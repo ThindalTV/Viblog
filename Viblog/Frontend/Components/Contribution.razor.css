@@ -1,0 +1,77 @@
+/* Contribution Component Isolated Styles */
+
+.contribution {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.contribution.no-image .contribution-content {
+    flex: 1;
+}
+
+.contribution-content {
+    flex: 4;
+    min-width: 0;
+}
+
+.contribution-image {
+    flex: 1;
+    max-width: 200px;
+}
+
+.contribution-image img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    display: block;
+}
+
+.contribution-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    color: #1a1a1a;
+}
+
+.contribution-details {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #555555;
+}
+
+.contribution-details p {
+    margin: 0 0 0.75rem 0;
+}
+
+.contribution-details p:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .contribution {
+        flex-direction: column;
+    }
+
+    .contribution-image {
+        max-width: 150px;
+        align-self: center;
+    }
+
+    .contribution-title {
+        font-size: 1.125rem;
+    }
+}
+
+@media (max-width: 640.98px) {
+    .contribution {
+        gap: 1rem;
+    }
+
+    .contribution-image {
+        max-width: 120px;
+    }
+}
