@@ -32,6 +32,9 @@ public static class RegisterAdminExtensions
             collection.AddScoped<IMessageService, MessageService>();
             collection.AddScoped<IDialogService, DialogService>();
             
+            // Register media library broadcast service (singleton for cross-user notifications)
+            collection.AddSingleton<IMediaLibraryBroadcastService, InMemoryMediaLibraryBroadcastService>();
+            
             // Add Telerik UI for Blazor services
             collection.AddTelerikBlazor();
 

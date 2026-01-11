@@ -1,0 +1,112 @@
+@using Viblog.Admin.Components.MediaLibrary
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Admin.Services
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@inject IMediaLibraryBroadcastService BroadcastService
+@inject ILogger<MediaPickerDialog> Logger
+
+<dialog @ref="_dialogElement" class="media-picker-dialog">
+    <div class="media-picker-header">
+        <h2>Select Media</h2>
+        <button type="button" class="btn-primary upload-btn" @onclick="ShowUploadDialog">
+            <span class="icon">+</span> Upload
+        </button>
+        <button type="button" class="close-button" @onclick="CloseAsync" aria-label="Close">
+            &times;
+        </button>
+    </div>
+
+    <div class="media-picker-body">
+        <MediaLibraryContent PickerMode="true"
+                           OnMediaItemSelected="OnItemSelectedAsync" />
+    </div>
+
+    <div class="media-picker-footer">
+        @if (_selectedItem != null)
+        {
+            <div class="selected-info">
+                <strong>Selected:</strong> @_selectedItem.FileName
+            </div>
+            <button type="button" class="btn-primary" @onclick="ConfirmSelectionAsync">
+                Copy Path & Close
+            </button>
+        }
+        <button type="button" class="btn-secondary" @onclick="CloseAsync">
+            Cancel
+        </button>
+    </div>
+</dialog>
+
+<!-- Upload Dialog -->
+<MediaUploadDialog @bind-IsVisible="_showUploadDialog"
+                  OnFilesUploaded="OnFilesUploadedAsync"
+                  UploadedBy="system" />
+
+@code {
+    private ElementReference _dialogElement;
+    private MediaItem? _selectedItem;
+    private bool _showUploadDialog;
+
+    /// <summary>
+    /// Callback when a media path is selected and confirmed
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnMediaPathSelected { get; set; }
+
+    /// <summary>
+    /// Open the dialog
+    /// </summary>
+    public async Task OpenAsync()
+    {
+        _selectedItem = null;
+        await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('.media-picker-dialog').showModal()");
+    }
+
+    /// <summary>
+    /// Close the dialog
+    /// </summary>
+    public async Task CloseAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('.media-picker-dialog').close()");
+        _selectedItem = null;
+    }
+
+    private async Task OnItemSelectedAsync(MediaItem item)
+    {
+        _selectedItem = item;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task ConfirmSelectionAsync()
+    {
+        if (_selectedItem != null && OnMediaPathSelected.HasDelegate)
+        {
+            // Copy the URL to clipboard
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _selectedItem.PublicUrl);
+            
+            // Notify parent component
+            await OnMediaPathSelected.InvokeAsync(_selectedItem.PublicUrl);
+            
+            // Close the dialog
+            await CloseAsync();
+        }
+    }
+
+    private void ShowUploadDialog()
+    {
+        _showUploadDialog = true;
+    }
+
+    private async Task OnFilesUploadedAsync()
+    {
+        Logger.LogInformation("Files uploaded successfully in picker dialog - broadcasting to all users");
+        
+        // Broadcast to all users
+        await BroadcastService.BroadcastFolderContentsChangedAsync(
+            FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
+        
+        _showUploadDialog = false;
+    }
+}

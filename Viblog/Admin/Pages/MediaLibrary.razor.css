@@ -7,6 +7,9 @@
 
 /* Header */
 .media-library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -17,28 +20,19 @@
     font-size: 1.5rem;
 }
 
-/* Content Area - Two Column Layout */
-.media-library-content {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 25% 75%; /* Left column 1/4, right column 3/4 */
-    overflow: hidden;
+.upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
 }
 
-/* Right Column - Split into two rows */
-.media-library-right {
-    display: grid;
-    grid-template-rows: 75% 25%; /* Top row 3/4, bottom row 1/4 */
-    overflow: hidden;
+.upload-btn .icon {
+    font-size: 1.25rem;
+    font-weight: bold;
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .media-library-content {
-        grid-template-columns: 30% 70%;
-    }
-}
-
 @media (max-width: 768px) {
     .media-library-header {
         padding: 1rem;
@@ -47,14 +41,9 @@
     .media-library-header h1 {
         font-size: 1.25rem;
     }
-
-    /* Stack vertically on mobile */
-    .media-library-content {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto;
-    }
-
-    .media-library-right {
-        grid-template-rows: 1fr auto;
+    
+    .upload-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
     }
 }

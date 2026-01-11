@@ -1,5 +1,7 @@
 @using Viblog.Infrastructure.Shared.Data.Entities
+@using Microsoft.JSInterop
 @inject ILogger<MediaPreview> Logger
+@inject IJSRuntime JSRuntime
 
 <div class="media-preview">
     @if (SelectedItem == null)
@@ -58,13 +60,13 @@
                     <input type="text" 
                            readonly 
                            value="@SelectedItem.PublicUrl" 
-                           @onclick="() => OnCopyUrl(SelectedItem.PublicUrl)" 
+                           @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)" 
                            title="Click to copy" />
                 </div>
             </div>
             
             <div class="preview-actions">
-                <button class="btn-primary" @onclick="() => OnCopyUrl(SelectedItem.PublicUrl)">
+                <button class="btn-primary" @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)">
                     Copy URL
                 </button>
                 <button class="btn-danger" @onclick="OnDeleteRequested">
@@ -76,17 +78,29 @@
 </div>
 
 @code {
+    /// <summary>
+    /// The currently selected media item to preview
+    /// </summary>
     [Parameter]
     public MediaItem? SelectedItem { get; set; }
 
+    /// <summary>
+    /// Callback when the preview pane is closed
+    /// </summary>
     [Parameter]
     public EventCallback OnCloseCallback { get; set; }
 
+    /// <summary>
+    /// Callback when delete is requested
+    /// </summary>
     [Parameter]
     public EventCallback OnDeleteRequestedCallback { get; set; }
 
+    /// <summary>
+    /// Optional callback when URL is copied (for picker mode integration)
+    /// </summary>
     [Parameter]
-    public EventCallback<string> OnCopyUrlCallback { get; set; }
+    public EventCallback<string> OnUrlCopied { get; set; }
 
     private async Task OnClose()
     {
@@ -98,9 +112,23 @@
         await OnDeleteRequestedCallback.InvokeAsync();
     }
 
-    private async Task OnCopyUrl(string url)
+    private async Task CopyUrlAsync(string url)
     {
-        await OnCopyUrlCallback.InvokeAsync(url);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            Logger.LogInformation("URL copied to clipboard: {Url}", url);
+            
+            // Notify parent if callback is provided (for picker mode)
+            if (OnUrlCopied.HasDelegate)
+            {
+                await OnUrlCopied.InvokeAsync(url);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to copy URL to clipboard");
+        }
     }
 
     private static string FormatFileSize(long bytes)

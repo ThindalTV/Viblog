@@ -1,0 +1,56 @@
+@page "/admin/media-picker-example"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@using Viblog.Admin.Layout
+@using Viblog.Admin.Components.MediaLibrary
+
+<PageTitle>Media Picker Example - Viblog Admin</PageTitle>
+
+<div class="media-picker-example">
+    <h1>Media Picker Example</h1>
+    
+    <div class="example-content">
+        <p>Click the button below to open the media picker dialog and select a media item.</p>
+        
+        <button type="button" class="btn-primary" @onclick="OpenPickerAsync">
+            Select Media
+        </button>
+
+        @if (!string.IsNullOrEmpty(_selectedPath))
+        {
+            <div class="selected-media">
+                <h2>Selected Media Path:</h2>
+                <code>@_selectedPath</code>
+                
+                @if (_selectedPath.EndsWith(".jpg") || _selectedPath.EndsWith(".png") || _selectedPath.EndsWith(".gif") || _selectedPath.EndsWith(".webp"))
+                {
+                    <div class="preview">
+                        <img src="@_selectedPath" alt="Selected media" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<MediaPickerDialog @ref="_pickerDialog" OnMediaPathSelected="OnMediaPathSelectedAsync" />
+
+@code {
+    private MediaPickerDialog? _pickerDialog;
+    private string? _selectedPath;
+
+    private async Task OpenPickerAsync()
+    {
+        if (_pickerDialog != null)
+        {
+            await _pickerDialog.OpenAsync();
+        }
+    }
+
+    private async Task OnMediaPathSelectedAsync(string path)
+    {
+        _selectedPath = path;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+}

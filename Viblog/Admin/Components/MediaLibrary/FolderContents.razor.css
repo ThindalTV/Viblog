@@ -1,7 +1,7 @@
-/* File Selector Component */
-.file-selector {
-    display: flex;
-    flex-direction: column;
+/* Folder Contents Component */
+.folder-contents {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
     height: 100%;
     background: var(--color-background);
     overflow: hidden;
@@ -9,36 +9,21 @@
 
 /* Search Section */
 .search-section {
-    display: flex;
-    gap: 1rem;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
 }
 
-.search-section input {
-    flex: 1;
+.search-input {
+    width: 100%;
     padding: 0.5rem 1rem;
     border: 1px solid var(--color-border);
     border-radius: 0.25rem;
     font-size: 0.875rem;
 }
 
-.upload-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-}
-
-.upload-btn .icon {
-    font-size: 1.25rem;
-    font-weight: bold;
-}
-
 /* Media Grid Container */
 .media-grid-container {
-    flex: 1;
     position: relative;
     overflow-y: auto;
     padding: 1.5rem;
@@ -69,10 +54,6 @@
 
 .empty-state p {
     margin: 0.5rem 0;
-}
-
-.empty-state button {
-    margin-top: 1rem;
 }
 
 /* Media Grid */
@@ -187,7 +168,6 @@
     }
 
     .search-section {
-        flex-direction: column;
         padding: 1rem;
     }
 

@@ -2,12 +2,9 @@
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
 @using Viblog.Admin.Layout
-@using Viblog.Admin.Models
 @using Viblog.Admin.Components.MediaLibrary
-@using Viblog.Infrastructure.Shared.Data.Common
-@using Viblog.Infrastructure.Shared.Data.Entities
-@using Viblog.Infrastructure.Shared.Services
-@inject IMediaService MediaService
+@using Viblog.Admin.Services
+@inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<MediaLibrary> Logger
 
 <PageTitle>Media Library - Viblog Admin</PageTitle>
@@ -15,41 +12,12 @@
 <div class="media-library">
     <div class="media-library-header">
         <h1>Media Library</h1>
+        <button class="btn-primary upload-btn" @onclick="ShowUploadDialog">
+            <span class="icon">+</span> Upload Files
+        </button>
     </div>
 
-    <div class="media-library-content">
-        <!-- Left Column: Folder Selector (1/4 width, full height) -->
-        <FolderSelector @bind-SelectedMediaType="_viewModel.SelectedMediaType"
-                       @bind-SelectedDateFolder="_viewModel.SelectedDateFolder"
-                       DateFolders="_viewModel.DateFolders"
-                       IsLoading="_viewModel.IsLoading"
-                       OnFilterChangedCallback="OnFilterChangedAsync"
-                       OnDateFolderSelectedCallback="SelectDateFolderAsync" />
-
-        <!-- Right Column: File Selector and Preview -->
-        <div class="media-library-right">
-            <!-- File Selector (3/4 height) -->
-            <FileSelector @bind-SearchTerm="_viewModel.SearchTerm"
-                         @bind-SelectedItem="_viewModel.SelectedItem"
-                         SelectedMediaType="_viewModel.SelectedMediaType"
-                         MediaItems="_viewModel.MediaItems"
-                         IsLoading="_viewModel.IsLoading"
-                         CurrentPage="_viewModel.CurrentPage"
-                         PageSize="_viewModel.PageSize"
-                         TotalCount="_viewModel.TotalCount"
-                         OnSearchChangedCallback="OnSearchChangedAsync"
-                         OnItemSelectedCallback="SelectItem"
-                         OnUploadRequestedCallback="ShowUploadDialog"
-                         OnPreviousPageCallback="PreviousPageAsync"
-                         OnNextPageCallback="NextPageAsync" />
-
-            <!-- Media Preview (1/4 height) -->
-            <MediaPreview SelectedItem="_viewModel.SelectedItem"
-                         OnCloseCallback="CloseDetails"
-                         OnDeleteRequestedCallback="DeleteSelectedItemAsync"
-                         OnCopyUrlCallback="CopyToClipboard" />
-        </div>
-    </div>
+    <MediaLibraryContent />
 </div>
 
 <!-- Upload Dialog -->
@@ -58,156 +26,7 @@
                   UploadedBy="system" />
 
 @code {
-    private readonly MediaLibraryViewModel _viewModel = new();
-    private bool _showUploadDialog = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadDateFoldersAsync();
-        await LoadMediaItemsAsync();
-    }
-
-    private async Task LoadDateFoldersAsync()
-    {
-        try
-        {
-            _viewModel.IsLoading = true;
-            var dateFolders = await MediaService.GetDateFoldersAsync(
-                _viewModel.SelectedMediaType, 
-                CancellationToken.None);
-
-            _viewModel.DateFolders = dateFolders.Select(df => new DateFolderInfo
-            {
-                DateFolder = df,
-                DisplayName = DateFolderInfo.GetDisplayName(df),
-                ItemCount = 0 // We could get counts in a separate query if needed
-            }).ToList();
-
-            // Auto-select the first (newest) folder if none selected
-            if (_viewModel.SelectedDateFolder == null && _viewModel.DateFolders.Any())
-            {
-                _viewModel.SelectedDateFolder = _viewModel.DateFolders.First().DateFolder;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to load date folders");
-        }
-        finally
-        {
-            _viewModel.IsLoading = false;
-        }
-    }
-
-    private async Task LoadMediaItemsAsync()
-    {
-        try
-        {
-            _viewModel.IsLoading = true;
-            
-            var pagingParams = new PagingParameters
-            {
-                PageNumber = _viewModel.CurrentPage,
-                PageSize = _viewModel.PageSize
-            };
-
-            PagedResult<MediaItem> result;
-
-            if (!string.IsNullOrWhiteSpace(_viewModel.SearchTerm))
-            {
-                // Search mode
-                result = await MediaService.SearchAsync(
-                    _viewModel.SearchTerm,
-                    pagingParams,
-                    CancellationToken.None);
-            }
-            else if (_viewModel.SelectedDateFolder != null)
-            {
-                // Date folder mode
-                result = await MediaService.GetItemsByDateFolderAsync(
-                    _viewModel.SelectedDateFolder,
-                    _viewModel.SelectedMediaType,
-                    pagingParams,
-                    CancellationToken.None);
-            }
-            else
-            {
-                // No items to show
-                result = new PagedResult<MediaItem>
-                {
-                    Items = [],
-                    TotalCount = 0,
-                    PageNumber = 1,
-                    PageSize = _viewModel.PageSize
-                };
-            }
-
-            _viewModel.MediaItems = result.Items.ToList();
-            _viewModel.TotalCount = result.TotalCount;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to load media items");
-        }
-        finally
-        {
-            _viewModel.IsLoading = false;
-        }
-    }
-
-    private async Task OnFilterChangedAsync()
-    {
-        _viewModel.CurrentPage = 1;
-        _viewModel.SelectedDateFolder = null;
-        await LoadDateFoldersAsync();
-        await LoadMediaItemsAsync();
-    }
-
-    private async Task OnSearchChangedAsync()
-    {
-        _viewModel.CurrentPage = 1;
-        await LoadMediaItemsAsync();
-    }
-
-    private async Task SelectDateFolderAsync(string dateFolder)
-    {
-        if (_viewModel.SelectedDateFolder == dateFolder)
-            return;
-
-        _viewModel.SelectedDateFolder = dateFolder;
-        _viewModel.CurrentPage = 1;
-        _viewModel.SearchTerm = null;
-        await LoadMediaItemsAsync();
-    }
-
-    private void SelectItem(MediaItem item)
-    {
-        _viewModel.SelectedItem = item;
-    }
-
-    private void CloseDetails()
-    {
-        _viewModel.SelectedItem = null;
-    }
-
-    private async Task PreviousPageAsync()
-    {
-        if (_viewModel.CurrentPage > 1)
-        {
-            _viewModel.CurrentPage--;
-            await LoadMediaItemsAsync();
-        }
-    }
-
-    private async Task NextPageAsync()
-    {
-        var maxPage = (int)Math.Ceiling((double)_viewModel.TotalCount / _viewModel.PageSize);
-        if (_viewModel.CurrentPage < maxPage)
-        {
-            _viewModel.CurrentPage++;
-            await LoadMediaItemsAsync();
-        }
-    }
+    private bool _showUploadDialog;
 
     private void ShowUploadDialog()
     {
@@ -216,44 +35,13 @@
 
     private async Task OnFilesUploadedAsync()
     {
-        Logger.LogInformation("Files uploaded successfully");
+        Logger.LogInformation("Files uploaded successfully - broadcasting to all users");
         
-        // Refresh the media library to show new uploads
-        await LoadDateFoldersAsync();
-        await LoadMediaItemsAsync();
+        // Broadcast to all users that new files were uploaded
+        // Use null for folder/type since uploads can go to various folders based on date
+        await BroadcastService.BroadcastFolderContentsChangedAsync(
+            FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
         
-        // Close the dialog
         _showUploadDialog = false;
-    }
-
-    private async Task DeleteSelectedItemAsync()
-    {
-        if (_viewModel.SelectedItem == null)
-            return;
-
-        try
-        {
-            var success = await MediaService.DeleteAsync(
-                _viewModel.SelectedItem.Id,
-                _viewModel.SelectedItem.GroupKey,
-                CancellationToken.None);
-
-            if (success)
-            {
-                _viewModel.SelectedItem = null;
-                await LoadDateFoldersAsync();
-                await LoadMediaItemsAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to delete media item");
-        }
-    }
-
-    private void CopyToClipboard(string text)
-    {
-        // TODO: Implement clipboard copy with JavaScript interop
-        Logger.LogInformation("Copy to clipboard: {Text}", text);
     }
 }
