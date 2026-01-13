@@ -21,6 +21,7 @@ public static class RegisterFrontendExtensions
             collection.AddScoped<IBlogSearchFacade, BlogSearchFacade>();
             collection.AddScoped<IFeedFacade, FeedFacade>();
             collection.AddScoped<IArchiveFacade, ArchiveFacade>();
+            collection.AddScoped<IPageDetailFacade, PageDetailFacade>();
 
             return collection;
         }

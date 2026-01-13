@@ -132,6 +132,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Property(p => p.MediaUrls);
         });
 
+        builder.Entity<Page>(b =>
+        {
+            b.ToContainer("Pages");
+            b.HasPartitionKey(p => p.GroupKey);
+            b.HasNoDiscriminator();
+        });
+
         builder.Entity<MediaItem>(b =>
         {
             b.ToContainer("MediaItems");

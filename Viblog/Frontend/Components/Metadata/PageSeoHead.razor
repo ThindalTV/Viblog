@@ -1,0 +1,35 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Frontend.Components.Metadata
+@using static Viblog.Frontend.Components.Metadata.StructuredData
+@using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
+
+<SeoHead 
+    Title="@Page.LiveTitle"
+    Description="@Page.LiveMetaDescription"
+    CanonicalUrl="@CanonicalUrl"
+    Keywords="@Page.LiveMetaKeywords"
+    Author="@Page.AuthorName"
+    ImageUrl="@Page.LiveFeaturedImageUrl"
+    ImageAlt="@Page.LiveFeaturedImageAlt"
+    OgType="website"
+    TwitterCardType="@(string.IsNullOrWhiteSpace(Page.LiveFeaturedImageUrl) ? "summary" : "summary_large_image")">
+    
+    <StructuredData Type="StructuredDataType.CollectionPage" 
+                   Title="@Page.LiveTitle" 
+                   Description="@Page.LiveMetaDescription"
+                   Url="@CanonicalUrl" />
+</SeoHead>
+
+@code {
+    /// <summary>
+    /// The page to generate SEO metadata for
+    /// </summary>
+    [Parameter, EditorRequired]
+    public PageEntity Page { get; set; } = default!;
+
+    /// <summary>
+    /// The canonical URL for the page
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string CanonicalUrl { get; set; } = string.Empty;
+}

@@ -1,0 +1,529 @@
+using System.Linq.Expressions;
+using Viblog.Admin.Facades;
+using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+
+namespace Viblog.Tests.Facades;
+
+/// <summary>
+/// Unit tests for PagesAdminFacade
+/// </summary>
+public class PagesAdminFacadeTests
+{
+    private readonly Mock<IPageRepository> _mockRepository;
+    private readonly PagesAdminFacade _facade;
+
+    public PagesAdminFacadeTests()
+    {
+        _mockRepository = new Mock<IPageRepository>();
+        _facade = new PagesAdminFacade(_mockRepository.Object);
+    }
+
+    [Fact]
+    public async Task GetPagesAsync_WithNullFilter_ReturnsAllPages()
+    {
+        // Arrange
+        var pagingParams = new PagingParameters(1, 10);
+        var expectedPages = new PagedResult<Page>
+        {
+            Items = new List<Page>
+            {
+                CreateTestPage("about", isPublished: true),
+                CreateTestPage("contact", isPublished: false)
+            },
+            TotalCount = 2,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, string>>>(),
+                true,
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Act
+        var result = await _facade.GetPagesAsync(pagingParams, publishedOnly: null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Items.Count());
+        _mockRepository.Verify(r => r.FindAsync(
+            It.IsAny<Expression<Func<Page, bool>>>(),
+            pagingParams,
+            It.IsAny<Expression<Func<Page, string>>>(),
+            true,
+            false,
+            default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPagesAsync_WithPublishedOnlyTrue_ReturnsPublishedPages()
+    {
+        // Arrange
+        var pagingParams = new PagingParameters(1, 10);
+        var expectedPages = new PagedResult<Page>
+        {
+            Items = new List<Page> { CreateTestPage("about", isPublished: true) },
+            TotalCount = 1,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, string>>>(),
+                true,
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Act
+        var result = await _facade.GetPagesAsync(pagingParams, publishedOnly: true);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result.Items);
+        Assert.True(result.Items.First().IsPublished);
+    }
+
+    [Fact]
+    public async Task GetPagesAsync_WithPublishedOnlyFalse_ReturnsDraftPages()
+    {
+        // Arrange
+        var pagingParams = new PagingParameters(1, 10);
+        var expectedPages = new PagedResult<Page>
+        {
+            Items = new List<Page> { CreateTestPage("draft-page", isPublished: false) },
+            TotalCount = 1,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, string>>>(),
+                true,
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Act
+        var result = await _facade.GetPagesAsync(pagingParams, publishedOnly: false);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result.Items);
+        Assert.False(result.Items.First().IsPublished);
+    }
+
+    [Theory]
+    [InlineData(PageSortField.Slug)]
+    [InlineData(PageSortField.CreatedAt)]
+    [InlineData(PageSortField.UpdatedAt)]
+    [InlineData(PageSortField.IsPublished)]
+    public async Task GetPagesAsync_WithDifferentSortFields_CallsRepositoryCorrectly(PageSortField sortField)
+    {
+        // Arrange
+        var pagingParams = new PagingParameters(1, 10);
+        var expectedPages = new PagedResult<Page>
+        {
+            Items = new List<Page> { CreateTestPage("test") },
+            TotalCount = 1,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        // Setup for string-based sorts (Slug)
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, string>>>(),
+                It.IsAny<bool>(),
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Setup for DateTimeOffset-based sorts (CreatedAt, UpdatedAt)
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, DateTimeOffset>>>(),
+                It.IsAny<bool>(),
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Setup for bool-based sorts (IsPublished)
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                It.IsAny<bool>(),
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Act
+        var result = await _facade.GetPagesAsync(pagingParams, sortField: sortField);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result.Items);
+    }
+
+    [Fact]
+    public async Task GetPagesAsync_WithAscendingSort_PassesCorrectDirection()
+    {
+        // Arrange
+        var pagingParams = new PagingParameters(1, 10);
+        var expectedPages = new PagedResult<Page>
+        {
+            Items = new List<Page> { CreateTestPage("test") },
+            TotalCount = 1,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, string>>>(),
+                true,
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Act
+        await _facade.GetPagesAsync(pagingParams, ascending: true);
+
+        // Assert
+        _mockRepository.Verify(r => r.FindAsync(
+            It.IsAny<Expression<Func<Page, bool>>>(),
+            pagingParams,
+            It.IsAny<Expression<Func<Page, string>>>(),
+            true,
+            false,
+            default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPageByIdAsync_WhenPageExists_ReturnsPage()
+    {
+        // Arrange
+        var pageId = "page-123";
+        var expectedPage = CreateTestPage("about");
+        expectedPage.Id = pageId;
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync(expectedPage);
+
+        // Act
+        var result = await _facade.GetPageByIdAsync(pageId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(pageId, result.Id);
+    }
+
+    [Fact]
+    public async Task GetPageByIdAsync_WhenPageNotFound_ReturnsNull()
+    {
+        // Arrange
+        var pageId = "nonexistent-page";
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync((Page?)null);
+
+        // Act
+        var result = await _facade.GetPageByIdAsync(pageId);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task GetPageByIdAsync_WithInvalidId_ThrowsException(string? invalidId)
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () => await _facade.GetPageByIdAsync(invalidId!));
+    }
+
+    [Fact]
+    public async Task GetPageByIdAsync_WithNullId_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.GetPageByIdAsync(null!));
+    }
+
+    [Fact]
+    public async Task CreatePageAsync_WithValidPage_CallsRepositoryAndSaves()
+    {
+        // Arrange
+        var page = CreateTestPage("new-page");
+
+        _mockRepository.Setup(r => r.AddAsync(page, default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.CreatePageAsync(page);
+
+        // Assert
+        _mockRepository.Verify(r => r.AddAsync(page, default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePageAsync_WithNullPage_ThrowsException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.CreatePageAsync(null!));
+    }
+
+    [Fact]
+    public async Task UpdatePageAsync_WithValidPage_CallsRepositoryAndSaves()
+    {
+        // Arrange
+        var page = CreateTestPage("existing-page");
+        page.Id = "page-123";
+
+        _mockRepository.Setup(r => r.UpdateAsync(page, default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.UpdatePageAsync(page);
+
+        // Assert
+        _mockRepository.Verify(r => r.UpdateAsync(page, default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdatePageAsync_WithNullPage_ThrowsException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.UpdatePageAsync(null!));
+    }
+
+    [Fact]
+    public async Task DeletePageAsync_WithValidIds_CallsRepositoryAndSaves()
+    {
+        // Arrange
+        var pageId = "page-123";
+        var partitionKey = "pages";
+
+        _mockRepository.Setup(r => r.DeleteAsync(pageId, partitionKey, true, default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.DeletePageAsync(pageId, partitionKey);
+
+        // Assert
+        _mockRepository.Verify(r => r.DeleteAsync(pageId, partitionKey, true, default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task DeletePageAsync_WithInvalidId_ThrowsException(string? invalidId)
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () => await _facade.DeletePageAsync(invalidId!, "partition"));
+    }
+
+    [Fact]
+    public async Task DeletePageAsync_WithNullId_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.DeletePageAsync(null!, "partition"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task DeletePageAsync_WithInvalidPartitionKey_ThrowsException(string? invalidPartitionKey)
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () => await _facade.DeletePageAsync("id", invalidPartitionKey!));
+    }
+
+    [Fact]
+    public async Task DeletePageAsync_WithNullPartitionKey_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.DeletePageAsync("id", null!));
+    }
+
+    [Fact]
+    public async Task PublishPageNowAsync_WhenPageExists_PublishesAndSaves()
+    {
+        // Arrange
+        var pageId = "page-123";
+        var page = CreateTestPage("draft-page", isPublished: false);
+        page.Id = pageId;
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync(page);
+        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.PublishPageNowAsync(pageId);
+
+        // Assert
+        Assert.True(page.IsPublished);
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.IsPublished), default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task PublishPageNowAsync_WhenPageNotFound_ThrowsException()
+    {
+        // Arrange
+        var pageId = "nonexistent-page";
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync((Page?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _facade.PublishPageNowAsync(pageId));
+    }
+
+    [Fact]
+    public async Task SchedulePagePublishingAsync_WhenPageExists_SetsPublishDateAndSaves()
+    {
+        // Arrange
+        var pageId = "page-123";
+        var publishDate = DateTimeOffset.UtcNow.AddDays(1);
+        var page = CreateTestPage("scheduled-page", isPublished: false);
+        page.Id = pageId;
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync(page);
+        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.SchedulePagePublishingAsync(pageId, publishDate);
+
+        // Assert
+        Assert.Equal(publishDate, page.PublishDate);
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.PublishDate == publishDate), default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task SchedulePagePublishingAsync_WhenPageNotFound_ThrowsException()
+    {
+        // Arrange
+        var pageId = "nonexistent-page";
+        var publishDate = DateTimeOffset.UtcNow.AddDays(1);
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync((Page?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _facade.SchedulePagePublishingAsync(pageId, publishDate));
+    }
+
+    [Fact]
+    public async Task UnpublishPageAsync_WhenPageExists_UnpublishesAndSaves()
+    {
+        // Arrange
+        var pageId = "page-123";
+        var page = CreateTestPage("published-page", isPublished: true);
+        page.Id = pageId;
+        page.PublishDate = DateTimeOffset.UtcNow;
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync(page);
+        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
+            .Returns(Task.CompletedTask);
+        _mockRepository.Setup(r => r.SaveChangesAsync(default))
+            .ReturnsAsync(1);
+
+        // Act
+        await _facade.UnpublishPageAsync(pageId);
+
+        // Assert
+        Assert.False(page.IsPublished);
+        Assert.Null(page.PublishDate);
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => !p.IsPublished && p.PublishDate == null), default), Times.Once);
+        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UnpublishPageAsync_WhenPageNotFound_ThrowsException()
+    {
+        // Arrange
+        var pageId = "nonexistent-page";
+
+        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
+            .ReturnsAsync((Page?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _facade.UnpublishPageAsync(pageId));
+    }
+
+    [Fact]
+    public void Constructor_WithNullRepository_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new PagesAdminFacade(null!));
+    }
+
+    private static Page CreateTestPage(string slug, bool isPublished = true)
+    {
+        return new Page
+        {
+            Id = Guid.NewGuid().ToString(),
+            GroupKey = "pages",
+            Slug = slug,
+            IsPublished = isPublished,
+            LiveTitle = $"Live Title for {slug}",
+            LiveMarkdown = "# Live Content",
+            LiveContent = "<h1>Live Content</h1>",
+            LiveMetaDescription = "Live meta description",
+            DraftTitle = $"Draft Title for {slug}",
+            DraftMarkdown = "# Draft Content",
+            DraftContent = "<h1>Draft Content</h1>",
+            DraftMetaDescription = "Draft meta description",
+            AuthorId = "author-123",
+            AuthorName = "Test Author",
+            ViewCount = 0,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+    }
+}

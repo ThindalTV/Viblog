@@ -76,6 +76,7 @@ public static class CosmosDbServiceExtensions
         // Register specific repositories
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
+        services.AddScoped<IPageRepository, PageRepository>();
 
         return services;
     }

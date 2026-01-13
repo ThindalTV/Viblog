@@ -27,6 +27,7 @@ public static class RegisterAdminExtensions
             
             // Register admin facades
             collection.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
+            collection.AddScoped<IPagesAdminFacade, PagesAdminFacade>();
             
             // Register admin services
             collection.AddScoped<IMessageService, MessageService>();

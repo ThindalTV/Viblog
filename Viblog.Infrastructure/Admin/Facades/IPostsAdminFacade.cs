@@ -23,6 +23,36 @@ public interface IPostsAdminFacade
         PostSortField sortField = PostSortField.CreatedAt,
         bool ascending = false,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get a blog post by its ID for editing (bypasses publish check)
+    /// </summary>
+    /// <param name="id">The blog post ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The blog post or null if not found</returns>
+    Task<BlogPost?> GetPostByIdAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create a new blog post
+    /// </summary>
+    /// <param name="post">The blog post to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task CreatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update an existing blog post
+    /// </summary>
+    /// <param name="post">The blog post to update</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task UpdatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a blog post (soft delete)
+    /// </summary>
+    /// <param name="id">The blog post ID</param>
+    /// <param name="partitionKey">The partition key</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task DeletePostAsync(string id, string partitionKey, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

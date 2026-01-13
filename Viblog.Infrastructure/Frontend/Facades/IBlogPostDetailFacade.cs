@@ -3,7 +3,7 @@ using Viblog.Infrastructure.Shared.Data.Entities;
 namespace Viblog.Infrastructure.Frontend.Facades;
 
 /// <summary>
-/// Facade for blog post detail operations
+/// Facade for blog post detail operations (public-facing)
 /// </summary>
 public interface IBlogPostDetailFacade
 {
@@ -14,38 +14,6 @@ public interface IBlogPostDetailFacade
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The blog post or null if not found</returns>
     Task<BlogPost?> GetPostBySlugAsync(string slug, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get a blog post by its ID (for editing, bypasses publish check)
-    /// </summary>
-    /// <param name="id">The blog post ID</param>
-    /// <param name="partitionKey">The partition key</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The blog post or null if not found</returns>
-    Task<BlogPost?> GetPostByIdAsync(string id, string partitionKey, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get a blog post by its ID without partition key (for admin scenarios)
-    /// Note: Less efficient than GetPostByIdAsync with partition key
-    /// </summary>
-    /// <param name="id">The blog post ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The blog post or null if not found</returns>
-    Task<BlogPost?> GetPostByIdWithoutPartitionKeyAsync(string id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Create a new blog post
-    /// </summary>
-    /// <param name="post">The blog post to create</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    Task CreatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Update an existing blog post
-    /// </summary>
-    /// <param name="post">The blog post to update</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    Task UpdatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Increment the view count for a blog post

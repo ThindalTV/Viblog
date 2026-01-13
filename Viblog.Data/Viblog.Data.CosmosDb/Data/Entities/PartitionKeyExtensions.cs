@@ -37,4 +37,14 @@ internal static class PartitionKeyExtensions
     {
         public string SetPartitionKey() => ((BaseEntity)mediaItem).SetPartitionKey();
     }
+
+    extension(Page page)
+    {
+        public string SetPartitionKey()
+        {
+            // Pages use a simple "pages" partition key since they're static and not time-based
+            page.GroupKey = "pages";
+            return page.GroupKey;
+        }
+    }
 }

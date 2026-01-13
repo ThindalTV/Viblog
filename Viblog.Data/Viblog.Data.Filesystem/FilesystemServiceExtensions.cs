@@ -45,6 +45,7 @@ public static class FilesystemServiceExtensions
         // Register specific repositories
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
+        services.AddScoped<IPageRepository, PageRepository>();
         
         // Register media storage repository
         services.AddScoped<IMediaStorageRepository, FileSystemStorageRepository>();
