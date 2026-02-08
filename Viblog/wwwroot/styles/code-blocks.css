@@ -1,0 +1,144 @@
+/* Code block styling for markdown content */
+
+/* Inline code */
+code {
+    background-color: var(--code-inline-bg);
+    border: 1px solid var(--code-inline-border);
+    border-radius: var(--code-border-radius);
+    padding: var(--code-inline-padding);
+    font-family: var(--code-font-family);
+    font-size: var(--code-font-size);
+    color: var(--code-inline-color);
+}
+
+/* Code blocks (pre > code) */
+pre {
+    background-color: var(--code-block-bg);
+    border: 1px solid var(--code-block-border);
+    border-radius: var(--code-block-border-radius);
+    padding: var(--code-block-padding);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: var(--code-line-height);
+}
+
+pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: var(--code-block-font-size);
+    white-space: pre;
+    word-break: normal;
+    word-wrap: normal;
+}
+
+/* ColorCode generated syntax highlighting styles */
+
+/* Keywords */
+pre .keyword {
+    color: var(--code-keyword);
+    font-weight: bold;
+}
+
+/* Strings */
+pre .string {
+    color: var(--code-string);
+}
+
+/* Comments */
+pre .comment {
+    color: var(--code-comment);
+    font-style: italic;
+}
+
+/* Types/Classes */
+pre .class-name,
+pre .type {
+    color: var(--code-type);
+}
+
+/* Methods */
+pre .method {
+    color: var(--code-method);
+}
+
+/* Numbers */
+pre .number {
+    color: var(--code-number);
+}
+
+/* Operators */
+pre .operator {
+    color: var(--code-operator);
+}
+
+/* Preprocessor directives */
+pre .preprocessor {
+    color: var(--code-preprocessor);
+}
+
+/* XML/HTML tags */
+pre .tag {
+    color: var(--code-tag);
+}
+
+/* XML/HTML attribute names */
+pre .attribute-name {
+    color: var(--code-attribute-name);
+}
+
+/* XML/HTML attribute values */
+pre .attribute-value {
+    color: var(--code-attribute-value);
+}
+
+/* Identifiers */
+pre .identifier {
+    color: var(--code-identifier);
+}
+
+/* Plain text in code */
+pre .plain-text {
+    color: var(--code-plain-text);
+}
+
+/* XAML CData sections */
+pre .xaml-cdata {
+    color: var(--code-preprocessor);
+}
+
+/* XAML delimiter */
+pre .xaml-delimiter {
+    color: var(--code-keyword);
+}
+
+/* XAML markup extension class */
+pre .xaml-markup-extension-class {
+    color: var(--code-type);
+}
+
+/* XAML markup extension parameter name */
+pre .xaml-markup-extension-parameter-name {
+    color: var(--code-identifier);
+}
+
+/* XAML markup extension parameter value */
+pre .xaml-markup-extension-parameter-value {
+    color: var(--code-attribute-value);
+}
+
+/* SQL specific */
+pre .sql-system-function {
+    color: var(--code-sql-function);
+}
+
+/* JavaScript/TypeScript specific */
+pre .js-keyword {
+    color: var(--code-keyword);
+}
+
+pre .js-string {
+    color: var(--code-string);
+}
+

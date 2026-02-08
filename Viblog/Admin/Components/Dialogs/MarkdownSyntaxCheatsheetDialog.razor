@@ -1,0 +1,129 @@
+@using Viblog.Admin.Components.Dialogs
+@using Viblog.Admin.Services
+@inject IDialogService DialogService
+@implements IDisposable
+
+<DialogBase @ref="_dialog" IsModal="false" CssClass="markdown-syntax-dialog" OnClose="HandleClose">
+    <Title>
+        <h2 class="dialog-title">Markdown Syntax Cheatsheet</h2>
+    </Title>
+    <Content>
+        <div class="markdown-cheatsheet">
+            <div class="cheatsheet-section">
+                <h3>Headers</h3>
+                <div class="example">
+                    <code># H1</code>
+                    <code>## H2</code>
+                    <code>### H3</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Text Formatting</h3>
+                <div class="example">
+                    <code>**bold text**</code>
+                    <code>*italic text*</code>
+                    <code>***bold and italic***</code>
+                    <code>~~strikethrough~~</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Lists</h3>
+                <div class="example">
+                    <code>- Unordered item</code>
+                    <code>* Another item</code>
+                    <code>1. Ordered item</code>
+                    <code>2. Second item</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Links & Images</h3>
+                <div class="example">
+                    <code>[Link text](https://example.com)</code>
+                    <code>![Alt text](image.jpg)</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Code</h3>
+                <div class="example">
+                    <code>`inline code`</code>
+                    <code>```language</code>
+                    <code>code block</code>
+                    <code>```</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Blockquotes</h3>
+                <div class="example">
+                    <code>&gt; This is a quote</code>
+                    <code>&gt; Multiple lines</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Horizontal Rule</h3>
+                <div class="example">
+                    <code>---</code>
+                    <code>***</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Tables</h3>
+                <div class="example">
+                    <code>| Header 1 | Header 2 |</code>
+                    <code>|----------|----------|</code>
+                    <code>| Cell 1   | Cell 2   |</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Task Lists</h3>
+                <div class="example">
+                    <code>- [ ] Unchecked task</code>
+                    <code>- [x] Checked task</code>
+                </div>
+            </div>
+
+            <div class="cheatsheet-section">
+                <h3>Emoji</h3>
+                <div class="example">
+                    <code>:smile: :heart: :thumbsup:</code>
+                </div>
+            </div>
+        </div>
+    </Content>
+</DialogBase>
+
+@code {
+    private DialogBase? _dialog;
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnDialogChanged += HandleDialogChangedAsync;
+    }
+
+    private async Task HandleDialogChangedAsync(DialogInfo? dialog)
+    {
+        if (dialog is not MarkdownSyntaxDialogInfo)
+        {
+            return;
+        }
+
+        await (_dialog?.ShowAsync() ?? Task.CompletedTask);
+    }
+
+    private void HandleClose()
+    {
+        DialogService.Close();
+    }
+
+    public void Dispose()
+    {
+        DialogService.OnDialogChanged -= HandleDialogChangedAsync;
+    }
+}

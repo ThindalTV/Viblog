@@ -6,14 +6,9 @@ namespace Viblog.Admin.Services;
 public interface IDialogService
 {
     /// <summary>
-    /// Event raised when a dialog should be shown
+    /// Event raised when a dialog should be shown or hidden
     /// </summary>
-    event EventHandler? OnDialogChanged;
-
-    /// <summary>
-    /// Current dialog being displayed
-    /// </summary>
-    DialogInfo? CurrentDialog { get; }
+    event Func<DialogInfo?, Task>? OnDialogChanged;
 
     /// <summary>
     /// Show a confirmation dialog
@@ -45,6 +40,11 @@ public interface IDialogService
     void ShowAlert(string title, string message, Action? onConfirm = null, string confirmText = "OK");
 
     /// <summary>
+    /// Show the markdown syntax cheatsheet dialog
+    /// </summary>
+    void ShowMarkdownSyntaxDialog();
+
+    /// <summary>
     /// Close the current dialog
     /// </summary>
     void Close();
@@ -58,7 +58,7 @@ public class DialogService : IDialogService
     private DialogInfo? _currentDialog;
 
     /// <inheritdoc/>
-    public event EventHandler? OnDialogChanged;
+    public event Func<DialogInfo?, Task>? OnDialogChanged;
 
     /// <inheritdoc/>
     public DialogInfo? CurrentDialog => _currentDialog;
@@ -66,7 +66,7 @@ public class DialogService : IDialogService
     /// <inheritdoc/>
     public void ShowConfirmation(string title, string message, Action onConfirm, string confirmText = "Confirm", string cancelText = "Cancel")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -77,13 +77,13 @@ public class DialogService : IDialogService
             OnConfirm = onConfirm
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void ShowConfirmationAsync(string title, string message, Func<Task> onConfirmAsync, string confirmText = "Confirm", string cancelText = "Cancel")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -94,13 +94,13 @@ public class DialogService : IDialogService
             OnConfirmAsync = onConfirmAsync
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void ShowAlert(string title, string message, Action? onConfirm = null, string confirmText = "OK")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -110,18 +110,26 @@ public class DialogService : IDialogService
             OnConfirm = onConfirm
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
+    }
+
+    /// <inheritdoc/>
+    public void ShowMarkdownSyntaxDialog()
+    {
+        _currentDialog = new MarkdownSyntaxDialogInfo();
+
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void Close()
     {
         _currentDialog = null;
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
-    private void NotifyStateChanged()
+    private async Task NotifyStateChangedAsync()
     {
-        OnDialogChanged?.Invoke(this, EventArgs.Empty);
+        await (OnDialogChanged?.Invoke(_currentDialog) ?? Task.CompletedTask);
     }
 }

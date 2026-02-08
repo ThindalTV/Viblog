@@ -1,9 +1,38 @@
+using Microsoft.AspNetCore.Components;
+
 namespace Viblog.Admin.Services;
 
 /// <summary>
-/// Represents a dialog to be displayed
+/// Dialog type enumeration
 /// </summary>
-public class DialogInfo
+public enum DialogType
+{
+    /// <summary>
+    /// Standard confirmation/alert dialog
+    /// </summary>
+    Standard,
+
+    /// <summary>
+    /// Markdown syntax cheatsheet
+    /// </summary>
+    MarkdownSyntax
+}
+
+/// <summary>
+/// Base class for dialog information
+/// </summary>
+public abstract class DialogInfo
+{
+    /// <summary>
+    /// Type of dialog to display
+    /// </summary>
+    public DialogType Type { get; set; }
+}
+
+/// <summary>
+/// Information for message/confirmation dialogs
+/// </summary>
+public class MessageDialogInfo : DialogInfo
 {
     /// <summary>
     /// Dialog title
@@ -54,4 +83,20 @@ public class DialogInfo
     /// Async action to execute when cancelled
     /// </summary>
     public Func<Task>? OnCancelAsync { get; set; }
+
+    public MessageDialogInfo()
+    {
+        Type = DialogType.Standard;
+    }
+}
+
+/// <summary>
+/// Information for markdown syntax cheatsheet dialog
+/// </summary>
+public class MarkdownSyntaxDialogInfo : DialogInfo
+{
+    public MarkdownSyntaxDialogInfo()
+    {
+        Type = DialogType.MarkdownSyntax;
+    }
 }
