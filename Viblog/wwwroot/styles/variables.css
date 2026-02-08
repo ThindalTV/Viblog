@@ -67,4 +67,64 @@
     --admin-border: #e0e0e0;
     --admin-error: #dc3545;
     --admin-success: #28a745;
+
+    /* Code Block Colors - Light Theme */
+    --code-inline-bg: #f4f4f4;
+    --code-inline-border: #ddd;
+    --code-inline-color: #c7254e;
+    --code-block-bg: #f8f8f8;
+    --code-block-border: #ddd;
+    --code-keyword: #0000ff;
+    --code-string: #a31515;
+    --code-comment: #008000;
+    --code-type: #2b91af;
+    --code-method: #74531f;
+    --code-number: #098658;
+    --code-operator: #000000;
+    --code-preprocessor: #808080;
+    --code-tag: #800000;
+    --code-attribute-name: #ff0000;
+    --code-attribute-value: #0000ff;
+    --code-identifier: #000000;
+    --code-plain-text: #000000;
+    --code-sql-function: #ff00ff;
+
+    /* Code Block Typography */
+    --code-font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    --code-font-size: 0.9em;
+    --code-block-font-size: 0.875em;
+    --code-line-height: 1.45;
+
+    /* Code Block Spacing */
+    --code-inline-padding: 2px 6px;
+    --code-block-padding: 16px;
+    --code-border-radius: 3px;
+    --code-block-border-radius: 4px;
 }
+
+/* Dark theme support disabled - using light theme only for now */
+/*
+@media (prefers-color-scheme: dark) {
+    :root {
+        --code-inline-bg: #2d2d2d;
+        --code-inline-border: #404040;
+        --code-inline-color: #f8c555;
+        --code-block-bg: #1e1e1e;
+        --code-block-border: #404040;
+        --code-keyword: #569cd6;
+        --code-string: #ce9178;
+        --code-comment: #6a9955;
+        --code-type: #4ec9b0;
+        --code-method: #dcdcaa;
+        --code-number: #b5cea8;
+        --code-operator: #d4d4d4;
+        --code-preprocessor: #9b9b9b;
+        --code-tag: #569cd6;
+        --code-attribute-name: #9cdcfe;
+        --code-attribute-value: #ce9178;
+        --code-identifier: #d4d4d4;
+        --code-plain-text: #d4d4d4;
+    }
+}
+*/
+

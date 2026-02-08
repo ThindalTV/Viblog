@@ -1,9 +1,19 @@
 @using Viblog.Admin.Components.Input
+@using Viblog.Admin.Services
+@using Viblog.Infrastructure.Shared.Services
+
+@inject IMarkdownService MarkdownService
+@inject IDialogService DialogService
 
 <div class="markdown-editor">
     @if (!string.IsNullOrWhiteSpace(Label))
     {
-        <label class="editor-label">@Label</label>
+        <div class="editor-label-row">
+            <label class="editor-label">@Label</label>
+            <button type="button" class="btn-markdown-help" @onclick="ShowCheatsheet" title="Markdown Syntax Help">
+                ?
+            </button>
+        </div>
     }
 
     <div class="editor-container">
@@ -101,23 +111,20 @@
 
     private async Task RenderMarkdown(string markdown)
     {
-        // TODO: Integrate a proper markdown library (e.g., Markdig)
-        // For now, just wrap content in paragraphs as a placeholder
         if (!string.IsNullOrWhiteSpace(markdown))
         {
-            var paragraphs = markdown
-                .Split(["\n\n", "\r\n\r\n"], StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => $"<p>{System.Net.WebUtility.HtmlEncode(p.Trim())}</p>");
-            
-            var rendered = string.Join("\n", paragraphs);
-            RenderedContent = rendered;
-            await RenderedContentChanged.InvokeAsync(rendered);
+            RenderedContent = MarkdownService.RenderToHtml(markdown);
+            await RenderedContentChanged.InvokeAsync(RenderedContent);
         }
         else
         {
-            // When content is empty, set to null (not empty string) for "short" posts
             RenderedContent = string.Empty;
             await RenderedContentChanged.InvokeAsync(string.Empty);
         }
+    }
+
+    private void ShowCheatsheet()
+    {
+        DialogService.ShowMarkdownSyntaxDialog();
     }
 }

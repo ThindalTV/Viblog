@@ -1,6 +1,9 @@
 /* Import variables */
 @import 'styles/variables.css';
 
+/* Import code block styles */
+@import 'styles/code-blocks.css';
+
 /* Base styles */
 html, body {
     font-family: var(--font-family-base);

@@ -26,6 +26,9 @@ public static class ServiceExtensions
         // Register text utilities
         services.AddScoped<ITextUtilities, TextUtilities>();
 
+        // Register markdown service
+        services.AddScoped<IMarkdownService, MarkdownService>();
+
         // Register media services
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IMetadataExtractorService, MetadataExtractorService>();
