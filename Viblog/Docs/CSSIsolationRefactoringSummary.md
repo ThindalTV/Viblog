@@ -47,7 +47,7 @@ Refactored to use Blazor's built-in CSS isolation feature, where each component/
 - Easy to find what styles a component
 
 ### ?? Performance
-- Single bundled `Vilog.styles.css` file
+- Single bundled `Viblog.styles.css` file
 - Browser can optimize scoped CSS
 - Smaller global CSS footprint
 - Better caching strategy
@@ -183,14 +183,14 @@ For each component:
 
 Blazor automatically generates:
 ```
-wwwroot/Vilog.styles.css
+wwwroot/Viblog.styles.css
 ```
 
 Contains all scoped CSS from all `.razor.css` files, bundled and minified.
 
 Referenced in `App.razor`:
 ```html
-<link rel="stylesheet" href="Vilog.styles.css" />
+<link rel="stylesheet" href="Viblog.styles.css" />
 ```
 
 ## Testing
@@ -230,7 +230,7 @@ Referenced in `App.razor`:
 - Styled Components (not Blazor native)
 
 ## Related Documentation
-- `Vilog\Docs\CSSIsolationStrategy.md` - Detailed strategy guide
+- `Viblog\Docs\CSSIsolationStrategy.md` - Detailed strategy guide
 - [Blazor CSS Isolation Docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/components/css-isolation)
 
 ## Conclusion

@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Authorization;
-using Vilog.Admin.Configuration;
-using Vilog.Admin.Facades;
-using Vilog.Admin.Infrastructure;
-using Vilog.Admin.Services;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Viblog.Admin.Configuration;
+using Viblog.Admin.Facades;
+using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Admin.Services;
 
-namespace Vilog.Admin;
+namespace Viblog.Admin;
 
 public static class RegisterAdminExtensions
 {
@@ -14,7 +13,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IServiceCollection collection)
     {
-        public IServiceCollection AddVilogAdmin()
+        public IServiceCollection AddViblogAdmin()
         {
             // Register admin authentication settings
             var adminSettings = new AdminAuthenticationSettings();
@@ -28,10 +27,14 @@ public static class RegisterAdminExtensions
             
             // Register admin facades
             collection.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
+            collection.AddScoped<IPagesAdminFacade, PagesAdminFacade>();
             
             // Register admin services
             collection.AddScoped<IMessageService, MessageService>();
             collection.AddScoped<IDialogService, DialogService>();
+            
+            // Register media library broadcast service (singleton for cross-user notifications)
+            collection.AddSingleton<IMediaLibraryBroadcastService, InMemoryMediaLibraryBroadcastService>();
             
             // Add Telerik UI for Blazor services
             collection.AddTelerikBlazor();
@@ -50,7 +53,15 @@ public static class RegisterAdminExtensions
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.Cookie.Name = "Vilog.Admin.Auth";
+                    options.Cookie.Name = "Viblog.Admin.Auth";
+                });
+
+            // Configure authorization policies
+            collection.AddAuthorizationBuilder()
+                .AddPolicy("Admin", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
                 });
 
             return collection;
@@ -62,7 +73,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IApplicationBuilder app)
     {
-        public IApplicationBuilder UseVilogAdmin()
+        public IApplicationBuilder UseViblogAdmin()
         {
             app.UseAuthentication();
             app.UseAuthorization();
@@ -76,7 +87,7 @@ public static class RegisterAdminExtensions
     /// </summary>
     extension(IEndpointRouteBuilder endpoints)
     {
-        public IEndpointRouteBuilder MapVilogAdminEndpoints()
+        public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
             // Map admin login endpoint
             endpoints.MapPost("/admin/api/login", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>

@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Vilog.Shared.Models.Feeds;
+namespace Viblog.Shared.Models.Feeds;
 
 /// <summary>
 /// Represents a category in an Atom feed

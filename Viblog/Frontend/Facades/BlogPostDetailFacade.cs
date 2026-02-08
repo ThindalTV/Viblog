@@ -1,11 +1,11 @@
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Vilog.Frontend.Facades;
+namespace Viblog.Frontend.Facades;
 
 /// <summary>
-/// Facade implementation for blog post detail operations
+/// Facade implementation for blog post detail operations (public-facing)
 /// </summary>
 public class BlogPostDetailFacade : IBlogPostDetailFacade
 {
@@ -61,49 +61,5 @@ public class BlogPostDetailFacade : IBlogPostDetailFacade
         }
 
         return await _blogPostRepository.GetRelatedPostsAsync(post, maxPosts, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task<BlogPost?> GetPostByIdAsync(
-        string id,
-        string partitionKey,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
-
-        return await _blogPostRepository.GetByIdAsync(id, partitionKey, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task<BlogPost?> GetPostByIdWithoutPartitionKeyAsync(
-        string id,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-
-        return await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task CreatePostAsync(
-        BlogPost post,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(post);
-
-        await _blogPostRepository.AddAsync(post, cancellationToken);
-        await _blogPostRepository.SaveChangesAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task UpdatePostAsync(
-        BlogPost post,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(post);
-
-        await _blogPostRepository.UpdateAsync(post, cancellationToken);
-        await _blogPostRepository.SaveChangesAsync(cancellationToken);
     }
 }

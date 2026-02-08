@@ -1,35 +1,48 @@
-@using Vilog.Frontend.Models
+@using Viblog.Frontend.Models
 
 @if (Show)
 {
-    <div class="profile-header">
-        <div class="profile-cards">
-            <div class="profile-bio-card">
-                <h2 class="profile-role">@Role</h2>
-                <div class="profile-bio">
-                    @Bio
-                </div>
-                @if (SocialLinks != null && SocialLinks.Any())
-                {
-                    <div class="profile-social-links">
-                        @foreach (var link in SocialLinks)
-                        {
+    <div class="header-content">
+        <section class="header-presentation box">
+            <h2>@Role</h2>
+            <div class="bio-content">
+                @Bio
+            </div>
+            @if (SocialLinks != null && SocialLinks.Any())
+            {
+                <ul class="socials">
+                    @foreach (var link in SocialLinks)
+                    {
+                        <li>
                             <a href="@link.Url" 
                                target="_blank" 
-                               rel="noopener noreferrer" 
-                               aria-label="@link.Label"
-                               class="social-link">
-                                @((MarkupString)link.Icon)
+                               rel="nofollow noopener noreferrer" 
+                               aria-label="@link.Label">
+                                <img src="@link.Icon" alt="@link.Label" />
                             </a>
-                        }
-                    </div>
-                }
-            </div>
-            
-            <div class="profile-image-card">
-                <img src="@ImageUrl" alt="@ImageAlt" class="profile-image" />
-            </div>
-        </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+        <section class="header-photo box">
+            @if (Awards != null && Awards.Any())
+            {
+                <ul class="header-awards">
+                    @foreach (var award in Awards)
+                    {
+                        <li>
+                            <a href="@award.Url" 
+                               target="_blank" 
+                               rel="nofollow noopener noreferrer" 
+                               title="@award.Title">
+                                <img src="@award.ImageUrl" alt="@award.AltText" />
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
     </div>
 }
 
@@ -53,20 +66,14 @@
     public RenderFragment? Bio { get; set; }
 
     /// <summary>
-    /// Profile image URL
-    /// </summary>
-    [Parameter]
-    public string ImageUrl { get; set; } = "/images/profile.jpg";
-
-    /// <summary>
-    /// Alt text for the profile image
-    /// </summary>
-    [Parameter]
-    public string ImageAlt { get; set; } = "Profile photo";
-
-    /// <summary>
     /// Social media links
     /// </summary>
     [Parameter]
     public List<SocialLink>? SocialLinks { get; set; }
+
+    /// <summary>
+    /// Award images to display
+    /// </summary>
+    [Parameter]
+    public List<Award>? Awards { get; set; }
 }

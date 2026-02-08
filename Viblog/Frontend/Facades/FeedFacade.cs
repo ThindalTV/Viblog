@@ -1,13 +1,13 @@
 using System.Xml;
 using Microsoft.Extensions.Options;
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Models.Feeds;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Models.Feeds;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Frontend.Facades;
+namespace Viblog.Frontend.Facades;
 
 /// <summary>
 /// Facade implementation for RSS/Atom feed generation

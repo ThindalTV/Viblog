@@ -1,6 +1,6 @@
-# SASS Setup for Vilog
+# SASS Setup for Viblog
 
-This document describes the SASS compilation setup for the Vilog blogging platform.
+This document describes the SASS compilation setup for the Viblog blogging platform.
 
 ## Overview
 
@@ -9,7 +9,7 @@ The project uses **AspNetCore.SassCompiler** to automatically compile SCSS files
 ## Structure
 
 ```
-Vilog/
+Viblog/
 ??? wwwroot/
 ?   ??? styles/
 ?   ?   ??? _variables.scss    # Global variables (colors, spacing, breakpoints)
@@ -286,7 +286,7 @@ Use the correct relative path for imports:
 
 ## Configuration
 
-The SASS compiler configuration is in `Vilog.csproj`:
+The SASS compiler configuration is in `Viblog.csproj`:
 
 ```xml
 <PackageReference Include="AspNetCore.SassCompiler" Version="1.79.4" />
@@ -305,7 +305,7 @@ Bootstrap has been completely removed from the project:
 - ? Added: Custom SASS files with variables and mixins
 - ? Added: AspNetCore.SassCompiler for automatic compilation
 
-All Bootstrap classes should be replaced with custom classes using the Vilog design system.
+All Bootstrap classes should be replaced with custom classes using the Viblog design system.
 
 ## Resources
 

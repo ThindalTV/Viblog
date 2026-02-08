@@ -1,0 +1,342 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Data.Common
+@using Viblog.Infrastructure.Shared.Services
+@using Viblog.Admin.Services
+@inject IMediaService MediaService
+@inject IMediaLibraryBroadcastService BroadcastService
+@inject ILogger<FolderContents> Logger
+@implements IAsyncDisposable
+
+<div class="folder-contents">
+    <!-- Search Section -->
+    <div class="search-section">
+        <input type="text" 
+               placeholder="Search files..." 
+               @bind="SearchTerm" 
+               @bind:after="OnSearchChangedAsync"
+               class="search-input" />
+    </div>
+
+    <!-- Media Grid -->
+    <div class="media-grid-container">
+        @if (_isLoading)
+        {
+            <div class="loading-overlay">
+                <p>Loading...</p>
+            </div>
+        }
+        else if (!_mediaItems.Any())
+        {
+            <div class="empty-state">
+                <p>No media files found</p>
+                @if (!string.IsNullOrWhiteSpace(SearchTerm))
+                {
+                    <p>Try a different search term</p>
+                }
+                else if (SelectedMediaType.HasValue)
+                {
+                    <p>Try selecting a different file type</p>
+                }
+                else
+                {
+                    <p>Use the upload button in the header to add files</p>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="media-grid">
+                @foreach (var item in _mediaItems)
+                {
+                    <div class="media-item @(_selectedItem?.Id == item.Id ? "selected" : "")" 
+                         @onclick="() => SelectItemAsync(item)">
+                        <div class="media-thumbnail">
+                            @if (item.PreviewUrl != null)
+                            {
+                                <img src="@item.PreviewUrl" alt="@item.AltText" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="no-preview">
+                                    <span>@Path.GetExtension(item.FileName)</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="media-info">
+                            <div class="media-filename" title="@item.FileName">@item.FileName</div>
+                            <div class="media-meta">
+                                <span class="file-size">@FormatFileSize(item.FileSize)</span>
+                                <span class="upload-date">@item.CreatedAt.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (_totalCount > _pageSize)
+            {
+                <div class="pagination">
+                    <button class="btn-secondary" 
+                            disabled="@(_currentPage <= 1)"
+                            @onclick="PreviousPageAsync">
+                        Previous
+                    </button>
+                    
+                    <span class="page-info">
+                        Page @_currentPage of @Math.Ceiling((double)_totalCount / _pageSize)
+                    </span>
+                    
+                    <button class="btn-secondary" 
+                            disabled="@(_currentPage >= Math.Ceiling((double)_totalCount / _pageSize))"
+                            @onclick="NextPageAsync">
+                        Next
+                    </button>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Media Preview -->
+    <MediaPreview SelectedItem="_selectedItem"
+                 OnCloseCallback="ClosePreview"
+                 OnDeleteRequestedCallback="DeleteSelectedItemAsync"
+                 OnUrlCopied="HandleUrlCopied" />
+</div>
+
+@code {
+    private List<MediaItem> _mediaItems = [];
+    private MediaItem? _selectedItem;
+    private bool _isLoading;
+    private int _currentPage = 1;
+    private readonly int _pageSize = 20;
+    private int _totalCount;
+    
+    // Track previous values to detect meaningful changes
+    private string? _previousDateFolder;
+    private MediaTypeCategory? _previousMediaType;
+
+    /// <summary>
+    /// Search term for filtering
+    /// </summary>
+    [Parameter]
+    public string? SearchTerm { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SearchTermChanged { get; set; }
+
+    /// <summary>
+    /// Selected media type filter
+    /// </summary>
+    [Parameter]
+    public MediaTypeCategory? SelectedMediaType { get; set; }
+
+    /// <summary>
+    /// Selected date folder
+    /// </summary>
+    [Parameter]
+    public string? SelectedDateFolder { get; set; }
+
+    /// <summary>
+    /// Callback when item is selected (for picker mode)
+    /// </summary>
+    [Parameter]
+    public EventCallback<MediaItem> OnItemSelected { get; set; }
+
+    /// <summary>
+    /// Callback when URL is copied (for picker mode)
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnUrlCopied { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _previousDateFolder = SelectedDateFolder;
+        _previousMediaType = SelectedMediaType;
+        
+        // Subscribe to broadcast events
+        BroadcastService.OnFolderContentsChanged += HandleFolderContentsChanged;
+        
+        await LoadMediaItemsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Only reload if date folder or media type changed
+        if (_previousDateFolder != SelectedDateFolder || _previousMediaType != SelectedMediaType)
+        {
+            _previousDateFolder = SelectedDateFolder;
+            _previousMediaType = SelectedMediaType;
+            _currentPage = 1;
+            await LoadMediaItemsAsync();
+        }
+    }
+
+    private async Task HandleFolderContentsChanged(FolderContentsChangedEventArgs args)
+    {
+        // Filter: only refresh if the change is relevant to our current view
+        var isRelevant = args.DateFolder == null || args.DateFolder == SelectedDateFolder;
+        var isTypeRelevant = !args.MediaType.HasValue || args.MediaType == SelectedMediaType;
+
+        if (isRelevant && isTypeRelevant)
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadMediaItemsAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task LoadMediaItemsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            
+            var pagingParams = new PagingParameters
+            {
+                PageNumber = _currentPage,
+                PageSize = _pageSize
+            };
+
+            PagedResult<MediaItem> result;
+
+            if (!string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                result = await MediaService.SearchAsync(
+                    SearchTerm,
+                    pagingParams,
+                    CancellationToken.None);
+            }
+            else if (SelectedDateFolder != null)
+            {
+                result = await MediaService.GetItemsByDateFolderAsync(
+                    SelectedDateFolder,
+                    SelectedMediaType,
+                    pagingParams,
+                    CancellationToken.None);
+            }
+            else
+            {
+                result = new PagedResult<MediaItem>
+                {
+                    Items = [],
+                    TotalCount = 0,
+                    PageNumber = 1,
+                    PageSize = _pageSize
+                };
+            }
+
+            _mediaItems = result.Items.ToList();
+            _totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load media items");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnSearchChangedAsync()
+    {
+        _currentPage = 1;
+        await SearchTermChanged.InvokeAsync(SearchTerm);
+        await LoadMediaItemsAsync();
+    }
+
+    private async Task SelectItemAsync(MediaItem item)
+    {
+        _selectedItem = item;
+        
+        if (OnItemSelected.HasDelegate)
+        {
+            await OnItemSelected.InvokeAsync(item);
+        }
+    }
+
+    private void ClosePreview()
+    {
+        _selectedItem = null;
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+            await LoadMediaItemsAsync();
+        }
+    }
+
+    private async Task NextPageAsync()
+    {
+        var maxPage = (int)Math.Ceiling((double)_totalCount / _pageSize);
+        if (_currentPage < maxPage)
+        {
+            _currentPage++;
+            await LoadMediaItemsAsync();
+        }
+    }
+
+    private async Task DeleteSelectedItemAsync()
+    {
+        if (_selectedItem == null)
+            return;
+
+        try
+        {
+            var success = await MediaService.DeleteAsync(
+                _selectedItem.Id,
+                _selectedItem.GroupKey,
+                CancellationToken.None);
+
+            if (success)
+            {
+                _selectedItem = null;
+                
+                // Broadcast the deletion to all users
+                // Note: We use null for folder/type to refresh all views since we don't track these on MediaItem
+                await BroadcastService.BroadcastFolderContentsChangedAsync(
+                    FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Delete));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete media item");
+        }
+    }
+
+    private async Task HandleUrlCopied(string url)
+    {
+        if (OnUrlCopied.HasDelegate)
+        {
+            await OnUrlCopied.InvokeAsync(url);
+        }
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    /// <summary>
+    /// Cleanup: unsubscribe from broadcast events
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        BroadcastService.OnFolderContentsChanged -= HandleFolderContentsChanged;
+        await ValueTask.CompletedTask;
+    }
+}

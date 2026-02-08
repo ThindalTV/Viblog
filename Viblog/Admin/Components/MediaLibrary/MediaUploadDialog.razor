@@ -1,0 +1,236 @@
+﻿@using Viblog.Infrastructure.Shared.Data.Entities
+@inject ILogger<MediaUploadDialog> Logger
+
+@if (IsVisible)
+{
+    <TelerikWindow @bind-Visible="@IsVisible"
+                   Modal="true"
+                   Width="700px"
+                   Height="auto">
+        <WindowTitle>
+            <strong>Upload Media Files</strong>
+        </WindowTitle>
+        <WindowContent>
+            <div class="upload-dialog-content">
+                <TelerikUpload SaveUrl="@SaveUrl"
+                              RemoveUrl="@RemoveUrl"
+                              SaveField="file"
+                              RemoveField="file"
+                              AllowedExtensions="@AllowedExtensions"
+                              MaxFileSize="@MaxFileSize"
+                              Multiple="true"
+                              AutoUpload="false"
+                              OnSelect="@OnFileSelect"
+                              OnUpload="@OnUploadHandler"
+                              OnSuccess="@OnUploadSuccess"
+                              OnError="@OnUploadError"
+                              OnRemove="@OnRemoveHandler"
+                              @ref="@UploadRef">
+                </TelerikUpload>
+
+                <!-- Upload Instructions -->
+                <div class="upload-instructions">
+                    <p>
+                        <strong>Drag and drop files here or click to browse</strong>
+                    </p>
+                    <p class="upload-hint">
+                        Supported formats: Images, PDFs, Documents, Videos, Audio
+                    </p>
+                    <p class="upload-size-hint">
+                        Max file size: @(MaxFileSize / 1024 / 1024)MB
+                    </p>
+                </div>
+
+                <!-- Success Messages -->
+                @if (_successMessages.Any())
+                {
+                    <div class="success-messages">
+                        @foreach (var message in _successMessages)
+                        {
+                            <div class="success-message">
+                                <span class="success-icon">✓</span>
+                                @message
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Error Messages -->
+                @if (_errorMessages.Any())
+                {
+                    <div class="error-messages">
+                        @foreach (var error in _errorMessages)
+                        {
+                            <div class="error-message">@error</div>
+                        }
+                    </div>
+                }
+            </div>
+        </WindowContent>
+        <WindowActions>
+            <TelerikButton OnClick="@OnClose" ThemeColor="@ThemeConstants.Button.ThemeColor.Base">Close</TelerikButton>
+            <TelerikButton OnClick="@StartUpload" 
+                          ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                          Enabled="@_hasSelectedFiles">
+                Upload All
+            </TelerikButton>
+        </WindowActions>
+    </TelerikWindow>
+}
+
+@code {
+    private TelerikUpload? UploadRef { get; set; }
+
+    /// <summary>
+    /// Whether the dialog is visible
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Event callback when visibility changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    /// <summary>
+    /// Event callback when files are successfully uploaded
+    /// </summary>
+    [Parameter]
+    public EventCallback OnFilesUploaded { get; set; }
+
+    /// <summary>
+    /// Optional folder path for uploads (defaults to date-based)
+    /// </summary>
+    [Parameter]
+    public string? FolderPath { get; set; }
+
+    /// <summary>
+    /// Current user identifier
+    /// </summary>
+    [Parameter]
+    public string? UploadedBy { get; set; }
+
+    // Configuration - matches MediaLibrarySettings
+    private List<string> AllowedExtensions => new()
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".webp",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx",
+        ".mp4", ".webm", ".mp3"
+    };
+
+    private int MaxFileSize => 50 * 1024 * 1024; // 50MB
+
+    // API endpoints - using existing MediaEndpoints
+    private string SaveUrl
+    {
+        get
+        {
+            var folderPath = FolderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM");
+            var url = $"/api/media/upload?folderPath={Uri.EscapeDataString(folderPath)}";
+            
+            if (!string.IsNullOrEmpty(UploadedBy))
+            {
+                url += $"&uploadedBy={Uri.EscapeDataString(UploadedBy)}";
+            }
+            
+            return url;
+        }
+    }
+    
+    private string RemoveUrl => "/api/media/upload"; // Could be different if needed
+
+    // State
+    private bool _hasSelectedFiles = false;
+    private List<string> _successMessages = new();
+    private List<string> _errorMessages = new();
+    private int _uploadedCount = 0;
+
+    private void OnFileSelect(UploadSelectEventArgs args)
+    {
+        _errorMessages.Clear();
+        _hasSelectedFiles = args.Files.Any();
+        
+        Logger.LogInformation("Selected {Count} files", args.Files.Count);
+        StateHasChanged();
+    }
+
+    private void OnUploadHandler(UploadEventArgs args)
+    {
+        // Add query parameters for folder path and uploaded by
+        var folderPath = FolderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM");
+        
+        args.RequestData.Add("folderPath", folderPath);
+        
+        if (!string.IsNullOrEmpty(UploadedBy))
+        {
+            args.RequestData.Add("uploadedBy", UploadedBy);
+        }
+
+        Logger.LogInformation("Uploading file: {FileName} to folder: {FolderPath}", 
+            args.Files.FirstOrDefault()?.Name, folderPath);
+    }
+
+    private void OnUploadSuccess(UploadSuccessEventArgs args)
+    {
+        var fileName = args.Files.FirstOrDefault()?.Name ?? "Unknown file";
+        _successMessages.Add($"Successfully uploaded: {fileName}");
+        _uploadedCount++;
+        
+        Logger.LogInformation("Upload succeeded: {FileName}", fileName);
+        StateHasChanged();
+    }
+
+    private void OnUploadError(UploadErrorEventArgs args)
+    {
+        var fileName = args.Files.FirstOrDefault()?.Name ?? "Unknown file";
+        var errorMessage = $"Failed to upload {fileName}: {args.Request.StatusText}";
+        _errorMessages.Add(errorMessage);
+        
+        Logger.LogError("Upload failed: {Error}", errorMessage);
+        StateHasChanged();
+    }
+
+    private void OnRemoveHandler(UploadEventArgs args)
+    {
+        Logger.LogInformation("Removing file: {FileName}", args.Files.FirstOrDefault()?.Name);
+    }
+
+    private async Task StartUpload()
+    {
+        if (UploadRef != null)
+        {
+            _successMessages.Clear();
+            _errorMessages.Clear();
+            _uploadedCount = 0;
+            
+            UploadRef.UploadFiles();
+            
+            // Wait a bit to allow uploads to complete, then notify parent if successful
+            await Task.Delay(1000);
+            
+            if (_uploadedCount > 0 && !_errorMessages.Any())
+            {
+                await OnFilesUploaded.InvokeAsync();
+            }
+        }
+    }
+
+    private async Task OnClose()
+    {
+        // Only close and refresh if files were uploaded
+        if (_uploadedCount > 0)
+        {
+            await OnFilesUploaded.InvokeAsync();
+        }
+        
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+        
+        // Clear state
+        _hasSelectedFiles = false;
+        _successMessages.Clear();
+        _errorMessages.Clear();
+        _uploadedCount = 0;
+    }
+}

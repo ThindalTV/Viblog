@@ -1,0 +1,22 @@
+/* Media Library Content Component */
+.media-library-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 25% 75%; /* Left column 1/4, right column 3/4 */
+    overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .media-library-content {
+        grid-template-columns: 30% 70%;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack vertically on mobile */
+    .media-library-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+}

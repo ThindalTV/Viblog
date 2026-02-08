@@ -1,8 +1,8 @@
-# Vilog Post System: Complete Guide
+# Viblog Post System: Complete Guide
 
 ## Overview
 
-The Vilog post system is the core feature of the blogging platform, providing comprehensive content management capabilities with a focus on flexibility, performance, and SEO optimization. This document covers both the user-facing features and the technical implementation.
+The Viblog post system is the core feature of the blogging platform, providing comprehensive content management capabilities with a focus on flexibility, performance, and SEO optimization. This document covers both the user-facing features and the technical implementation.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ The Vilog post system is the core feature of the blogging platform, providing co
 
 ### States
 
-Posts in Vilog can exist in one of two primary states:
+Posts in Viblog can exist in one of two primary states:
 
 #### 1. Draft
 - **IsPublished**: `false`
@@ -350,7 +350,7 @@ Posts are never hard-deleted from the database:
 
 ### Markdown Support
 
-Vilog uses standard Markdown with these features:
+Viblog uses standard Markdown with these features:
 
 #### Headings
 ```markdown
@@ -633,7 +633,7 @@ The post system follows the **Display-Facade-Repository** pattern:
 ### Entity Model
 
 **Class**: `BlogPost : BaseEntity`
-**Location**: `Vilog.Shared.Data.Entities`
+**Location**: `Viblog.Shared.Data.Entities`
 
 **Key Properties**:
 See [Post Structure](#post-structure) for complete list.
@@ -658,7 +658,7 @@ public void UpdatePartitionKey()
 
 **Interface**: `IBlogPostRepository : IRepository<BlogPost>`
 **Implementation**: `BlogPostRepository`
-**Location**: `Vilog.Shared.Data.Repositories`
+**Location**: `Viblog.Shared.Data.Repositories`
 
 **Specialized Methods**:
 
@@ -778,7 +778,7 @@ Task IncrementViewCountAsync(
 
 **Interface**: `IBlogSearchService`
 **Implementation**: `BlogSearchService`
-**Location**: `Vilog.Shared.Services`
+**Location**: `Viblog.Shared.Services`
 
 **Search Index**:
 ```csharp
@@ -1207,7 +1207,7 @@ var featured = await _repository.GetFeaturedPostsAsync(
 
 ## Summary
 
-The Vilog post system provides a comprehensive, performant, and SEO-optimized blogging platform with:
+The Viblog post system provides a comprehensive, performant, and SEO-optimized blogging platform with:
 
 - **Flexible content management** with drafts and publishing
 - **Rich organization** through categories and tags
@@ -1220,4 +1220,4 @@ The Vilog post system provides a comprehensive, performant, and SEO-optimized bl
 
 Whether you're creating content, managing posts, or extending functionality, the post system offers the tools and patterns needed for a professional blogging experience.
 
-For technical support or feature requests, please refer to the main [Vilog Architecture Guide](./general.md).
+For technical support or feature requests, please refer to the main [Viblog Architecture Guide](./general.md).

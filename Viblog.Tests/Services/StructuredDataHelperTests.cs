@@ -1,10 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Services;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 public class StructuredDataHelperTests
 {

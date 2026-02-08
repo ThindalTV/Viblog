@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Helper service for generating JSON-LD structured data for SEO

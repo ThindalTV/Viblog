@@ -1,10 +1,7 @@
 using Microsoft.Extensions.Options;
-using Moq;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Models.Sitemap;
-using Vilog.Shared.Services;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Tests.Api.Endpoints;
+namespace Viblog.Tests.Api.Endpoints;
 
 /// <summary>
 /// Tests for SitemapEndpoints - validates sitemap and robots.txt endpoint behavior

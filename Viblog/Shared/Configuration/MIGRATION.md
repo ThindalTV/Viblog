@@ -199,7 +199,7 @@ public MyService(
 
 **After (Option 2 - Full Config):**
 ```csharp
-public MyService(IOptions<VilogConfiguration> config)
+public MyService(IOptions<ViblogConfiguration> config)
 {
     var siteName = config.Value.SiteMetadata.SiteName;
     var dbName = config.Value.CosmosDb.DatabaseName;

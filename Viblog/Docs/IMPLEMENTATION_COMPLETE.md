@@ -374,7 +374,7 @@ Beyond the requested features, you also get:
 ## ?? Support & Resources
 
 ### Documentation
-All features documented in `/Vilog/Docs/`:
+All features documented in `/Viblog/Docs/`:
 - BlogEnhancements.md (comprehensive)
 - Individual feature docs
 - Architecture guides

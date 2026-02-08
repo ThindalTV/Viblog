@@ -1,7 +1,7 @@
 # Blog Search Architecture
 
 ## Overview
-This document describes the search abstraction layer implemented for the Vilog blogging platform.
+This document describes the search abstraction layer implemented for the Viblog blogging platform.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ This document describes the search abstraction layer implemented for the Vilog b
 ## Components
 
 ### 1. IBlogSearchService (Interface)
-Location: `Vilog\Shared\Services\IBlogSearchService.cs`
+Location: `Viblog\Shared\Services\IBlogSearchService.cs`
 
 Defines the contract for blog search operations:
 - `SearchAsync()` - General search across all indexed content
@@ -22,7 +22,7 @@ Defines the contract for blog search operations:
 - `GetRelatedPostsAsync()` - Find related posts based on tags/categories
 
 ### 2. BlogSearchService (Implementation)
-Location: `Vilog\Shared\Services\BlogSearchService.cs`
+Location: `Viblog\Shared\Services\BlogSearchService.cs`
 
 Default implementation using the repository pattern:
 - Uses `SearchIndex` property for efficient searching
@@ -32,7 +32,7 @@ Default implementation using the repository pattern:
 - Virtual methods for easy testing/mocking
 
 ### 3. SearchIndex Property
-Location: `Vilog\Shared\Data\Entities\BlogPost.cs`
+Location: `Viblog\Shared\Data\Entities\BlogPost.cs`
 
 Optimized search field that concatenates:
 - Title
@@ -45,7 +45,7 @@ Optimized search field that concatenates:
 **Auto-maintained**: Repository automatically updates this field on Add/Update operations.
 
 ### 4. Service Registration
-Location: `Vilog\Shared\Services\ServiceExtensions.cs`
+Location: `Viblog\Shared\Services\ServiceExtensions.cs`
 
 Extension method `AddBlogServices()` for DI registration.
 

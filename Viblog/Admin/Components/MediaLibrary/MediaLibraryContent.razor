@@ -1,0 +1,54 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+
+<div class="media-library-content">
+    <!-- Left Column: Folder Selector -->
+    <FolderSelector @bind-SelectedMediaType="_selectedMediaType"
+                   @bind-SelectedDateFolder="_selectedDateFolder" />
+
+    <!-- Right Column: Folder Contents (includes MediaPreview) -->
+    <FolderContents @bind-SearchTerm="_searchTerm"
+                   SelectedMediaType="_selectedMediaType"
+                   SelectedDateFolder="_selectedDateFolder"
+                   OnItemSelected="HandleItemSelected"
+                   OnUrlCopied="HandleUrlCopied" />
+</div>
+
+@code {
+    private MediaTypeCategory? _selectedMediaType;
+    private string? _selectedDateFolder;
+    private string? _searchTerm;
+
+    /// <summary>
+    /// Callback when a media item is selected. Used by picker mode.
+    /// </summary>
+    [Parameter]
+    public EventCallback<MediaItem> OnMediaItemSelected { get; set; }
+
+    /// <summary>
+    /// Callback when a media item URL is copied. Used by picker mode.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnMediaUrlCopied { get; set; }
+
+    /// <summary>
+    /// Whether the component is in picker mode
+    /// </summary>
+    [Parameter]
+    public bool PickerMode { get; set; }
+
+    private async Task HandleItemSelected(MediaItem item)
+    {
+        if (PickerMode && OnMediaItemSelected.HasDelegate)
+        {
+            await OnMediaItemSelected.InvokeAsync(item);
+        }
+    }
+
+    private async Task HandleUrlCopied(string url)
+    {
+        if (PickerMode && OnMediaUrlCopied.HasDelegate)
+        {
+            await OnMediaUrlCopied.InvokeAsync(url);
+        }
+    }
+}

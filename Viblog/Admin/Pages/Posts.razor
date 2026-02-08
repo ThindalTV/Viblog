@@ -1,13 +1,10 @@
 @page "/admin/posts"
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminLayout
-@using Vilog.Admin.Infrastructure
-@using Vilog.Shared.Data.Entities
-@using Vilog.Shared.Data.Common
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>Posts - Vilog Admin</PageTitle>
+<PageTitle>Posts - Viblog Admin</PageTitle>
 
 <div class="admin-page">
     <div class="page-header">

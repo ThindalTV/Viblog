@@ -1,10 +1,4 @@
-using Moq;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Services;
-
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 public class BlogSearchServiceTests
 {

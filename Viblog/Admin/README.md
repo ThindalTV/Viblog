@@ -1,8 +1,8 @@
-# Vilog Authentication Architecture
+# Viblog Authentication Architecture
 
 ## Overview
 
-Vilog uses a dual-architecture approach:
+Viblog uses a dual-architecture approach:
 - **Public Frontend**: Statically rendered, no authentication required
 - **Admin Area**: Server-interactive with authentication required
 

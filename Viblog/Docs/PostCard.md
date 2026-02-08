@@ -11,7 +11,7 @@ The `PostCard` component is a reusable Blazor component that displays a blog pos
 - Follow the DRY (Don't Repeat Yourself) principle
 
 ## Location
-`Vilog\Frontend\Components\PostCard.razor`
+`Viblog\Frontend\Components\PostCard.razor`
 
 ## Parameters
 
@@ -173,7 +173,7 @@ The component uses existing CSS classes from `blog.scss`:
 - `.post-read-more` - Read more link container
 - `.read-more-link` - Read more link styling
 
-All styles are defined in `Vilog\wwwroot\blog.scss` and apply automatically to the component.
+All styles are defined in `Viblog\wwwroot\blog.scss` and apply automatically to the component.
 
 ## Design Decisions
 
@@ -248,10 +248,10 @@ When using this component:
 7. Don't manually link to detail pages - let the component decide
 
 ## Related Files
-- `Vilog\Frontend\Pages\Index.razor` - Uses PostCard for front page
-- `Vilog\Frontend\Pages\Posts.razor` - Uses PostCard for posts list
-- `Vilog\Frontend\Pages\Post.razor` - Detail page for long-form posts
-- `Vilog\wwwroot\blog.scss` - Styling for post cards
-- `Vilog\Shared\Data\Entities\BlogPost.cs` - Blog post entity definition
-- `Vilog\Shared\Facades\IBlogPostDetailFacade.cs` - Facade for post detail
-- `Vilog\Docs\BlogPostDetail.md` - Documentation for post detail feature
+- `Viblog\Frontend\Pages\Index.razor` - Uses PostCard for front page
+- `Viblog\Frontend\Pages\Posts.razor` - Uses PostCard for posts list
+- `Viblog\Frontend\Pages\Post.razor` - Detail page for long-form posts
+- `Viblog\wwwroot\blog.scss` - Styling for post cards
+- `Viblog\Shared\Data\Entities\BlogPost.cs` - Blog post entity definition
+- `Viblog\Shared\Facades\IBlogPostDetailFacade.cs` - Facade for post detail
+- `Viblog\Docs\BlogPostDetail.md` - Documentation for post detail feature

@@ -1,12 +1,8 @@
 using Microsoft.Extensions.Options;
-using Moq;
-using Vilog.Frontend.Facades;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Frontend.Facades;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Tests.Facades;
+namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for FeedFacade
@@ -313,7 +309,7 @@ public class FeedFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = title,
             Slug = slug,
             Content = content,

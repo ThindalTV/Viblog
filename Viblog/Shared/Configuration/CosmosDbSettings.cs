@@ -1,4 +1,4 @@
-namespace Vilog.Shared.Configuration;
+namespace Viblog.Shared.Configuration;
 
 /// <summary>
 /// Configuration settings for CosmosDB

@@ -1,8 +1,8 @@
-# Vilog Media Manager: Complete Guide
+# Viblog Media Manager: Complete Guide
 
 ## Overview
 
-The Vilog Media Manager is a comprehensive media asset management system designed to handle all types of media files including images, videos, PDFs, and other documents. It provides a flexible, storage-agnostic architecture that allows administrators to upload, organize, preview, and manage media assets efficiently while supporting multiple storage backends.
+The Viblog Media Manager is a comprehensive media asset management system designed to handle all types of media files including images, videos, PDFs, and other documents. It provides a flexible, storage-agnostic architecture that allows administrators to upload, organize, preview, and manage media assets efficiently while supporting multiple storage backends.
 
 **Implementation Plan:** [Media Manager Implementation Plan](../Plans/mediamanager.md)
 
@@ -28,7 +28,7 @@ The Vilog Media Manager is a comprehensive media asset management system designe
 
 ### Media States
 
-Media items in Vilog can exist in several states throughout their lifecycle:
+Media items in Viblog can exist in several states throughout their lifecycle:
 
 #### 1. Uploading
 - **Status**: `Uploading`
@@ -130,7 +130,7 @@ Upload ? Available ? In Use
 #### PublicUrl
 - **Type**: String
 - **Purpose**: Public-facing URL for accessing the file
-- **Example**: `"https://cdn.vilog.com/media/2024/03/abc123-image.png"`
+- **Example**: `"https://cdn.Viblog.com/media/2024/03/abc123-image.png"`
 - **Usage**: Serving content to users
 - **Generation**: Created by storage provider on upload
 
@@ -249,7 +249,7 @@ Upload ? Available ? In Use
 
 ### Storage Provider Abstraction
 
-The Media Manager uses a clean separation between **storage operations** (physical file management) and **metadata operations** (database records). This follows Vilog's repository pattern while allowing pluggable storage backends.
+The Media Manager uses a clean separation between **storage operations** (physical file management) and **metadata operations** (database records). This follows Viblog's repository pattern while allowing pluggable storage backends.
 
 ### Architecture Layers
 
@@ -450,8 +450,8 @@ public class MediaStorageResult
     "Provider": "BlobStorage",
     "BlobStorage": {
       "ConnectionString": "DefaultEndpointsProtocol=https;...",
-      "ContainerName": "vilog-media",
-      "CdnUrl": "https://cdn.vilog.com"
+      "ContainerName": "Viblog-media",
+      "CdnUrl": "https://cdn.Viblog.com"
     }
   }
 }
@@ -466,7 +466,7 @@ public class MediaStorageResult
 
 **Implementation**: `BlobStorageRepository : IMediaStorageRepository`
 
-**Location**: `Vilog.Shared.Data.Repositories.Storage`
+**Location**: `Viblog.Shared.Data.Repositories.Storage`
 
 #### 2. FileSystemStorageRepository
 
@@ -478,8 +478,8 @@ public class MediaStorageResult
   "MediaStorage": {
     "Provider": "FileSystem",
     "FileSystem": {
-      "BasePath": "C:\\Vilog\\Media",
-      "BaseUrl": "https://vilog.local/media"
+      "BasePath": "C:\\Viblog\\Media",
+      "BaseUrl": "https://Viblog.local/media"
     }
   }
 }
@@ -498,7 +498,7 @@ public class MediaStorageResult
 
 **Implementation**: `FileSystemStorageRepository : IMediaStorageRepository`
 
-**Location**: `Vilog.Shared.Data.Repositories.Storage`
+**Location**: `Viblog.Shared.Data.Repositories.Storage`
 
 #### 3. SqlServerStorageRepository
 
@@ -510,7 +510,7 @@ public class MediaStorageResult
   "MediaStorage": {
     "Provider": "SqlServer",
     "SqlServer": {
-      "ConnectionString": "Server=...;Database=VilogMedia;",
+      "ConnectionString": "Server=...;Database=ViblogMedia;",
       "TableName": "MediaFiles",
       "MaxFileSize": 10485760
     }
@@ -531,7 +531,7 @@ public class MediaStorageResult
 
 **Implementation**: `SqlServerStorageRepository : IMediaStorageRepository`
 
-**Location**: `Vilog.Shared.Data.Repositories.Storage`
+**Location**: `Viblog.Shared.Data.Repositories.Storage`
 
 ### Storage Provider Selection
 
@@ -572,7 +572,7 @@ public static IServiceCollection AddMediaStorage(
 2. **Metadata Repository Owns MediaItem**:
    - All entity operations through `IMediaMetadataRepository`
    - Standard repository pattern with CosmosDB
-   - Follows existing Vilog patterns
+   - Follows existing Viblog patterns
 
 3. **Storage Repository Owns Physical Files**:
    - All file operations through `IMediaStorageRepository`
@@ -603,7 +603,7 @@ public static IServiceCollection AddMediaStorage(
 
 **Purpose**: Simplified media upload interface that can be used throughout the application. Unlike MediaFacade, this is focused on quick uploads from anywhere (blog posts, profiles, etc.) with automatic metadata creation.
 
-**Location**: `Vilog.Shared.Services`
+**Location**: `Viblog.Shared.Services`
 
 ```csharp
 public interface IMediaService
@@ -938,7 +938,7 @@ public class CategoryService
 
 #### Creating Blank Folders
 
-Folders in Vilog are path-based and derived from media items. To support creating blank folders in the UI, we use a UI-only approach where folders are managed in component state until files are uploaded to them.
+Folders in Viblog are path-based and derived from media items. To support creating blank folders in the UI, we use a UI-only approach where folders are managed in component state until files are uploaded to them.
 
 **UI-Only Folders Approach**
 
@@ -1514,7 +1514,7 @@ public class MediaSelection
 #### MediaItem Entity
 
 **Class**: `MediaItem : BaseEntity`
-**Location**: `Vilog.Shared.Data.Entities`
+**Location**: `Viblog.Shared.Data.Entities`
 
 **Complete Definition**:
 ```csharp
@@ -1743,7 +1743,7 @@ await _repository.UpdateAsync(item);
 **Benefits**:
 - Switch storage providers without changing entity model
 - Storage operations isolated from database operations
-- Clean repository pattern following Vilog conventions
+- Clean repository pattern following Viblog conventions
 - Each repository has single responsibility
 
 ### Why Not Store Files in CosmosDB?
@@ -1824,8 +1824,8 @@ folderPath: "/images/blog/"
 {
   "id": "abc123",
   "fileName": "image.jpg",
-  "publicUrl": "https://cdn.vilog.com/media/image.jpg",
-  "previewUrl": "https://cdn.vilog.com/media/image.jpg",
+  "publicUrl": "https://cdn.Viblog.com/media/image.jpg",
+  "previewUrl": "https://cdn.Viblog.com/media/image.jpg",
   "fileSize": 102400,
   "mimeType": "image/jpeg",
   "status": "Available",
@@ -1994,7 +1994,7 @@ folderPath: "/images/blog/"
 
 ## Summary
 
-The Vilog Media Manager provides a simplified, performant media asset management system with:
+The Viblog Media Manager provides a simplified, performant media asset management system with:
 
 - **Path-based organization** (no separate folder entities)
 - **No tagging system** (organize by paths, search by metadata)
@@ -2006,4 +2006,4 @@ The Vilog Media Manager provides a simplified, performant media asset management
 
 Whether you're uploading media, organizing assets, or integrating media into blog posts, the Media Manager provides the tools needed for efficient media asset management with minimal complexity.
 
-For technical support or feature requests, please refer to the main [Vilog Architecture Guide](./general.md).
+For technical support or feature requests, please refer to the main [Viblog Architecture Guide](./general.md).

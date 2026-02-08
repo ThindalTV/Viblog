@@ -1,22 +1,20 @@
+using System.Linq.Expressions;
 using Microsoft.Extensions.Options;
-using Moq;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Services;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 public class SitemapServiceTests
 {
     private readonly Mock<IBlogPostRepository> _mockRepository;
+    private readonly Mock<IPageRepository> _mockPageRepository;
     private readonly SiteMetadata _siteMetadata;
     private readonly SitemapService _service;
 
     public SitemapServiceTests()
     {
         _mockRepository = new Mock<IBlogPostRepository>();
+        _mockPageRepository = new Mock<IPageRepository>();
         _siteMetadata = new SiteMetadata
         {
             BaseUrl = "https://example.com",
@@ -25,7 +23,7 @@ public class SitemapServiceTests
         };
 
         var options = Options.Create(_siteMetadata);
-        _service = new SitemapService(_mockRepository.Object, options);
+        _service = new SitemapService(_mockRepository.Object, _mockPageRepository.Object, options);
     }
 
     [Fact]
@@ -37,6 +35,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(emptyPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -57,6 +57,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(emptyPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -90,6 +92,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -113,6 +117,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -152,6 +158,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -176,6 +184,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -203,6 +213,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -226,6 +238,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -251,6 +265,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
+
+        SetupEmptyPages();
 
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
@@ -279,6 +295,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -306,6 +324,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -332,6 +352,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -352,6 +374,8 @@ public class SitemapServiceTests
             It.IsAny<PagingParameters>(),
             cancellationToken))
             .ReturnsAsync(emptyPosts);
+
+        SetupEmptyPages();
 
         // Act
         await _service.GenerateSitemapAsync(cancellationToken);
@@ -391,6 +415,8 @@ public class SitemapServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedPosts);
 
+        SetupEmptyPages();
+
         // Act
         var sitemap = await _service.GenerateSitemapAsync();
 
@@ -402,6 +428,19 @@ public class SitemapServiceTests
     }
 
     #region Helper Methods
+
+    private void SetupEmptyPages()
+    {
+        var emptyPages = new PagedResult<Page>([], 0, 1, 1000);
+        _mockPageRepository.Setup(r => r.FindAsync(
+            It.IsAny<Expression<Func<Page, bool>>>(),
+            It.IsAny<PagingParameters>(),
+            It.IsAny<Expression<Func<Page, string>>>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(emptyPages);
+    }
 
     private static BlogPost CreateBlogPost(
         string slug, 
