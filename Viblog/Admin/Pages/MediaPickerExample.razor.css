@@ -1,0 +1,66 @@
+/* Media Picker Example Page */
+.media-picker-example {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.media-picker-example h1 {
+    margin-bottom: 2rem;
+}
+
+.example-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: var(--color-primary);
+    color: white;
+    align-self: flex-start;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.selected-media {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.selected-media h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.selected-media code {
+    display: block;
+    padding: 1rem;
+    background: var(--color-code-bg);
+    border-radius: 4px;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.preview {
+    margin-top: 1.5rem;
+}
+
+.preview img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using Vilog.Admin.Infrastructure;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Vilog.Admin.Facades;
+namespace Viblog.Admin.Facades;
 
 /// <summary>
 /// Facade implementation for admin post management operations
@@ -57,5 +57,50 @@ public class PostsAdminFacade : IPostsAdminFacade
             PostSortField.CreatedAt or _ => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.CreatedAt, ascending, false, cancellationToken)
         };
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<BlogPost?> GetPostByIdAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        return await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task CreatePostAsync(
+        BlogPost post,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(post);
+
+        await _blogPostRepository.AddAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task UpdatePostAsync(
+        BlogPost post,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(post);
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task DeletePostAsync(
+        string id,
+        string partitionKey,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
+
+        await _blogPostRepository.DeleteAsync(id, partitionKey, softDelete: true, cancellationToken: cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
     }
 }

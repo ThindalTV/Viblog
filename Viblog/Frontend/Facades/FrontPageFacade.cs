@@ -1,9 +1,9 @@
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Vilog.Frontend.Facades;
+namespace Viblog.Frontend.Facades;
 
 /// <summary>
 /// Facade implementation for front page operations

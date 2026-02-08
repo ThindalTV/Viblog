@@ -28,7 +28,7 @@ Use the `TwitterMetadata.Labels` constants for consistency:
 ### Basic Usage with Constants
 
 ```csharp
-using Vilog.Frontend.Models;
+using Viblog.Frontend.Models;
 
 var metadata = new List<TwitterMetadata>
 {

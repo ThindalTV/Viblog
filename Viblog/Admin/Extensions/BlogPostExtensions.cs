@@ -1,7 +1,7 @@
-using Vilog.Admin.Models;
-using Vilog.Shared.Data.Entities;
+using Viblog.Admin.Models;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
-namespace Vilog.Admin.Extensions;
+namespace Viblog.Admin.Extensions;
 
 /// <summary>
 /// Extension methods for converting between BlogPost entity and BlogPostModel
@@ -22,7 +22,7 @@ public static class BlogPostExtensions
             return new BlogPostModel
             {
                 Id = post.Id,
-                PartitionKey = post.PartitionKey,
+                PartitionKey = post.GroupKey,
                 Title = post.Title,
                 Slug = post.Slug,
                 Short = post.Short,
@@ -35,7 +35,6 @@ public static class BlogPostExtensions
                 PublishedAt = post.PublishedAt,
                 IsPublished = post.IsPublished,
                 IsFeatured = post.IsFeatured,
-                AllowComments = post.AllowComments,
                 Tags = [.. post.Tags],
                 CategoryIds = [.. post.CategoryIds]
             };
@@ -67,7 +66,6 @@ public static class BlogPostExtensions
                 PublishedAt = model.PublishedAt,
                 IsPublished = model.IsPublished,
                 IsFeatured = model.IsFeatured,
-                AllowComments = model.AllowComments,
                 Tags = model.Tags,
                 CategoryIds = model.CategoryIds
             };
@@ -76,8 +74,8 @@ public static class BlogPostExtensions
             if (!string.IsNullOrWhiteSpace(model.Id))
             {
                 post.Id = model.Id;
-                post.PartitionKey = model.PartitionKey ?? post.GetPublicationYear();
             }
+
             // For new posts, partition key will be set by repository's UpdatePartitionKey() method
 
             return post;

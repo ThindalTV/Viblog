@@ -1,10 +1,6 @@
-using Moq;
-using Vilog.Frontend.Facades;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Infrastructure;
+using Viblog.Frontend.Facades;
 
-namespace Vilog.Tests.Facades;
+namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for BlogSearchFacade
@@ -273,7 +269,7 @@ public class BlogSearchFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = "test",
+            GroupKey = "test",
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = content,

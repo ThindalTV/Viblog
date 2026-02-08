@@ -1,15 +1,16 @@
 @page "/admin/posts/new"
 @page "/admin/posts/edit/{id}"
-@using Vilog.Admin.Components
-@using Vilog.Admin.Components.Input
-@using Vilog.Admin.Extensions
-@using Vilog.Admin.Models
-@using Vilog.Admin.Services
-@using Vilog.Frontend.Infrastructure
-@using Vilog.Shared.Services
+@using Viblog.Admin.Components
+@using Viblog.Admin.Components.Input
+@using Viblog.Admin.Extensions
+@using Viblog.Admin.Models
+@using Viblog.Admin.Services
+@using Viblog.Frontend.Infrastructure
+@using Viblog.Infrastructure.Admin.Facades
+@using Viblog.Shared.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
-@inject IBlogPostDetailFacade BlogPostDetailFacade
+@inject IPostsAdminFacade PostsAdminFacade
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ITextUtilities TextUtilities
@@ -118,9 +119,6 @@ else
                     <CheckboxInput @bind-Value="_model.IsFeatured"
                                  Label="Featured Post" />
 
-                    <CheckboxInput @bind-Value="_model.AllowComments"
-                                 Label="Allow Comments" />
-
                     <TagInput @bind-Tags="_model.Tags"
                               Label="Tags"
                               HelpText="Press Enter to add a tag" />
@@ -183,7 +181,6 @@ else
             // Initialize with defaults for new post
             _model = new BlogPostModel
             {
-                AllowComments = true,
                 PublishedAt = DateTimeOffset.Now,
                 AuthorName = userName
             };
@@ -198,8 +195,8 @@ else
             _isLoading = true;
             MessageService.Clear();
 
-            // Get post by ID without partition key (admin scenario)
-            var post = await BlogPostDetailFacade.GetPostByIdWithoutPartitionKeyAsync(Id!, CancellationToken.None);
+            // Get post by ID (admin scenario)
+            var post = await PostsAdminFacade.GetPostByIdAsync(Id!);
 
             if (post == null)
             {
@@ -240,12 +237,12 @@ else
             if (_isEditMode)
             {
                 post.UpdatedAt = DateTimeOffset.UtcNow;
-                await BlogPostDetailFacade.UpdatePostAsync(post, CancellationToken.None);
+                await PostsAdminFacade.UpdatePostAsync(post);
                 MessageService.SetSuccess("Post updated successfully!");
             }
             else
             {
-                await BlogPostDetailFacade.CreatePostAsync(post, CancellationToken.None);
+                await PostsAdminFacade.CreatePostAsync(post);
                 MessageService.SetSuccess("Post created successfully!");
             }
 
@@ -339,7 +336,7 @@ else
             MessageService.Clear();
 
             // Load the current post to get all data
-            var post = await BlogPostDetailFacade.GetPostByIdWithoutPartitionKeyAsync(Id!, CancellationToken.None);
+            var post = await PostsAdminFacade.GetPostByIdAsync(Id!);
             
             if (post == null)
             {
@@ -352,7 +349,7 @@ else
             post.PublishedAt = _model.PublishedAt;
             post.UpdatedAt = DateTimeOffset.UtcNow;
 
-            await BlogPostDetailFacade.UpdatePostAsync(post, CancellationToken.None);
+            await PostsAdminFacade.UpdatePostAsync(post, CancellationToken.None);
             
             MessageService.SetSuccess(
                 _model.IsPublished 

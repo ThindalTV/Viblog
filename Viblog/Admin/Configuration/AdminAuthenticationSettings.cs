@@ -1,4 +1,4 @@
-namespace Vilog.Admin.Configuration;
+namespace Viblog.Admin.Configuration;
 
 /// <summary>
 /// Configuration for admin authentication

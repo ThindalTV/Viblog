@@ -2,7 +2,7 @@
 
 ## Overview
 
-Blog posts in Vilog use a **year-based partition key strategy** for optimal performance with Azure CosmosDB.
+Blog posts in Viblog use a **year-based partition key strategy** for optimal performance with Azure CosmosDB.
 
 ## Partition Key Format
 

@@ -6,7 +6,7 @@ The blog now includes a comprehensive search feature that allows users to search
 ## Components
 
 ### 1. BlogSearchFacade
-**Location:** `Vilog\Shared\Facades\BlogSearchFacade.cs`
+**Location:** `Viblog\Shared\Facades\BlogSearchFacade.cs`
 
 **Purpose:** Provides business logic layer for blog search operations.
 
@@ -16,7 +16,7 @@ The blog now includes a comprehensive search feature that allows users to search
 **Registration:** `services.AddScoped<IBlogSearchFacade, BlogSearchFacade>()`
 
 ### 2. Search.razor Page
-**Location:** `Vilog\Frontend\Pages\Search.razor`
+**Location:** `Viblog\Frontend\Pages\Search.razor`
 
 **Routes:**
 - `/search?q={query}` - First page of results
@@ -36,7 +36,7 @@ The blog now includes a comprehensive search feature that allows users to search
 - `Query` (string?, from query string): Search term
 
 ### 3. BlogLayout Enhancement
-**Location:** `Vilog\Frontend\Layout\BlogLayout.razor`
+**Location:** `Viblog\Frontend\Layout\BlogLayout.razor`
 
 **New Features:**
 - Search form in header (always visible)
@@ -440,24 +440,24 @@ Potential improvements:
 ## Related Files
 
 ### Core Implementation
-- `Vilog\Frontend\Pages\Search.razor`
-- `Vilog\Frontend\Pages\Search.razor.css`
-- `Vilog\Shared\Facades\IBlogSearchFacade.cs`
-- `Vilog\Shared\Facades\BlogSearchFacade.cs`
+- `Viblog\Frontend\Pages\Search.razor`
+- `Viblog\Frontend\Pages\Search.razor.css`
+- `Viblog\Shared\Facades\IBlogSearchFacade.cs`
+- `Viblog\Shared\Facades\BlogSearchFacade.cs`
 
 ### Layout Updates
-- `Vilog\Frontend\Layout\BlogLayout.razor`
-- `Vilog\Frontend\Layout\BlogLayout.razor.css`
+- `Viblog\Frontend\Layout\BlogLayout.razor`
+- `Viblog\Frontend\Layout\BlogLayout.razor.css`
 
 ### Services
-- `Vilog\Shared\Services\IBlogSearchService.cs`
-- `Vilog\Shared\Services\BlogSearchService.cs`
+- `Viblog\Shared\Services\IBlogSearchService.cs`
+- `Viblog\Shared\Services\BlogSearchService.cs`
 
 ### Configuration
-- `Vilog\Shared\Services\ServiceExtensions.cs`
+- `Viblog\Shared\Services\ServiceExtensions.cs`
 
 ### Reused Components
-- `Vilog\Frontend\Components\PostCard.razor`
+- `Viblog\Frontend\Components\PostCard.razor`
 
 ## Best Practices
 

@@ -1,14 +1,12 @@
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Models.Sitemap;
-using Vilog.Shared.Services;
+using Viblog.Infrastructure.Shared.Models.Sitemap;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Api.Endpoints;
+namespace Viblog.Api.Endpoints;
 
 /// <summary>
 /// Sitemap API endpoints

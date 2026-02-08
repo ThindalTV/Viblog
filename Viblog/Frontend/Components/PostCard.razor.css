@@ -1,22 +1,45 @@
 /* PostCard Component Isolated Styles */
 
+.post-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .blog-post {
     margin-bottom: 2.5rem;
-    padding: 1.5rem;
-    background-color: #f8f8f8;
-    border-left: 4px solid #1a1a1a;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.blog-post:hover {
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.post-card-link:hover .blog-post {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px 7px rgba(155, 125, 212, 0.15);
+}
+
+.blog-post.grid-card {
+    height: 400px;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.blog-post.grid-card .post-excerpt {
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+.post-card-link .category-link,
+.post-card-link .tag-link {
+    pointer-events: none;
 }
 
 .featured-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background-color: #1a1a1a;
+    background-color: #9b7dd4;
     color: #ffffff;
     font-size: 0.75rem;
     font-weight: 600;
@@ -40,7 +63,7 @@
 }
 
 .post-title a:hover {
-    color: #555555;
+    color: #9b7dd4;
 }
 
 .post-meta {
@@ -58,7 +81,6 @@
     color: #d7d7d7;
 }
 
-.post-author,
 .post-date,
 .reading-time {
     display: inline-block;
@@ -74,7 +96,7 @@
 .category-link {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background-color: #1a1a1a;
+    background-color: #9b7dd4;
     color: #ffffff;
     font-size: 0.75rem;
     font-weight: 500;
@@ -82,11 +104,11 @@
     border-radius: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .category-link:hover {
-    background-color: #333333;
+    background-color: #8566c4;
     transform: translateY(-2px);
 }
 
@@ -111,7 +133,7 @@
     font-size: 0.75rem;
     text-decoration: none;
     border-radius: 0.25rem;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
 .tag-link:hover {
@@ -123,18 +145,16 @@
     margin-top: 1rem;
 }
 
-.read-more-link {
+.read-more-text {
     display: inline-block;
-    color: #1a1a1a;
-    text-decoration: none;
+    color: #9b7dd4;
     font-weight: 600;
     font-size: 0.95rem;
-    transition: color 0.2s ease, transform 0.2s ease;
+    transition: color 0.2s ease;
 }
 
-.read-more-link:hover {
-    color: #333333;
-    transform: translateX(4px);
+.post-card-link:hover .read-more-text {
+    color: #8566c4;
 }
 
 /* Mobile Responsive */

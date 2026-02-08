@@ -1,8 +1,9 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using Viblog.Infrastructure.Shared.Services;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Provides text manipulation and formatting utilities

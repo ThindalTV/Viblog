@@ -1,4 +1,4 @@
-namespace Vilog.Admin.Services;
+namespace Viblog.Admin.Services;
 
 /// <summary>
 /// Service for managing and displaying messages to users

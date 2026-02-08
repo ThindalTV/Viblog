@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Xunit;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Tests.Configuration;
+namespace Viblog.Tests.Configuration;
 
 /// <summary>
 /// Tests demonstrating how to test code that uses the IOptions pattern
@@ -60,13 +59,13 @@ public class ConfigurationTestExamples
     }
 
     /// <summary>
-    /// Example: Testing with the full VilogConfiguration
+    /// Example: Testing with the full ViblogConfiguration
     /// </summary>
     [Fact]
     public void ServiceUsesFullConfig_AccessesMultipleSections()
     {
         // Arrange
-        var config = new VilogConfiguration
+        var config = new ViblogConfiguration
         {
             SiteMetadata = new SiteMetadata
             {
@@ -109,9 +108,9 @@ public class ConfigurationTestExamples
     // Example service using full config
     private class ServiceUsingFullConfig
     {
-        private readonly VilogConfiguration _config;
+        private readonly ViblogConfiguration _config;
 
-        public ServiceUsingFullConfig(IOptions<VilogConfiguration> config)
+        public ServiceUsingFullConfig(IOptions<ViblogConfiguration> config)
         {
             _config = config.Value;
         }

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Vilog.Shared.Utilities;
+namespace Viblog.Shared.Utilities;
 
 /// <summary>
 /// Utility methods for exception handling and formatting

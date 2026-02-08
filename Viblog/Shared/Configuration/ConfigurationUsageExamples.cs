@@ -1,19 +1,19 @@
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
+using Viblog.Shared.Configuration;
 
-namespace Vilog.Shared.Examples;
+namespace Viblog.Shared.Examples;
 
 /// <summary>
-/// Examples demonstrating how to use the Vilog configuration with the IOptions pattern
+/// Examples demonstrating how to use the Viblog configuration with the IOptions pattern
 /// </summary>
 public class ConfigurationUsageExamples
 {
     // Example 1: Inject the entire configuration
     public class ServiceUsingFullConfig
     {
-        private readonly VilogConfiguration _config;
+        private readonly ViblogConfiguration _config;
 
-        public ServiceUsingFullConfig(IOptions<VilogConfiguration> config)
+        public ServiceUsingFullConfig(IOptions<ViblogConfiguration> config)
         {
             _config = config.Value;
         }

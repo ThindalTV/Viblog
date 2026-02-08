@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Vilog.Shared.Models.Sitemap;
+namespace Viblog.Shared.Models.Sitemap;
 
 /// <summary>
 /// Represents a single URL entry in a sitemap

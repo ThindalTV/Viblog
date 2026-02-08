@@ -1,0 +1,49 @@
+/* Media Library Page */
+.media-library {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.media-library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.media-library-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.upload-btn .icon {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .media-library-header {
+        padding: 1rem;
+    }
+
+    .media-library-header h1 {
+        font-size: 1.25rem;
+    }
+    
+    .upload-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+}

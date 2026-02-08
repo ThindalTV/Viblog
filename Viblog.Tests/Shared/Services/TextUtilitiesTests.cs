@@ -1,7 +1,4 @@
-using Vilog.Shared.Services;
-using Xunit;
-
-namespace Vilog.Tests.Shared.Services;
+namespace Viblog.Tests.Shared.Services;
 
 /// <summary>
 /// Tests for TextUtilities service

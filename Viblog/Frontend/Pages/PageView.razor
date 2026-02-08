@@ -1,0 +1,203 @@
+@page "/{slug}"
+@layout Viblog.Frontend.Layout.BlogLayout
+@using Viblog.Frontend.Components.Metadata
+@using Viblog.Infrastructure.Frontend.Facades
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
+
+@inject IPageDetailFacade PageDetailFacade
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (_isLoading)
+{
+    <div class="page-loading">
+        <p class="loading-message">Loading page...</p>
+    </div>
+}
+else if (_errorMessage != null)
+{
+    <div class="page-error">
+        <h2>Error</h2>
+        <p class="error-message">@_errorMessage</p>
+        <a href="/" class="back-link">? Back to Home</a>
+    </div>
+}
+else if (_page == null)
+{
+    <div class="page-not-found">
+        <h2>Page Not Found</h2>
+        <p>The page you're looking for doesn't exist or has been removed.</p>
+        <a href="/" class="back-link">? Back to Home</a>
+    </div>
+}
+else
+{
+    <PageSeoHead Page="@_page" CanonicalUrl="@GetCanonicalUrl()" />
+
+    @if (_isAdmin)
+    {
+        <div class="admin-preview-bar">
+            <div class="preview-controls">
+                <span class="preview-label">Admin Preview:</span>
+                <a href="@GetPreviewUrl(false)" 
+                   class="preview-toggle @(!_showDraft ? "active" : "")">
+                    ✓ Live
+                </a>
+                <a href="@GetPreviewUrl(true)" 
+                   class="preview-toggle @(_showDraft ? "active" : "")">
+                    📝 Draft
+                </a>
+                @if (!_page.IsPublished)
+                {
+                    <span class="preview-status status-unpublished">Unpublished</span>
+                }
+                else if (_showDraft)
+                {
+                    <span class="preview-status status-draft">Viewing Draft</span>
+                }
+            </div>
+            <a href="/admin/pages/edit/@_page.Id" class="edit-link">Edit Page →</a>
+        </div>
+    }
+
+    <article class="page-detail">
+        @if (CurrentContent.ShowTitle)
+        {
+            <header class="page-header">
+                <h1 class="page-title">@CurrentContent.Title</h1>
+            </header>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(CurrentContent.FeaturedImageUrl))
+        {
+            <div class="page-featured-image">
+                <img src="@CurrentContent.FeaturedImageUrl" 
+                     alt="@(CurrentContent.FeaturedImageAlt ?? CurrentContent.Title)" />
+            </div>
+        }
+
+        <div class="page-content">
+            @((MarkupString)CurrentContent.Content)
+        </div>
+
+        @if (_page.ViewCount > 0)
+        {
+            <footer class="page-footer">
+                <div class="page-meta">
+                    <span class="view-count">@_page.ViewCount views</span>
+                </div>
+            </footer>
+        }
+    </article>
+}
+
+@code {
+private PageEntity? _page;
+private bool _isLoading = true;
+private string? _errorMessage;
+private bool _isAdmin;
+private bool _showDraft;
+
+[Parameter]
+public string Slug { get; set; } = string.Empty;
+
+/// <summary>
+/// Gets the current content to display based on admin preview mode
+/// </summary>
+private PageContent CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
+
+protected override async Task OnInitializedAsync()
+{
+    await CheckAdminStatusAsync();
+    CheckPreviewMode();
+    await LoadPageAsync();
+}
+
+protected override async Task OnParametersSetAsync()
+{
+    if (!string.IsNullOrWhiteSpace(Slug))
+    {
+        CheckPreviewMode();
+        await LoadPageAsync();
+    }
+}
+
+private async Task CheckAdminStatusAsync()
+{
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdmin = authState.User.IsInRole("Admin");
+}
+
+private void CheckPreviewMode()
+{
+    // Only allow draft preview for admins
+    if (!_isAdmin)
+    {
+        _showDraft = false;
+        return;
+    }
+
+    // Check for ?preview=draft query parameter
+    var uri = new Uri(Navigation.Uri);
+    var queryParams = QueryHelpers.ParseQuery(uri.Query);
+        
+    _showDraft = queryParams.TryGetValue("preview", out var previewValue) 
+        && previewValue.ToString().Equals("draft", StringComparison.OrdinalIgnoreCase);
+}
+
+private string GetPreviewUrl(bool showDraft)
+{
+    var baseUrl = $"/{Slug}";
+    return showDraft ? $"{baseUrl}?preview=draft" : baseUrl;
+}
+
+    private async Task LoadPageAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            _page = await PageDetailFacade.GetPageBySlugAsync(Slug);
+
+            if (_page == null)
+            {
+                // Page not found - will be handled by custom fallback routing
+                // This allows the router to try other routes or show 404
+                return;
+            }
+
+            // Increment view count if page is found
+            // Fire and forget - don't wait for view count update
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await PageDetailFacade.IncrementViewCountAsync(_page.Id, _page.GroupKey);
+                }
+                catch
+                {
+                    // Silently fail - view count is not critical
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load the page. Please try again later.";
+            // In production, log the exception
+            // Logger.LogError(ex, "Error loading page with slug: {Slug}", Slug);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetCanonicalUrl()
+    {
+        return $"{Navigation.BaseUri}{Slug}";
+    }
+}

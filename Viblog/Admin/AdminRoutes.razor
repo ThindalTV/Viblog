@@ -1,11 +1,11 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Routing
-@using Vilog.Admin
+@using Viblog.Admin
 @inject NavigationManager Navigation
 
 <TelerikRootComponent>
-    <Router AppAssembly="typeof(Vilog.Admin._Imports).Assembly">
+    <Router AppAssembly="typeof(Viblog.Admin._Imports).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.AdminLayout)">
                 <NotAuthorized>

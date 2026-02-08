@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Options;
-using Vilog.Shared.Configuration;
-using Vilog.Shared.Data.Repositories;
-using Vilog.Shared.Models.Sitemap;
+using Viblog.Shared.Configuration;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Models.Sitemap;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Shared.Data.Common;
 
-namespace Vilog.Shared.Services;
+namespace Viblog.Shared.Services;
 
 /// <summary>
 /// Service for generating sitemap data
@@ -11,13 +13,16 @@ namespace Vilog.Shared.Services;
 public class SitemapService : ISitemapService
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IPageRepository _pageRepository;
     private readonly SiteMetadata _siteMetadata;
 
     public SitemapService(
         IBlogPostRepository blogPostRepository,
+        IPageRepository pageRepository,
         IOptions<SiteMetadata> siteMetadata)
     {
         _blogPostRepository = blogPostRepository;
+        _pageRepository = pageRepository;
         _siteMetadata = siteMetadata.Value;
     }
 
@@ -35,9 +40,27 @@ public class SitemapService : ISitemapService
         urlSet.Urls.Add(CreateUrl($"{_siteMetadata.BaseUrl}/posts", DateTime.UtcNow, "daily", "0.9"));
         urlSet.Urls.Add(CreateUrl($"{_siteMetadata.BaseUrl}/archive", DateTime.UtcNow, "weekly", "0.8"));
 
+        // Get all published pages (repository's GetBySlugAsync already handles scheduled promotion)
+        var dukaPages = await _pageRepository.FindAsync(
+            p => p.IsPublished,
+            new PagingParameters { PageSize = 1000 },
+            p => p.Slug,
+            ascending: true,
+            includeDeleted: false,
+            cancellationToken);
+
+        // Add custom pages to sitemap
+        foreach (var page in dukaPages.Items)
+        {
+            var url = $"{_siteMetadata.BaseUrl}/{page.Slug}";
+            var lastMod = page.UpdatedAt.UtcDateTime != default ? page.UpdatedAt.UtcDateTime : page.CreatedAt.UtcDateTime;
+            
+            urlSet.Urls.Add(CreateUrl(url, lastMod, "monthly", "0.8"));
+        }
+
         // Get all published posts
         var posts = await _blogPostRepository.GetPublishedPostsAsync(
-            new Shared.Data.Common.PagingParameters { PageSize = 10000 },
+            new PagingParameters { PageSize = 10000 },
             cancellationToken);
 
         // Blog posts

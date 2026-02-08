@@ -1,0 +1,130 @@
+@using Viblog.Admin.Models
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Helpers
+@using Viblog.Infrastructure.Shared.Services
+@inject IMediaService MediaService
+@inject ILogger<FolderSelector> Logger
+
+<div class="folder-selector">
+    <!-- File Type Filter -->
+    <div class="filter-section">
+        <label>File Type:</label>
+        <select @bind="SelectedMediaType" @bind:after="OnFilterChangedAsync">
+            <option value="">All Files</option>
+            @foreach (var type in Enum.GetValues<MediaTypeCategory>())
+            {
+                <option value="@type">@MediaTypeHelper.GetDisplayName(type)</option>
+            }
+        </select>
+    </div>
+
+    <!-- Date Folders List -->
+    <div class="date-folders">
+        <h3>Uploads By Date</h3>
+        @if (_isLoading && !_dateFolders.Any())
+        {
+            <p class="loading-message">Loading...</p>
+        }
+        else if (!_dateFolders.Any())
+        {
+            <p class="no-folders">No uploads yet</p>
+        }
+        else
+        {
+            <ul class="date-folder-list">
+                @foreach (var folder in _dateFolders)
+                {
+                    <li class="@(folder.DateFolder == SelectedDateFolder ? "active" : "")"
+                        @onclick="() => OnDateFolderSelectedAsync(folder.DateFolder)">
+                        <span class="folder-name">@folder.DisplayName</span>
+                        <span class="item-count">@folder.ItemCount</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    private List<DateFolderInfo> _dateFolders = [];
+    private bool _isLoading;
+    private MediaTypeCategory? _previousMediaType;
+
+    /// <summary>
+    /// Selected media type filter
+    /// </summary>
+    [Parameter]
+    public MediaTypeCategory? SelectedMediaType { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaTypeCategory?> SelectedMediaTypeChanged { get; set; }
+
+    /// <summary>
+    /// Selected date folder
+    /// </summary>
+    [Parameter]
+    public string? SelectedDateFolder { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedDateFolderChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _previousMediaType = SelectedMediaType;
+        await LoadDateFoldersAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Only reload folders if media type changed externally
+        if (_previousMediaType != SelectedMediaType)
+        {
+            _previousMediaType = SelectedMediaType;
+            await LoadDateFoldersAsync();
+        }
+    }
+
+    private async Task LoadDateFoldersAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            var dateFolders = await MediaService.GetDateFoldersAsync(
+                SelectedMediaType,
+                CancellationToken.None);
+
+            _dateFolders = dateFolders.Select(df => new DateFolderInfo
+            {
+                DateFolder = df,
+                DisplayName = DateFolderInfo.GetDisplayName(df),
+                ItemCount = 0
+            }).ToList();
+
+            // Auto-select the first (newest) folder if none selected
+            if (SelectedDateFolder == null && _dateFolders.Any())
+            {
+                await OnDateFolderSelectedAsync(_dateFolders.First().DateFolder);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load date folders");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnFilterChangedAsync()
+    {
+        await SelectedMediaTypeChanged.InvokeAsync(SelectedMediaType);
+        await LoadDateFoldersAsync();
+    }
+
+    private async Task OnDateFolderSelectedAsync(string dateFolder)
+    {
+        SelectedDateFolder = dateFolder;
+        await SelectedDateFolderChanged.InvokeAsync(dateFolder);
+    }
+}

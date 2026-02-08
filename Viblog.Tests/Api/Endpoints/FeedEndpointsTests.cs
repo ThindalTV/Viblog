@@ -1,9 +1,4 @@
-using Microsoft.AspNetCore.Http;
-using Moq;
-using Vilog.Frontend.Infrastructure;
-using Vilog.Shared.Models.Feeds;
-
-namespace Vilog.Tests.Api.Endpoints;
+namespace Viblog.Tests.Api.Endpoints;
 
 /// <summary>
 /// Tests for FeedEndpoints - validates RSS and Atom feed generation endpoint behavior

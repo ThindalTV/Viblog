@@ -55,7 +55,7 @@ Specialized component for the homepage with WebSite and Organization schemas.
 **Example:**
 ```razor
 @page "/"
-@using Vilog.Frontend.Components
+@using Viblog.Frontend.Components
 
 <HomeSeoHead />
 
@@ -82,8 +82,8 @@ Specialized component for blog post pages with BlogPosting and Breadcrumb schema
 **Example:**
 ```razor
 @page "/post/{year:int}/{slug}"
-@using Vilog.Frontend.Components
-@using Vilog.Shared.Data.Entities
+@using Viblog.Frontend.Components
+@using Viblog.Shared.Data.Entities
 
 <PostSeoHead Post="@_post" 
             CanonicalUrl="@GetCanonicalUrl()" 
@@ -110,7 +110,7 @@ Specialized component for category, tag, archive, and other listing pages with C
 **Example:**
 ```razor
 @page "/category/{categoryId}"
-@using Vilog.Frontend.Components
+@using Viblog.Frontend.Components
 
 <CollectionSeoHead 
     Title="@($"Category: {CategoryId}")" 

@@ -1,9 +1,9 @@
-namespace Vilog.Shared.Configuration;
+namespace Viblog.Shared.Configuration;
 
 /// <summary>
 /// Root configuration class that provides access to all application settings
 /// </summary>
-public class VilogConfiguration
+public class ViblogConfiguration
 {
     /// <summary>
     /// Site metadata configuration for SEO, structured data, and social sharing

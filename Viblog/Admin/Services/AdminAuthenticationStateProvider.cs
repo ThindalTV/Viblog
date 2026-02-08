@@ -2,10 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
-using Microsoft.AspNetCore.Http;
-using Vilog.Admin.Configuration;
+using Viblog.Admin.Configuration;
 
-namespace Vilog.Admin.Services;
+namespace Viblog.Admin.Services;
 
 /// <summary>
 /// Authentication state provider for admin area using hardcoded credentials

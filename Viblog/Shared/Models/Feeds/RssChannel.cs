@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Vilog.Shared.Models.Feeds;
+namespace Viblog.Shared.Models.Feeds;
 
 /// <summary>
 /// Represents the channel element of an RSS feed

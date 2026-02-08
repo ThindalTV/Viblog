@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Vilog.Api.Endpoints;
+using Viblog.Api.Endpoints;
 
-namespace Vilog.Api;
+namespace Viblog.Api;
 
 /// <summary>
 /// Extension methods for registering API endpoints
@@ -14,7 +12,7 @@ public static class ApiServiceExtensions
     /// </summary>
     /// <param name="app">The web application</param>
     /// <returns>The web application for chaining</returns>
-    public static WebApplication MapVilogApiEndpoints(this WebApplication app)
+    public static WebApplication MapViblogApiEndpoints(this WebApplication app)
     {
         // Map feed endpoints (RSS, Atom)
         app.MapFeedEndpoints();
@@ -22,9 +20,10 @@ public static class ApiServiceExtensions
         // Map SEO endpoints (sitemap.xml, robots.txt)
         app.MapSitemapEndpoints();
 
-        // Add future API groups here:
-        // app.MapWebhookEndpoints();
-        // app.MapHealthCheckEndpoints();
+        // Map media library endpoints
+        var mediaGroup = app.MapGroup("/api/media")
+            .WithTags("Media");
+        mediaGroup.MapMediaEndpoints();
 
         return app;
     }

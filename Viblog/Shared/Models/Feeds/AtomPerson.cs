@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Vilog.Shared.Models.Feeds;
+namespace Viblog.Shared.Models.Feeds;
 
 /// <summary>
 /// Represents a person (author or contributor) in an Atom feed

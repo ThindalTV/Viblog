@@ -1,7 +1,6 @@
-using Vilog.Admin.Services;
-using Xunit;
+using Viblog.Admin.Services;
 
-namespace Vilog.Tests.Services;
+namespace Viblog.Tests.Services;
 
 /// <summary>
 /// Unit tests for DialogService
@@ -15,8 +14,7 @@ public class DialogServiceTests
         var service = new DialogService();
         var title = "Confirm Action";
         var message = "Are you sure?";
-        var confirmCalled = false;
-        void OnConfirm() => confirmCalled = true;
+        void OnConfirm() { return; }
 
         // Act
         service.ShowConfirmation(title, message, OnConfirm, "Yes", "No");
@@ -55,11 +53,9 @@ public class DialogServiceTests
         var service = new DialogService();
         var title = "Async Confirm";
         var message = "Are you sure?";
-        var asyncCalled = false;
         async Task OnConfirmAsync()
         {
             await Task.Delay(1);
-            asyncCalled = true;
         }
 
         // Act
@@ -115,8 +111,7 @@ public class DialogServiceTests
     {
         // Arrange
         var service = new DialogService();
-        var confirmCalled = false;
-        void OnConfirm() => confirmCalled = true;
+        void OnConfirm() { }
 
         // Act
         service.ShowAlert("Title", "Message", OnConfirm);
@@ -216,7 +211,7 @@ public class DialogServiceTests
     }
 
     [Fact]
-    public void ShowConfirmationAsync_ConfirmCallbackExecutes()
+    public async Task ShowConfirmationAsync_ConfirmCallbackExecutes()
     {
         // Arrange
         var service = new DialogService();
@@ -231,7 +226,10 @@ public class DialogServiceTests
 
         // Act
         var callback = service.CurrentDialog?.OnConfirmAsync;
-        callback?.Invoke().Wait();
+        if (callback is not null)
+        {
+            await callback.Invoke();
+        }
 
         // Assert
         Assert.True(executed);

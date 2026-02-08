@@ -6,7 +6,7 @@ The blog now includes dedicated pages for filtering posts by category and tag, p
 ## Components
 
 ### 1. CategoryPostsFacade
-**Location:** `Vilog\Shared\Facades\CategoryPostsFacade.cs`
+**Location:** `Viblog\Shared\Facades\CategoryPostsFacade.cs`
 
 **Purpose:** Provides business logic for retrieving posts filtered by category.
 
@@ -16,7 +16,7 @@ The blog now includes dedicated pages for filtering posts by category and tag, p
 **Registration:** `services.AddScoped<ICategoryPostsFacade, CategoryPostsFacade>()`
 
 ### 2. TagPostsFacade
-**Location:** `Vilog\Shared\Facades\TagPostsFacade.cs`
+**Location:** `Viblog\Shared\Facades\TagPostsFacade.cs`
 
 **Purpose:** Provides business logic for retrieving posts filtered by tag.
 
@@ -26,7 +26,7 @@ The blog now includes dedicated pages for filtering posts by category and tag, p
 **Registration:** `services.AddScoped<ITagPostsFacade, TagPostsFacade>()`
 
 ### 3. Category.razor Page
-**Location:** `Vilog\Frontend\Pages\Category.razor`
+**Location:** `Viblog\Frontend\Pages\Category.razor`
 
 **Routes:**
 - `/category/{categoryId}` - First page
@@ -45,7 +45,7 @@ The blog now includes dedicated pages for filtering posts by category and tag, p
 - `PageNumber` (int?, optional): Page number for pagination
 
 ### 4. Tag.razor Page
-**Location:** `Vilog\Frontend\Pages\Tag.razor`
+**Location:** `Viblog\Frontend\Pages\Tag.razor`
 
 **Routes:**
 - `/tag/{tagName}` - First page
@@ -331,27 +331,27 @@ Potential improvements:
 ## Related Files
 
 ### Core Implementation
-- `Vilog\Frontend\Pages\Category.razor`
-- `Vilog\Frontend\Pages\Category.razor.css`
-- `Vilog\Frontend\Pages\Tag.razor`
-- `Vilog\Frontend\Pages\Tag.razor.css`
-- `Vilog\Shared\Facades\ICategoryPostsFacade.cs`
-- `Vilog\Shared\Facades\CategoryPostsFacade.cs`
-- `Vilog\Shared\Facades\ITagPostsFacade.cs`
-- `Vilog\Shared\Facades\TagPostsFacade.cs`
+- `Viblog\Frontend\Pages\Category.razor`
+- `Viblog\Frontend\Pages\Category.razor.css`
+- `Viblog\Frontend\Pages\Tag.razor`
+- `Viblog\Frontend\Pages\Tag.razor.css`
+- `Viblog\Shared\Facades\ICategoryPostsFacade.cs`
+- `Viblog\Shared\Facades\CategoryPostsFacade.cs`
+- `Viblog\Shared\Facades\ITagPostsFacade.cs`
+- `Viblog\Shared\Facades\TagPostsFacade.cs`
 
 ### Updated Components
-- `Vilog\Frontend\Components\PostCard.razor`
-- `Vilog\Frontend\Components\PostCard.razor.css`
-- `Vilog\Frontend\Pages\Post.razor`
-- `Vilog\Frontend\Pages\Post.razor.css`
+- `Viblog\Frontend\Components\PostCard.razor`
+- `Viblog\Frontend\Components\PostCard.razor.css`
+- `Viblog\Frontend\Pages\Post.razor`
+- `Viblog\Frontend\Pages\Post.razor.css`
 
 ### Configuration
-- `Vilog\Shared\Services\ServiceExtensions.cs`
+- `Viblog\Shared\Services\ServiceExtensions.cs`
 
 ### Data Layer
-- `Vilog\Shared\Data\Repositories\IBlogPostRepository.cs`
-- `Vilog\Shared\Data\Repositories\BlogPostRepository.cs`
+- `Viblog\Shared\Data\Repositories\IBlogPostRepository.cs`
+- `Viblog\Shared\Data\Repositories\BlogPostRepository.cs`
 
 ## Best Practices
 

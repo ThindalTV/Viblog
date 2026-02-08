@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Vilog.Admin.Models;
+namespace Viblog.Admin.Models;
 
 /// <summary>
 /// View model for blog post editing
@@ -39,7 +39,6 @@ public class BlogPostModel
     public DateTimeOffset PublishedAt { get; set; } = DateTimeOffset.Now;
     public bool IsPublished { get; set; }
     public bool IsFeatured { get; set; }
-    public bool AllowComments { get; set; } = true;
 
     public List<string> Tags { get; set; } = [];
     public List<string> CategoryIds { get; set; } = [];

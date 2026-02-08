@@ -1,10 +1,6 @@
-using Moq;
-using Vilog.Frontend.Facades;
-using Vilog.Shared.Data.Common;
-using Vilog.Shared.Data.Entities;
-using Vilog.Shared.Data.Repositories;
+using Viblog.Frontend.Facades;
 
-namespace Vilog.Tests.Facades;
+namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for CategoryPostsFacade
@@ -222,7 +218,7 @@ public class CategoryPostsFacadeTests
         return new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            PartitionKey = categoryId,
+            GroupKey = categoryId,
             Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
             Content = $"Content for {title}",

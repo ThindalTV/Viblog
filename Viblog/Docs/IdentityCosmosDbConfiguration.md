@@ -1,7 +1,7 @@
 # ASP.NET Core Identity with CosmosDB Configuration
 
 ## Overview
-This document explains how ASP.NET Core Identity is configured to work with Azure Cosmos DB in the Vilog application.
+This document explains how ASP.NET Core Identity is configured to work with Azure Cosmos DB in the Viblog application.
 
 ## The Problem
 
@@ -30,7 +30,7 @@ not support index definitions.
 ## Implementation
 
 ### ApplicationUser
-Location: `Vilog\Shared\Data\ApplicationUser.cs`
+Location: `Viblog\Shared\Data\ApplicationUser.cs`
 
 ```csharp
 public class ApplicationUser : IdentityUser
@@ -46,7 +46,7 @@ public class ApplicationUser : IdentityUser
 ```
 
 ### ApplicationDbContext
-Location: `Vilog\Shared\Data\ApplicationDbContext.cs`
+Location: `Viblog\Shared\Data\ApplicationDbContext.cs`
 
 The DbContext configures three main areas:
 1. **Remove Identity Indexes** - CosmosDB doesn't support EF Core index definitions
@@ -204,7 +204,7 @@ modelBuilder.Entity<Entities.BlogPost>(entity =>
 After the application runs and creates the database, you'll see these containers in CosmosDB:
 
 ```
-VilogDb (Database)
+ViblogDb (Database)
 ??? Users                 (Identity - User accounts)
 ??? Roles                 (Identity - Application roles)
 ??? UserClaims            (Identity - User claims)
@@ -288,7 +288,7 @@ static async Task EnsureDatabaseCreatedAsync(WebApplication app)
 **On First Run:**
 1. Application starts
 2. Database initialization runs
-3. Database `VilogDb` is created (if missing)
+3. Database `ViblogDb` is created (if missing)
 4. All 8 containers are created (if missing):
    - Users
    - Roles
@@ -372,7 +372,7 @@ var result = await userManager.CreateAsync(user, "Password123!");
 
 ### Verify in Data Explorer
 1. Open `https://localhost:8081/_explorer/index.html`
-2. Navigate to `VilogDb` ? `Users`
+2. Navigate to `ViblogDb` ? `Users`
 3. You should see the created user with:
    - `id`: User's ID
    - `_etag`: CosmosDB's concurrency token

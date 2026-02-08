@@ -1,7 +1,7 @@
 # Database Seeding
 
 ## Overview
-The Vilog application includes automatic database seeding functionality that populates CosmosDB with sample blog posts on first run.
+The Viblog application includes automatic database seeding functionality that populates CosmosDB with sample blog posts on first run.
 
 ## How It Works
 
@@ -14,7 +14,7 @@ On application startup, after the database and containers are created, the seedi
 4. **Logs the process** - All seeding activities are logged
 
 ### Seeding Location
-- **File:** `Vilog\Shared\Data\Seeders\BlogPostSeeder.cs`
+- **File:** `Viblog\Shared\Data\Seeders\BlogPostSeeder.cs`
 - **Called from:** `Program.cs` during application startup
 - **Timing:** After database creation, before app starts handling requests
 
@@ -176,7 +176,7 @@ Note: Even when skipped, "completed" is logged (seeding check completed).
 
 ### Via Data Explorer
 1. Open `https://localhost:8081/_explorer/index.html`
-2. Navigate to `VilogDb` ? `BlogPosts`
+2. Navigate to `ViblogDb` ? `BlogPosts`
 3. You should see 15 documents
 
 ### Via Application
@@ -253,7 +253,7 @@ To re-seed with fresh data:
 
 ### Option 2: Delete Entire Database
 1. Open Data Explorer
-2. Delete the `VilogDb` database
+2. Delete the `ViblogDb` database
 3. Restart the application
 4. Database, containers, and seed data recreated
 

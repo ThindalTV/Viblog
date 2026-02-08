@@ -1,4 +1,4 @@
-namespace Vilog.Frontend.Models;
+namespace Viblog.Frontend.Models;
 
 /// <summary>
 /// Represents a Twitter Card label/data pair for additional metadata
