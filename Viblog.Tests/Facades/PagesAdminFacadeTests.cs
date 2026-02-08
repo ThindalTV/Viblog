@@ -511,14 +511,22 @@ public class PagesAdminFacadeTests
             GroupKey = "pages",
             Slug = slug,
             IsPublished = isPublished,
-            LiveTitle = $"Live Title for {slug}",
-            LiveMarkdown = "# Live Content",
-            LiveContent = "<h1>Live Content</h1>",
-            LiveMetaDescription = "Live meta description",
-            DraftTitle = $"Draft Title for {slug}",
-            DraftMarkdown = "# Draft Content",
-            DraftContent = "<h1>Draft Content</h1>",
-            DraftMetaDescription = "Draft meta description",
+            Live = new PageContent
+            {
+                Title = $"Live Title for {slug}",
+                Markdown = "# Live Content",
+                Content = "<h1>Live Content</h1>",
+                MetaDescription = "Live meta description",
+                ShowTitle = true
+            },
+            Draft = new PageContent
+            {
+                Title = $"Draft Title for {slug}",
+                Markdown = "# Draft Content",
+                Content = "<h1>Draft Content</h1>",
+                MetaDescription = "Draft meta description",
+                ShowTitle = true
+            },
             AuthorId = "author-123",
             AuthorName = "Test Author",
             ViewCount = 0,

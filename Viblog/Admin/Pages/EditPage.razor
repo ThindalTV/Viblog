@@ -1,5 +1,7 @@
 @page "/admin/pages/new"
 @page "/admin/pages/edit/{id}"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
 @using Viblog.Admin.Components
 @using Viblog.Admin.Components.Input
 @using Viblog.Admin.Extensions
@@ -22,51 +24,28 @@
     @if (!_isLoading)
     {
         <div class="page-actions">
-            @if (!string.IsNullOrWhiteSpace(Id))
+            @if (_model.IsPublished)
             {
-                <div class="publication-status">
-                    @if (!_model.IsPublished)
-                    {
-                        <span class="status-badge status-draft">Draft</span>
-                    }
-                    else if (_model.PublishDate.HasValue && _model.PublishDate.Value > DateTimeOffset.UtcNow)
-                    {
-                        <span class="status-badge status-scheduled">Scheduled for @_model.PublishDate.Value.ToString("MMM dd, yyyy")</span>
-                    }
-                    else
-                    {
-                        <span class="status-badge status-published">Published</span>
-                    }
-                </div>
+                <span class="status-badge status-published">✓ Published</span>
             }
             
-            @if (!_model.IsPublished || (_model.PublishDate.HasValue && _model.PublishDate.Value > DateTimeOffset.UtcNow))
+            <button type="submit" form="edit-page-form" class="btn-primary" disabled="@_isSaving">
+                @GetSaveButtonText()
+            </button>
+            
+            @if (_isEditMode)
             {
                 <button type="button" class="btn-action btn-publish-now" @onclick="PublishNow" disabled="@_isSaving">
-                    Publish Now
-                </button>
-                <button type="button" class="btn-action btn-publish-later" @onclick="ShowScheduleDialog" disabled="@_isSaving">
-                    Schedule
+                    @(_model.IsPublished ? "Publish Draft Now" : "Publish Now")
                 </button>
             }
             
-            @if (_model.IsPublished)
+            @if (_isEditMode && _model.IsPublished)
             {
                 <button type="button" class="btn-action btn-unpublish" @onclick="Unpublish" disabled="@_isSaving">
                     Unpublish
                 </button>
             }
-            
-            <button type="submit" form="edit-page-form" class="btn-primary" disabled="@_isSaving">
-                @if (_isSaving)
-                {
-                    <span>Saving...</span>
-                }
-                else
-                {
-                    <span>@(_isEditMode ? "Update Page" : "Create Page")</span>
-                }
-            </button>
             
             <button type="button" class="btn-secondary" @onclick="Cancel" disabled="@_isSaving">
                 Cancel
@@ -89,19 +68,20 @@ else
         <FormSection Title="Basic Information">
             <div class="form-grid-two">
                 <div class="form-column">
-                    <TextInput @bind-Value="_model.DraftTitle"
+                    <TextInput @bind-Value="_model.Draft.Title"
                               OnBlur="@HandleTitleBlur"
-                              Label="Title"
+                              Label="Title (optional)"
                               Placeholder="Enter page title"
-                              Required="true"
-                              ValidationFor="@(() => _model.DraftTitle)" />
+                              ValidationFor="@(() => _model.Draft.Title)" />
 
                     <TextInput @bind-Value="_model.Slug"
                               Label="Slug"
                               Placeholder="url-friendly-slug (e.g., 'about', 'contact')"
                               Required="true"
-                              ValidationFor="@(() => _model.Slug)"
-                              HelpText="This will be the URL of your page" />
+                              ValidationFor="@(() => _model.Slug)" />
+
+                    <CheckboxInput @bind-Value="_model.Draft.ShowTitle"
+                                   Label="Show title as heading on page" />
 
                     <TextInput @bind-Value="_model.AuthorName"
                               Label="Author Name"
@@ -112,17 +92,55 @@ else
                 </div>
 
                 <div class="form-column">
-                    <TextInput @bind-Value="_model.DraftFeaturedImageUrl"
+                    <div class="form-field">
+                        <CheckboxInput @bind-Value="_publishDateEnabled"
+                                      Label="Schedule publish date" />
+                        
+                        @if (_publishDateEnabled)
+                        {
+                            <DateTimeInput @bind-Value="_publishDateValue"
+                                          Label="Publish Date & Time" />
+                            
+                            @if (_publishDateValue > DateTimeOffset.UtcNow)
+                            {
+                                @if (_model.IsPublished)
+                                {
+                                    <p class="help-text info-text">📅 Draft update scheduled for @_publishDateValue.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+                                }
+                                else
+                                {
+                                    <p class="help-text info-text">📅 Page will be published on @_publishDateValue.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="help-text warning-text">⚠️ Date is in the past - will publish on next save or background job run</p>
+                            }
+                        }
+                        else
+                        {
+                            @if (_model.IsPublished)
+                            {
+                                <p class="help-text">Leave unchecked to save as draft without publishing changes</p>
+                            }
+                            else
+                            {
+                                <p class="help-text">Leave unchecked to save as draft without publishing</p>
+                            }
+                        }
+                    </div>
+
+                    <TextInput @bind-Value="_model.Draft.FeaturedImageUrl"
                               Label="Featured Image URL (optional)"
                               Placeholder="https://example.com/image.jpg"
-                              ValidationFor="@(() => _model.DraftFeaturedImageUrl)" />
+                              ValidationFor="@(() => _model.Draft.FeaturedImageUrl)" />
 
-                    <TextInput @bind-Value="_model.DraftFeaturedImageAlt"
+                    <TextInput @bind-Value="_model.Draft.FeaturedImageAlt"
                               Label="Featured Image Alt Text"
                               Placeholder="Description of the image"
-                              ValidationFor="@(() => _model.DraftFeaturedImageAlt)" />
+                              ValidationFor="@(() => _model.Draft.FeaturedImageAlt)" />
 
-                    @if (_model.IsPublished && _model.ViewCount > 0)
+                    @if (_model.ViewCount > 0)
                     {
                         <div class="info-field">
                             <label>Views</label>
@@ -134,8 +152,8 @@ else
         </FormSection>
 
         <FormSection Title="Content (Draft Version)">
-            <MarkdownEditor @bind-Markdown="_model.DraftMarkdown"
-                          @bind-RenderedContent="_model.DraftContent"
+            <MarkdownEditor @bind-Markdown="_model.Draft.Markdown"
+                          @bind-RenderedContent="_model.Draft.Content"
                           Label="Page Content"
                           Placeholder="Write your page content in markdown..."
                           Rows="25" />
@@ -144,20 +162,19 @@ else
         <FormSection Title="SEO Metadata">
             <div class="form-grid-two">
                 <div class="form-column">
-                    <TextInput @bind-Value="_model.DraftMetaDescription"
+                    <TextInput @bind-Value="_model.Draft.MetaDescription"
                               Label="Meta Description"
-                              Placeholder="Brief description for search engines"
+                              Placeholder="Brief description for search engines (150-160 characters)"
                               Multiline="true"
                               Rows="3"
-                              ValidationFor="@(() => _model.DraftMetaDescription)"
-                              HelpText="Recommended: 150-160 characters" />
+                              ValidationFor="@(() => _model.Draft.MetaDescription)" />
                 </div>
 
                 <div class="form-column">
-                    <TextInput @bind-Value="_model.DraftMetaKeywords"
+                    <TextInput @bind-Value="_model.Draft.MetaKeywords"
                               Label="Meta Keywords (optional)"
                               Placeholder="keyword1, keyword2, keyword3"
-                              ValidationFor="@(() => _model.DraftMetaKeywords)" />
+                              ValidationFor="@(() => _model.Draft.MetaKeywords)" />
                 </div>
             </div>
         </FormSection>
@@ -169,11 +186,11 @@ else
                     <p class="info-note">This is what visitors currently see. Your draft changes above will replace this when published.</p>
                     
                     <div class="live-preview">
-                        <h3>@_model.LiveTitle</h3>
-                        @if (!string.IsNullOrWhiteSpace(_model.LiveContent))
+                        <h3>@_model.Live.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(_model.Live.Content))
                         {
                             <div class="live-content">
-                                @((MarkupString)_model.LiveContent)
+                                @((MarkupString)_model.Live.Content)
                             </div>
                         }
                     </div>
@@ -184,71 +201,133 @@ else
 }
 
 @code {
-    private PageModel _model = new();
-    private bool _isLoading = true;
-    private bool _isSaving;
-    private bool _isEditMode;
+private PageModel _model = new();
+private bool _isLoading = true;
+private bool _isSaving;
+private bool _isEditMode;
+private bool _publishDateEnabled;
+private DateTimeOffset _publishDateValue = DateTimeOffset.Now.AddDays(1);
 
-    [Parameter]
-    public string? Id { get; set; }
+[Parameter]
+public string? Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        _isEditMode = !string.IsNullOrWhiteSpace(Id);
+protected override async Task OnInitializedAsync()
+{
+    _isEditMode = !string.IsNullOrWhiteSpace(Id);
         
-        if (_isEditMode)
+    if (_isEditMode)
+    {
+        await LoadPageAsync();
+    }
+    else
+    {
+        // Get current user for new page
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userName = authState.User.Identity?.Name ?? "Anonymous";
+
+        // Initialize with defaults for new page
+        _model = new PageModel
         {
-            await LoadPageAsync();
+            AuthorName = userName,
+            IsPublished = false
+        };
+        _isLoading = false;
+    }
+}
+
+private async Task LoadPageAsync()
+{
+    try
+    {
+        _isLoading = true;
+        MessageService.Clear();
+
+        var page = await PagesAdminFacade.GetPageByIdAsync(Id!);
+
+        if (page == null)
+        {
+            MessageService.SetFail("Page not found.");
+            return;
+        }
+
+        _model = page.ToModel();
+            
+        // Initialize publish date controls
+        if (_model.PublishDate.HasValue)
+        {
+            _publishDateEnabled = true;
+            _publishDateValue = _model.PublishDate.Value;
         }
         else
         {
-            // Get current user for new page
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var userName = authState.User.Identity?.Name ?? "Anonymous";
-
-            // Initialize with defaults for new page
-            _model = new PageModel
-            {
-                AuthorName = userName,
-                IsPublished = false
-            };
-            _isLoading = false;
+            _publishDateEnabled = false;
+            _publishDateValue = DateTimeOffset.Now.AddDays(1);
         }
     }
-
-    private async Task LoadPageAsync()
+    catch (Exception ex)
     {
-        try
+        MessageService.SetError(ex, "Failed to load page. Please try again.");
+    }
+    finally
+    {
+        _isLoading = false;
+    }
+}
+
+private void EnablePublishDate()
+{
+    _publishDateEnabled = true;
+    _publishDateValue = DateTimeOffset.Now.AddDays(1);
+    _model.PublishDate = _publishDateValue;
+}
+
+private void ClearPublishDate()
+{
+    _publishDateEnabled = false;
+    _model.PublishDate = null;
+}
+
+private string GetSaveButtonText()
+{
+    if (_isSaving)
+    {
+        return "Saving...";
+    }
+
+    // If scheduling is enabled
+    if (_publishDateEnabled)
+    {
+        // Past or current date
+        if (_publishDateValue <= DateTimeOffset.UtcNow)
         {
-            _isLoading = true;
-            MessageService.Clear();
-
-            var page = await PagesAdminFacade.GetPageByIdAsync(Id!);
-
-            if (page == null)
+            return "Publish Now";
+        }
+        // Future date
+        else
+        {
+            if (_model.IsPublished)
             {
-                MessageService.SetFail("Page not found.");
-                return;
+                return "Schedule Draft Update";
             }
-
-            _model = page.ToModel();
-        }
-        catch (Exception ex)
-        {
-            MessageService.SetError(ex, "Failed to load page. Please try again.");
-        }
-        finally
-        {
-            _isLoading = false;
+            else
+            {
+                return "Schedule Publish";
+            }
         }
     }
+    // No scheduling
+    else
+    {
+        return "Save Draft";
+    }
+}
 
     private void HandleTitleBlur(FocusEventArgs e)
     {
         // Auto-generate slug if it's empty when title loses focus
         if (string.IsNullOrWhiteSpace(_model.Slug))
         {
-            _model.Slug = TextUtilities.Slugify(_model.DraftTitle) ?? string.Empty;
+            _model.Slug = TextUtilities.Slugify(_model.Draft.Title) ?? string.Empty;
         }
     }
 
@@ -259,6 +338,12 @@ else
             _isSaving = true;
             MessageService.Clear();
 
+            // Sync publish date value back to model if enabled
+            if (_publishDateEnabled)
+            {
+                _model.PublishDate = _publishDateValue;
+            }
+
             var page = _model.ToEntity();
 
             if (_isEditMode)
@@ -266,17 +351,18 @@ else
                 page.UpdatedAt = DateTimeOffset.UtcNow;
                 await PagesAdminFacade.UpdatePageAsync(page);
                 MessageService.SetSuccess("Page updated successfully!");
+                
+                // Reload to show updated live version
+                await LoadPageAsync();
             }
             else
             {
                 await PagesAdminFacade.CreatePageAsync(page);
                 MessageService.SetSuccess("Page created successfully!");
-                _isEditMode = true;
-                Id = page.Id;
+                
+                // Navigate to edit page with the new ID
+                Navigation.NavigateTo($"/admin/pages/edit/{page.Id}");
             }
-
-            // Reload to show updated live version
-            await LoadPageAsync();
         }
         catch (Exception ex)
         {
@@ -296,20 +382,41 @@ else
             return;
         }
         
+        var confirmMessage = _model.IsPublished 
+            ? "This will publish your current draft changes immediately, replacing the live version. Continue?"
+            : "This will make your draft version live immediately. Continue?";
+        
         DialogService.ShowConfirmationAsync(
             "Publish Page Now",
-            "This will make your draft version live immediately. Continue?",
+            confirmMessage,
             async () =>
             {
                 try
                 {
                     _isSaving = true;
-                    MessageService.Clear();
+                    await InvokeAsync(StateHasChanged);
 
+                    // Sync the current form data to the model
+                    if (_publishDateEnabled)
+                    {
+                        _model.PublishDate = _publishDateValue;
+                    }
+                    else
+                    {
+                        _model.PublishDate = null;
+                    }
+                    
+                    // Save the current draft changes first
+                    var page = _model.ToEntity();
+                    page.UpdatedAt = DateTimeOffset.UtcNow;
+                    await PagesAdminFacade.UpdatePageAsync(page);
+                    
+                    // Now publish it (this promotes draft to live)
                     await PagesAdminFacade.PublishPageNowAsync(Id!);
                     MessageService.SetSuccess("Page published successfully!");
                     
                     await LoadPageAsync();
+                    await InvokeAsync(StateHasChanged);
                 }
                 catch (Exception ex)
                 {
@@ -318,20 +425,9 @@ else
                 finally
                 {
                     _isSaving = false;
+                    await InvokeAsync(StateHasChanged);
                 }
             });
-    }
-
-    private void ShowScheduleDialog()
-    {
-        if (!_isEditMode || string.IsNullOrWhiteSpace(Id))
-        {
-            MessageService.SetFail("Please save the page before scheduling.");
-            return;
-        }
-
-        // For now, we'll use a simple prompt - in the future, implement a proper date picker dialog
-        MessageService.SetInfo("Please use the 'Publish Now' button and manually set the publish date in the form.");
     }
 
     private void Unpublish()
@@ -344,12 +440,13 @@ else
                 try
                 {
                     _isSaving = true;
-                    MessageService.Clear();
+                    await InvokeAsync(StateHasChanged);
 
                     await PagesAdminFacade.UnpublishPageAsync(Id!);
                     MessageService.SetSuccess("Page unpublished successfully!");
                     
                     await LoadPageAsync();
+                    await InvokeAsync(StateHasChanged);
                 }
                 catch (Exception ex)
                 {
@@ -358,6 +455,7 @@ else
                 finally
                 {
                     _isSaving = false;
+                    await InvokeAsync(StateHasChanged);
                 }
             });
     }

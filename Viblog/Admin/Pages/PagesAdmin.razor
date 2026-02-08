@@ -64,13 +64,13 @@
                         </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(PageEntity.DraftTitle)" 
+                    <GridColumn Field="@nameof(PageEntity.Draft)" 
                                Title="Title" 
                                Sortable="false">
                         <Template>
                             @{
                                 var item = context as PageEntity;
-                                @item?.DraftTitle
+                                @item?.Draft.Title
                             }
                         </Template>
                     </GridColumn>

@@ -4,19 +4,19 @@
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 
 <SeoHead 
-    Title="@Page.LiveTitle"
-    Description="@Page.LiveMetaDescription"
+    Title="@Page.Live.Title"
+    Description="@Page.Live.MetaDescription"
     CanonicalUrl="@CanonicalUrl"
-    Keywords="@Page.LiveMetaKeywords"
+    Keywords="@Page.Live.MetaKeywords"
     Author="@Page.AuthorName"
-    ImageUrl="@Page.LiveFeaturedImageUrl"
-    ImageAlt="@Page.LiveFeaturedImageAlt"
+    ImageUrl="@Page.Live.FeaturedImageUrl"
+    ImageAlt="@Page.Live.FeaturedImageAlt"
     OgType="website"
-    TwitterCardType="@(string.IsNullOrWhiteSpace(Page.LiveFeaturedImageUrl) ? "summary" : "summary_large_image")">
+    TwitterCardType="@(string.IsNullOrWhiteSpace(Page.Live.FeaturedImageUrl) ? "summary" : "summary_large_image")">
     
     <StructuredData Type="StructuredDataType.CollectionPage" 
-                   Title="@Page.LiveTitle" 
-                   Description="@Page.LiveMetaDescription"
+                   Title="@Page.Live.Title" 
+                   Description="@Page.Live.MetaDescription"
                    Url="@CanonicalUrl" />
 </SeoHead>
 

@@ -28,22 +28,30 @@ public static class PageExtensions
                 PublishDate = page.PublishDate,
                 
                 // Draft version
-                DraftTitle = page.DraftTitle,
-                DraftMarkdown = page.DraftMarkdown,
-                DraftContent = string.IsNullOrWhiteSpace(page.DraftContent) ? null : page.DraftContent,
-                DraftFeaturedImageUrl = page.DraftFeaturedImageUrl,
-                DraftFeaturedImageAlt = page.DraftFeaturedImageAlt,
-                DraftMetaDescription = page.DraftMetaDescription,
-                DraftMetaKeywords = page.DraftMetaKeywords,
+                Draft = new PageContentModel
+                {
+                    Title = page.Draft.Title,
+                    Markdown = page.Draft.Markdown,
+                    Content = string.IsNullOrWhiteSpace(page.Draft.Content) ? null : page.Draft.Content,
+                    FeaturedImageUrl = page.Draft.FeaturedImageUrl,
+                    FeaturedImageAlt = page.Draft.FeaturedImageAlt,
+                    MetaDescription = page.Draft.MetaDescription,
+                    MetaKeywords = page.Draft.MetaKeywords,
+                    ShowTitle = page.Draft.ShowTitle
+                },
                 
                 // Live version
-                LiveTitle = page.LiveTitle,
-                LiveMarkdown = page.LiveMarkdown,
-                LiveContent = page.LiveContent,
-                LiveFeaturedImageUrl = page.LiveFeaturedImageUrl,
-                LiveFeaturedImageAlt = page.LiveFeaturedImageAlt,
-                LiveMetaDescription = page.LiveMetaDescription,
-                LiveMetaKeywords = page.LiveMetaKeywords,
+                Live = new PageContentModel
+                {
+                    Title = page.Live.Title,
+                    Markdown = page.Live.Markdown,
+                    Content = page.Live.Content,
+                    FeaturedImageUrl = page.Live.FeaturedImageUrl,
+                    FeaturedImageAlt = page.Live.FeaturedImageAlt,
+                    MetaDescription = page.Live.MetaDescription,
+                    MetaKeywords = page.Live.MetaKeywords,
+                    ShowTitle = page.Live.ShowTitle
+                },
                 
                 // Common
                 AuthorName = page.AuthorName,
@@ -71,22 +79,30 @@ public static class PageExtensions
                 PublishDate = model.PublishDate,
                 
                 // Draft version
-                DraftTitle = model.DraftTitle,
-                DraftMarkdown = model.DraftMarkdown,
-                DraftContent = model.DraftContent ?? string.Empty,
-                DraftFeaturedImageUrl = model.DraftFeaturedImageUrl,
-                DraftFeaturedImageAlt = model.DraftFeaturedImageAlt,
-                DraftMetaDescription = model.DraftMetaDescription,
-                DraftMetaKeywords = model.DraftMetaKeywords,
+                Draft = new PageContent
+                {
+                    Title = model.Draft.Title,
+                    Markdown = model.Draft.Markdown,
+                    Content = model.Draft.Content ?? string.Empty,
+                    FeaturedImageUrl = model.Draft.FeaturedImageUrl,
+                    FeaturedImageAlt = model.Draft.FeaturedImageAlt,
+                    MetaDescription = model.Draft.MetaDescription,
+                    MetaKeywords = model.Draft.MetaKeywords,
+                    ShowTitle = model.Draft.ShowTitle
+                },
                 
                 // Live version
-                LiveTitle = model.LiveTitle,
-                LiveMarkdown = model.LiveMarkdown,
-                LiveContent = model.LiveContent,
-                LiveFeaturedImageUrl = model.LiveFeaturedImageUrl,
-                LiveFeaturedImageAlt = model.LiveFeaturedImageAlt,
-                LiveMetaDescription = model.LiveMetaDescription,
-                LiveMetaKeywords = model.LiveMetaKeywords,
+                Live = new PageContent
+                {
+                    Title = model.Live.Title,
+                    Markdown = model.Live.Markdown,
+                    Content = model.Live.Content,
+                    FeaturedImageUrl = model.Live.FeaturedImageUrl,
+                    FeaturedImageAlt = model.Live.FeaturedImageAlt,
+                    MetaDescription = model.Live.MetaDescription,
+                    MetaKeywords = model.Live.MetaKeywords,
+                    ShowTitle = model.Live.ShowTitle
+                },
                 
                 // Common
                 AuthorName = model.AuthorName,

@@ -20,79 +20,15 @@ public class Page : BaseEntity
     /// </summary>
     public DateTimeOffset? PublishDate { get; set; }
 
-    // Live version fields (currently published)
-    
     /// <summary>
-    /// The title of the live page version
+    /// Live (currently published) version of the page content
     /// </summary>
-    public string LiveTitle { get; set; } = string.Empty;
+    public PageContent Live { get; set; } = new();
 
     /// <summary>
-    /// Raw markdown content of the live page version
+    /// Draft (work in progress) version of the page content
     /// </summary>
-    public string LiveMarkdown { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Rendered HTML content of the live page version (generated from Markdown)
-    /// </summary>
-    public string LiveContent { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Featured image URL for the live page version
-    /// </summary>
-    public string? LiveFeaturedImageUrl { get; set; }
-
-    /// <summary>
-    /// Alt text for the featured image on the live page version
-    /// </summary>
-    public string? LiveFeaturedImageAlt { get; set; }
-
-    /// <summary>
-    /// Meta description for SEO purposes on the live page version
-    /// </summary>
-    public string? LiveMetaDescription { get; set; }
-
-    /// <summary>
-    /// Meta keywords for SEO purposes on the live page version
-    /// </summary>
-    public string? LiveMetaKeywords { get; set; }
-
-    // Draft version fields (work in progress)
-
-    /// <summary>
-    /// The title of the draft page version
-    /// </summary>
-    public string DraftTitle { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Raw markdown content of the draft page version
-    /// </summary>
-    public string DraftMarkdown { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Rendered HTML content of the draft page version (generated from Markdown)
-    /// </summary>
-    public string DraftContent { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Featured image URL for the draft page version
-    /// </summary>
-    public string? DraftFeaturedImageUrl { get; set; }
-
-    /// <summary>
-    /// Alt text for the featured image on the draft page version
-    /// </summary>
-    public string? DraftFeaturedImageAlt { get; set; }
-
-    /// <summary>
-    /// Meta description for SEO purposes on the draft page version
-    /// </summary>
-    public string? DraftMetaDescription { get; set; }
-
-    /// <summary>
-    /// Meta keywords for SEO purposes on the draft page version
-    /// </summary>
-    public string? DraftMetaKeywords { get; set; }
+    public PageContent Draft { get; set; } = new();
 
     // Common fields
 
@@ -124,10 +60,10 @@ public class Page : BaseEntity
     {
         var searchableContent = new[]
         {
-            LiveTitle,
-            LiveContent,
-            DraftTitle,
-            DraftContent,
+            Live.Title,
+            Live.Content,
+            Draft.Title,
+            Draft.Content,
             AuthorName,
             Slug
         };
@@ -148,13 +84,14 @@ public class Page : BaseEntity
         }
 
         // Copy draft to live
-        LiveTitle = DraftTitle;
-        LiveMarkdown = DraftMarkdown;
-        LiveContent = DraftContent;
-        LiveFeaturedImageUrl = DraftFeaturedImageUrl;
-        LiveFeaturedImageAlt = DraftFeaturedImageAlt;
-        LiveMetaDescription = DraftMetaDescription;
-        LiveMetaKeywords = DraftMetaKeywords;
+        Live.Title = Draft.Title;
+        Live.Markdown = Draft.Markdown;
+        Live.Content = Draft.Content;
+        Live.FeaturedImageUrl = Draft.FeaturedImageUrl;
+        Live.FeaturedImageAlt = Draft.FeaturedImageAlt;
+        Live.MetaDescription = Draft.MetaDescription;
+        Live.MetaKeywords = Draft.MetaKeywords;
+        Live.ShowTitle = Draft.ShowTitle;
 
         IsPublished = true;
         PublishDate = null;

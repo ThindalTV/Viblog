@@ -1,39 +1,35 @@
 /* Contribution Component Isolated Styles */
 
 .contribution {
-    display: flex;
+    display: grid;
+    grid-template-columns: 4fr 1fr;
     gap: 1.5rem;
-    align-items: flex-start;
 }
 
-.contribution.no-image .contribution-content {
-    flex: 1;
-}
+    .contribution.no-image {
+        grid-column: span 2;
+    }
 
 .contribution-content {
-    flex: 4;
-    min-width: 0;
+    grid-column: 1;
 }
 
 .contribution-image {
-    flex: 1;
+    grid-column: 2;
     max-width: 200px;
 }
 
-.contribution-image img {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 1;
-    border-radius: 0.5rem;
-    object-fit: cover;
-    display: block;
-}
+    .contribution-image img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-radius: 0.5rem;
+        object-fit: cover;
+        display: block;
+    }
 
 .contribution-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 0.75rem 0;
-    color: #1a1a1a;
+    grid-column: span 2;
 }
 
 .contribution-details {
@@ -42,13 +38,13 @@
     color: #555555;
 }
 
-.contribution-details p {
-    margin: 0 0 0.75rem 0;
-}
+    .contribution-details p {
+        margin: 0 0 0.75rem 0;
+    }
 
-.contribution-details p:last-child {
-    margin-bottom: 0;
-}
+        .contribution-details p:last-child {
+            margin-bottom: 0;
+        }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

@@ -2,10 +2,14 @@
 @layout Viblog.Frontend.Layout.BlogLayout
 @using Viblog.Frontend.Components.Metadata
 @using Viblog.Infrastructure.Frontend.Facades
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 
 @inject IPageDetailFacade PageDetailFacade
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (_isLoading)
 {
@@ -33,21 +37,50 @@ else
 {
     <PageSeoHead Page="@_page" CanonicalUrl="@GetCanonicalUrl()" />
 
-    <article class="page-detail">
-        <header class="page-header">
-            <h1 class="page-title">@_page.LiveTitle</h1>
-        </header>
+    @if (_isAdmin)
+    {
+        <div class="admin-preview-bar">
+            <div class="preview-controls">
+                <span class="preview-label">Admin Preview:</span>
+                <a href="@GetPreviewUrl(false)" 
+                   class="preview-toggle @(!_showDraft ? "active" : "")">
+                    ✓ Live
+                </a>
+                <a href="@GetPreviewUrl(true)" 
+                   class="preview-toggle @(_showDraft ? "active" : "")">
+                    📝 Draft
+                </a>
+                @if (!_page.IsPublished)
+                {
+                    <span class="preview-status status-unpublished">Unpublished</span>
+                }
+                else if (_showDraft)
+                {
+                    <span class="preview-status status-draft">Viewing Draft</span>
+                }
+            </div>
+            <a href="/admin/pages/edit/@_page.Id" class="edit-link">Edit Page →</a>
+        </div>
+    }
 
-        @if (!string.IsNullOrWhiteSpace(_page.LiveFeaturedImageUrl))
+    <article class="page-detail">
+        @if (CurrentContent.ShowTitle)
+        {
+            <header class="page-header">
+                <h1 class="page-title">@CurrentContent.Title</h1>
+            </header>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(CurrentContent.FeaturedImageUrl))
         {
             <div class="page-featured-image">
-                <img src="@_page.LiveFeaturedImageUrl" 
-                     alt="@(_page.LiveFeaturedImageAlt ?? _page.LiveTitle)" />
+                <img src="@CurrentContent.FeaturedImageUrl" 
+                     alt="@(CurrentContent.FeaturedImageAlt ?? CurrentContent.Title)" />
             </div>
         }
 
         <div class="page-content">
-            @((MarkupString)_page.LiveContent)
+            @((MarkupString)CurrentContent.Content)
         </div>
 
         @if (_page.ViewCount > 0)
@@ -62,25 +95,64 @@ else
 }
 
 @code {
-    private PageEntity? _page;
-    private bool _isLoading = true;
-    private string? _errorMessage;
+private PageEntity? _page;
+private bool _isLoading = true;
+private string? _errorMessage;
+private bool _isAdmin;
+private bool _showDraft;
 
-    [Parameter]
-    public string Slug { get; set; } = string.Empty;
+[Parameter]
+public string Slug { get; set; } = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+/// <summary>
+/// Gets the current content to display based on admin preview mode
+/// </summary>
+private PageContent CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
+
+protected override async Task OnInitializedAsync()
+{
+    await CheckAdminStatusAsync();
+    CheckPreviewMode();
+    await LoadPageAsync();
+}
+
+protected override async Task OnParametersSetAsync()
+{
+    if (!string.IsNullOrWhiteSpace(Slug))
     {
+        CheckPreviewMode();
         await LoadPageAsync();
     }
+}
 
-    protected override async Task OnParametersSetAsync()
+private async Task CheckAdminStatusAsync()
+{
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdmin = authState.User.IsInRole("Admin");
+}
+
+private void CheckPreviewMode()
+{
+    // Only allow draft preview for admins
+    if (!_isAdmin)
     {
-        if (!string.IsNullOrWhiteSpace(Slug))
-        {
-            await LoadPageAsync();
-        }
+        _showDraft = false;
+        return;
     }
+
+    // Check for ?preview=draft query parameter
+    var uri = new Uri(Navigation.Uri);
+    var queryParams = QueryHelpers.ParseQuery(uri.Query);
+        
+    _showDraft = queryParams.TryGetValue("preview", out var previewValue) 
+        && previewValue.ToString().Equals("draft", StringComparison.OrdinalIgnoreCase);
+}
+
+private string GetPreviewUrl(bool showDraft)
+{
+    var baseUrl = $"/{Slug}";
+    return showDraft ? $"{baseUrl}?preview=draft" : baseUrl;
+}
 
     private async Task LoadPageAsync()
     {

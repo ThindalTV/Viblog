@@ -16,35 +16,15 @@ public class PageModel
     public bool IsPublished { get; set; }
     public DateTimeOffset? PublishDate { get; set; }
 
-    // Draft version fields (what editors work with)
-    
-    [Required(ErrorMessage = "Title is required")]
-    public string DraftTitle { get; set; } = string.Empty;
+    /// <summary>
+    /// Draft version content (what editors work with)
+    /// </summary>
+    public PageContentModel Draft { get; set; } = new();
 
     /// <summary>
-    /// Raw markdown content for the draft version
+    /// Live version content (currently published - read-only in UI)
     /// </summary>
-    public string DraftMarkdown { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Rendered HTML content for the draft version (generated from Markdown)
-    /// </summary>
-    public string? DraftContent { get; set; }
-
-    public string? DraftFeaturedImageUrl { get; set; }
-    public string? DraftFeaturedImageAlt { get; set; }
-    public string? DraftMetaDescription { get; set; }
-    public string? DraftMetaKeywords { get; set; }
-
-    // Live version fields (currently published - read-only in UI)
-    
-    public string LiveTitle { get; set; } = string.Empty;
-    public string LiveMarkdown { get; set; } = string.Empty;
-    public string LiveContent { get; set; } = string.Empty;
-    public string? LiveFeaturedImageUrl { get; set; }
-    public string? LiveFeaturedImageAlt { get; set; }
-    public string? LiveMetaDescription { get; set; }
-    public string? LiveMetaKeywords { get; set; }
+    public PageContentModel Live { get; set; } = new();
 
     // Common fields
     

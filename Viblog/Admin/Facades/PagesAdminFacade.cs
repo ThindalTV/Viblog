@@ -70,6 +70,9 @@ public class PagesAdminFacade : IPagesAdminFacade
     {
         ArgumentNullException.ThrowIfNull(page);
 
+        // Check if slug already exists
+        await ValidateUniqueSlugAsync(page.Slug, null, cancellationToken);
+
         await _pageRepository.AddAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
     }
@@ -81,8 +84,32 @@ public class PagesAdminFacade : IPagesAdminFacade
     {
         ArgumentNullException.ThrowIfNull(page);
 
+        // Check if slug already exists (excluding current page)
+        await ValidateUniqueSlugAsync(page.Slug, page.Id, cancellationToken);
+
         await _pageRepository.UpdateAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Validates that a slug is unique across all pages
+    /// </summary>
+    /// <param name="slug">The slug to validate</param>
+    /// <param name="excludePageId">Optional page ID to exclude from the check (for updates)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <exception cref="InvalidOperationException">Thrown if slug already exists</exception>
+    private async Task ValidateUniqueSlugAsync(
+        string slug,
+        string? excludePageId,
+        CancellationToken cancellationToken)
+    {
+        // Check all pages (published or not) to ensure slug is unique
+        var existingPage = await _pageRepository.GetBySlugAsync(slug, publishedOnly: false, cancellationToken);
+        
+        if (existingPage != null && existingPage.Id != excludePageId)
+        {
+            throw new InvalidOperationException($"A page with the slug '{slug}' already exists. Please choose a different slug.");
+        }
     }
 
     /// <inheritdoc/>

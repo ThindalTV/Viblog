@@ -16,12 +16,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1" />
-    <PackageReference Include="SkiaSharp" Version="3.116.1" />
-    <PackageReference Include="Telerik.UI.for.Blazor" Version="12.2.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="Telerik.UI.for.Blazor" Version="12.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,7 @@
   <ItemGroup>
     <Folder Include="Admin\Components\Media\" />
     <Folder Include="Admin\Pages\Media\" />
+    <Folder Include="Services\" />
     <Folder Include="Shared\Infrastructure\" />
   </ItemGroup>
 
