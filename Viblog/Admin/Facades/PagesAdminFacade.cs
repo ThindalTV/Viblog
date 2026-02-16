@@ -1,5 +1,8 @@
 using System.Linq.Expressions;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
@@ -12,10 +15,17 @@ namespace Viblog.Admin.Facades;
 public class PagesAdminFacade : IPagesAdminFacade
 {
     private readonly IPageRepository _pageRepository;
+    private readonly IAuditLogService? _auditLogService;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    public PagesAdminFacade(IPageRepository pageRepository)
+    public PagesAdminFacade(
+        IPageRepository pageRepository,
+        IAuditLogService? auditLogService = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _pageRepository = pageRepository ?? throw new ArgumentNullException(nameof(pageRepository));
+        _auditLogService = auditLogService; // Optional
+        _httpContextAccessor = httpContextAccessor; // Optional
     }
 
     /// <inheritdoc/>
@@ -75,6 +85,14 @@ public class PagesAdminFacade : IPagesAdminFacade
 
         await _pageRepository.AddAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        // Log page creation
+        await LogAuditAsync(
+            AuditAction.PageCreated,
+            page.Id,
+            page.Slug,
+            $"Created page '{page.Slug}'",
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -89,6 +107,14 @@ public class PagesAdminFacade : IPagesAdminFacade
 
         await _pageRepository.UpdateAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        // Log page update
+        await LogAuditAsync(
+            AuditAction.PageUpdated,
+            page.Id,
+            page.Slug,
+            $"Updated page '{page.Slug}'",
+            cancellationToken);
     }
 
     /// <summary>
@@ -121,8 +147,22 @@ public class PagesAdminFacade : IPagesAdminFacade
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
+        // Get page info before deletion for audit log
+        var page = await _pageRepository.GetByIdAsync(id, partitionKey, cancellationToken);
+
         await _pageRepository.DeleteAsync(id, partitionKey, softDelete: true, cancellationToken: cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        // Log page deletion
+        if (page != null)
+        {
+            await LogAuditAsync(
+                AuditAction.PageDeleted,
+                page.Id,
+                page.Slug,
+                $"Deleted page '{page.Slug}'",
+                cancellationToken);
+        }
     }
 
     /// <inheritdoc/>
@@ -141,6 +181,14 @@ public class PagesAdminFacade : IPagesAdminFacade
         page.PublishDraftNow();
         await _pageRepository.UpdateAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        // Log page publishing
+        await LogAuditAsync(
+            AuditAction.PagePublished,
+            page.Id,
+            page.Slug,
+            $"Published page '{page.Slug}'",
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -179,5 +227,51 @@ public class PagesAdminFacade : IPagesAdminFacade
         page.PublishDate = null;
         await _pageRepository.UpdateAsync(page, cancellationToken);
         await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        // Log page unpublishing
+        await LogAuditAsync(
+            AuditAction.PageUnpublished,
+            page.Id,
+            page.Slug,
+            $"Unpublished page '{page.Slug}'",
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Helper method to log audit entries
+    /// </summary>
+    private async Task LogAuditAsync(
+        AuditAction action,
+        string entityId,
+        string entityName,
+        string description,
+        CancellationToken cancellationToken)
+    {
+        if (_auditLogService == null || _httpContextAccessor?.HttpContext == null)
+        {
+            return;
+        }
+
+        var user = _httpContextAccessor.HttpContext.User;
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        var userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
+        var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com";
+
+        await _auditLogService.LogActionAsync(
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            action: action,
+            entityType: EntityType.Page,
+            entityId: entityId,
+            entityName: entityName,
+            description: description,
+            result: ActionResult.Success,
+            cancellationToken: cancellationToken);
     }
 }

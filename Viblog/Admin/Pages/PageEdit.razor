@@ -1,6 +1,6 @@
 @page "/admin/pages/new"
 @page "/admin/pages/edit/{id}"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Policy = RequirePageWrite)]
 @layout AdminLayout
 @using Viblog.Admin.Components
 @using Viblog.Admin.Components.Input

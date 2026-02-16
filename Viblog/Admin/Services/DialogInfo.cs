@@ -15,7 +15,12 @@ public enum DialogType
     /// <summary>
     /// Markdown syntax cheatsheet
     /// </summary>
-    MarkdownSyntax
+    MarkdownSyntax,
+
+    /// <summary>
+    /// Password reset dialog
+    /// </summary>
+    PasswordReset
 }
 
 /// <summary>
@@ -98,5 +103,36 @@ public class MarkdownSyntaxDialogInfo : DialogInfo
     public MarkdownSyntaxDialogInfo()
     {
         Type = DialogType.MarkdownSyntax;
+    }
+}
+
+/// <summary>
+/// Information for password reset dialog
+/// </summary>
+public class PasswordResetDialogInfo : DialogInfo
+{
+    /// <summary>
+    /// Dialog title
+    /// </summary>
+    public string Title { get; set; } = "Reset Password";
+
+    /// <summary>
+    /// User ID whose password is being reset
+    /// </summary>
+    public string UserId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// User name (for display purposes)
+    /// </summary>
+    public string UserName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Async action to execute when confirmed with new password
+    /// </summary>
+    public Func<string, Task>? OnConfirmAsync { get; set; }
+
+    public PasswordResetDialogInfo()
+    {
+        Type = DialogType.PasswordReset;
     }
 }

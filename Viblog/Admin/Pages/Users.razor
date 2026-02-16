@@ -1,0 +1,222 @@
+@page "/admin/users"
+@attribute [Authorize(Policy = RequireUserRead)]
+@layout AdminLayout
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.User
+@using Viblog.Admin.Services
+@inject IUserManagementFacade UserManagementFacade
+@inject IDialogService DialogService
+@inject IMessageService MessageService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Users - Viblog Admin</PageTitle>
+
+<div class="admin-page">
+    <div class="page-header">
+        <h1>Users</h1>
+        <div class="page-actions">
+            @if (HasWritePermission())
+            {
+                <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                             Icon="@SvgIcon.Plus"
+                             OnClick="@(() => NavigationManager.NavigateTo("/admin/users/new"))">
+                    New User
+                </TelerikButton>
+            }
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="card">
+            <TelerikGrid @ref="@_gridRef"
+                        TItem="UserEntity"
+                        OnRead="@ReadUsersAsync"
+                        Pageable="true"
+                        PageSize="@_pageSize"
+                        Sortable="true"
+                        FilterMode="@GridFilterMode.FilterRow"
+                        Height="calc(100vh - 300px)">
+                <GridColumns>
+                    <GridColumn Field="@nameof(UserEntity.IsActive)" 
+                               Title="Status" 
+                               Width="100px"
+                               Filterable="false">
+                        <Template>
+                            @{
+                                var user = context as UserEntity;
+                                if (user?.IsActive == true)
+                                {
+                                    <span class="badge badge-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning">Inactive</span>
+                                }
+                            }
+                        </Template>
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(UserEntity.Name)" 
+                               Title="Name" 
+                               Sortable="true">
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(UserEntity.Email)" 
+                               Title="Email" 
+                               Sortable="true">
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(UserEntity.LastLoginAt)" 
+                               Title="Last Login" 
+                               Width="180px"
+                               Sortable="true">
+                        <Template>
+                            @{
+                                var user = context as UserEntity;
+                                if (user?.LastLoginAt != null)
+                                {
+                                    @user.LastLoginAt.Value.LocalDateTime.ToString("g")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Never</span>
+                                }
+                            }
+                        </Template>
+                    </GridColumn>
+                    
+                    <GridColumn Field="@nameof(UserEntity.Claims)" 
+                               Title="Permissions" 
+                               Width="250px"
+                               Filterable="false"
+                               Sortable="false">
+                        <Template>
+                            @{
+                                var user = context as UserEntity;
+                                if (user?.Claims?.Any() == true)
+                                {
+                                    <div class="claims-list">
+                                        @foreach (var claim in user.Claims.Take(3))
+                                        {
+                                            <span class="badge badge-info">@GetClaimDisplayName(claim)</span>
+                                        }
+                                        @if (user.Claims.Count > 3)
+                                        {
+                                            <span class="badge badge-secondary">+@(user.Claims.Count - 3) more</span>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </Template>
+                    </GridColumn>
+                    
+                    <GridColumn Title="Actions" Width="120px" Filterable="false" Sortable="false">
+                        <Template>
+                            @{
+                                var user = context as UserEntity;
+                                <div class="grid-actions">
+                                    @if (HasWritePermission())
+                                    {
+                                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                                     Icon="@SvgIcon.Pencil"
+                                                     Title="Edit"
+                                                     OnClick="@(() => NavigationManager.NavigateTo($"/admin/users/edit/{user!.Id}"))">
+                                        </TelerikButton>
+                                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                                     Icon="@SvgIcon.Trash"
+                                                     Title="Delete"
+                                                     OnClick="@(() => OnDeleteUser(user!))">
+                                        </TelerikButton>
+                                    }
+                                </div>
+                            }
+                        </Template>
+                    </GridColumn>
+                </GridColumns>
+            </TelerikGrid>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TelerikGrid<UserEntity>? _gridRef;
+    private int _pageSize = 20;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private async Task ReadUsersAsync(GridReadEventArgs args)
+    {
+        var pagingParams = new PagingParameters(
+            args.Request.Page,
+            args.Request.PageSize
+        );
+
+        try
+        {
+            var result = await UserManagementFacade.GetUsersAsync(
+                pagingParams,
+                includeInactive: true
+            );
+
+            args.Data = result.Items;
+            args.Total = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to load users");
+            args.Data = Enumerable.Empty<UserEntity>();
+            args.Total = 0;
+        }
+    }
+
+    private async Task OnDeleteUser(UserEntity user)
+    {
+        DialogService.ShowConfirmationAsync(
+            "Delete User",
+            $"Are you sure you want to delete the user '{user.Name}'?",
+            async () =>
+            {
+                try
+                {
+                    var success = await UserManagementFacade.DeleteUserAsync(user.Id);
+
+                    if (success)
+                    {
+                        _gridRef!.Rebind();
+                        MessageService.SetSuccess($"User '{user.Name}' deleted successfully");
+                    }
+                    else
+                    {
+                        MessageService.SetFail("Failed to delete user");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageService.SetError(ex, "Error deleting user");
+                }
+            }
+        );
+    }
+
+    private string GetClaimDisplayName(string claim)
+    {
+        return claim switch
+        {
+            UserClaims.PostWrite => "Posts",
+            UserClaims.PageWrite => "Pages",
+            UserClaims.StatisticsRead => "Stats",
+            UserClaims.UserRead => "View Users",
+            UserClaims.UserWrite => "Manage Users",
+            _ => claim
+        };
+    }
+
+    private bool HasWritePermission()
+    {
+        if (AuthenticationStateTask == null) return false;
+        
+        var authState = AuthenticationStateTask.Result;
+        return authState.User.HasClaim("permission", UserClaims.UserWrite);
+    }
+}

@@ -45,6 +45,14 @@ public interface IDialogService
     void ShowMarkdownSyntaxDialog();
 
     /// <summary>
+    /// Show the password reset dialog
+    /// </summary>
+    /// <param name="userId">User ID whose password is being reset</param>
+    /// <param name="userName">User name for display</param>
+    /// <param name="onConfirmAsync">Async action to execute when confirmed with new password</param>
+    void ShowPasswordResetDialog(string userId, string userName, Func<string, Task> onConfirmAsync);
+
+    /// <summary>
     /// Close the current dialog
     /// </summary>
     void Close();
@@ -117,6 +125,19 @@ public class DialogService : IDialogService
     public void ShowMarkdownSyntaxDialog()
     {
         _currentDialog = new MarkdownSyntaxDialogInfo();
+
+        _ = NotifyStateChangedAsync();
+    }
+
+    /// <inheritdoc/>
+    public void ShowPasswordResetDialog(string userId, string userName, Func<string, Task> onConfirmAsync)
+    {
+        _currentDialog = new PasswordResetDialogInfo
+        {
+            UserId = userId,
+            UserName = userName,
+            OnConfirmAsync = onConfirmAsync
+        };
 
         _ = NotifyStateChangedAsync();
     }

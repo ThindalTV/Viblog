@@ -3,6 +3,8 @@ using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Admin.Services;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Authentication;
 
 namespace Viblog.Admin;
 
@@ -28,6 +30,9 @@ public static class RegisterAdminExtensions
             // Register admin facades
             collection.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
             collection.AddScoped<IPagesAdminFacade, PagesAdminFacade>();
+            collection.AddScoped<IUserManagementFacade, UserManagementFacade>();
+            collection.AddScoped<IUserProfileFacade, UserProfileFacade>();
+            collection.AddScoped<IAuditLogFacade, AuditLogFacade>();
             
             // Register admin services
             collection.AddScoped<IMessageService, MessageService>();
@@ -56,12 +61,37 @@ public static class RegisterAdminExtensions
                     options.Cookie.Name = "Viblog.Admin.Auth";
                 });
 
-            // Configure authorization policies
+            // Configure authorization policies based on claims
             collection.AddAuthorizationBuilder()
-                .AddPolicy("Admin", policy =>
+                .AddPolicy(AdminPolicies.Admin, policy =>
                 {
                     policy.RequireAuthenticatedUser();
                     policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
+                })
+                .AddPolicy(AdminPolicies.RequirePostWrite, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", UserClaims.PostWrite);
+                })
+                .AddPolicy(AdminPolicies.RequirePageWrite, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", UserClaims.PageWrite);
+                })
+                .AddPolicy(AdminPolicies.RequireStatisticsRead, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", UserClaims.StatisticsRead);
+                })
+                .AddPolicy(AdminPolicies.RequireUserRead, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", UserClaims.UserRead);
+                })
+                .AddPolicy(AdminPolicies.RequireUserWrite, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", UserClaims.UserWrite);
                 });
 
             return collection;
@@ -69,7 +99,7 @@ public static class RegisterAdminExtensions
     }
 
     /// <summary>
-    /// Adds admin authentication middleware to the application pipeline
+    /// Adds admin authentication middleware (does not initialize default admin - call InitializeViblogAdminAsync separately)
     /// </summary>
     extension(IApplicationBuilder app)
     {
@@ -77,8 +107,49 @@ public static class RegisterAdminExtensions
         {
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
             return app;
+        }
+    }
+
+    /// <summary>
+    /// Initialize admin system asynchronously (creates default admin user if needed)
+    /// </summary>
+    extension(WebApplication app)
+    {
+        public async Task InitializeViblogAdminAsync()
+        {
+            using var scope = app.Services.CreateScope();
+            var userManagementService = scope.ServiceProvider.GetService<IUserManagementService>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<IUserManagementService>>();
+
+            if (userManagementService == null)
+            {
+                logger.LogWarning("IUserManagementService not registered. Skipping default admin user initialization.");
+                return;
+            }
+
+            try
+            {
+                logger.LogInformation("Checking if default admin user initialization is needed...");
+
+                var usersExist = await userManagementService.AnyUsersExistAsync();
+
+                if (!usersExist)
+                {
+                    logger.LogInformation("No users found. Creating default admin user...");
+                    var defaultAdmin = await userManagementService.CreateDefaultAdminUserAsync();
+                    logger.LogWarning("Default admin user created: {Email} with password 'admin123!' - CHANGE THIS PASSWORD IMMEDIATELY!", defaultAdmin.Email);
+                }
+                else
+                {
+                    logger.LogInformation("Users already exist. Skipping default admin creation.");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during default admin user initialization");
+            }
         }
     }
 
@@ -96,11 +167,12 @@ public static class RegisterAdminExtensions
                 var email = form["email"].ToString();
                 var password = form["password"].ToString();
                 var rememberMe = form["rememberMe"].ToString() == "on";
-                
-                if (authProvider.ValidateCredentials(email, password))
+
+                var result = await authProvider.ValidateCredentialsAsync(email, password);
+                if (result.Success && result.User is not null)
                 {
-                    await authProvider.MarkUserAsAuthenticated(email, rememberMe);
-                    
+                    await authProvider.MarkUserAsAuthenticatedAsync(result.User, rememberMe);
+
                     // Check if there's a return URL, otherwise redirect to admin dashboard
                     var returnUrl = context.Request.Query["ReturnUrl"].FirstOrDefault();
                     if (!string.IsNullOrEmpty(returnUrl) && Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
@@ -123,7 +195,7 @@ public static class RegisterAdminExtensions
             // Map admin logout endpoint
             endpoints.MapPost("/admin/api/logout", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>
             {
-                await authProvider.MarkUserAsLoggedOut();
+                await authProvider.MarkUserAsLoggedOutAsync();
                 context.Response.Redirect("/admin/login");
             })
             .RequireAuthorization(); // Require authentication for logout

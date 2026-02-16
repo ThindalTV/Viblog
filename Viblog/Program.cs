@@ -18,8 +18,23 @@ builder.Services.AddViblogConfiguration(builder.Configuration);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Configure Circuit options for Blazor Server
+builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.DetailedErrors = true;
+    }
+});
+
 // Configure Filesystem Data Access (replacing CosmosDB)
 builder.Services.AddFilesystemDataAccess(builder.Configuration);
+
+// Add authentication services (must be registered before audit logging)
+builder.Services.AddLocalAuthentication();
+
+// Add audit logging
+builder.Services.AddAuditLogging();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -39,6 +54,9 @@ var app = builder.Build();
 
 // Seed database with sample data if empty
 await SeedDatabaseAsync(app);
+
+// Initialize admin system (creates default admin user if needed)
+await app.InitializeViblogAdminAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -111,4 +129,37 @@ static async Task SeedDatabaseAsync(WebApplication app)
         logger, 
         filesystemOptions);
     logger.LogInformation("Database seeding check completed.");
+}
+
+/// <summary>
+/// Initialize default admin user if no users exist
+/// </summary>
+static async Task InitializeDefaultAdminAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var userManagementService = scope.ServiceProvider.GetRequiredService<Viblog.Infrastructure.Shared.Authentication.IUserManagementService>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Checking if default admin user initialization is needed...");
+
+        var usersExist = await userManagementService.AnyUsersExistAsync();
+
+        if (!usersExist)
+        {
+            logger.LogInformation("No users found. Creating default admin user...");
+            var defaultAdmin = await userManagementService.CreateDefaultAdminUserAsync();
+            logger.LogWarning("Default admin user created: {Email} with password 'admin123!' - CHANGE THIS PASSWORD IMMEDIATELY!", defaultAdmin.Email);
+        }
+        else
+        {
+            logger.LogInformation("Users already exist. Skipping default admin creation.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error during default admin user initialization");
+        throw;
+    }
 }

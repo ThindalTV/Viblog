@@ -1,5 +1,8 @@
 using System.Linq.Expressions;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
@@ -12,10 +15,17 @@ namespace Viblog.Admin.Facades;
 public class PostsAdminFacade : IPostsAdminFacade
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IAuditLogService? _auditLogService;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    public PostsAdminFacade(IBlogPostRepository blogPostRepository)
+    public PostsAdminFacade(
+        IBlogPostRepository blogPostRepository,
+        IAuditLogService? auditLogService = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
+        _auditLogService = auditLogService; // Optional
+        _httpContextAccessor = httpContextAccessor; // Optional
     }
 
     /// <inheritdoc/>
@@ -78,6 +88,14 @@ public class PostsAdminFacade : IPostsAdminFacade
 
         await _blogPostRepository.AddAsync(post, cancellationToken);
         await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        // Log post creation
+        await LogAuditAsync(
+            AuditAction.PostCreated,
+            post.Id,
+            post.Title,
+            $"Created blog post '{post.Title}'",
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -89,6 +107,14 @@ public class PostsAdminFacade : IPostsAdminFacade
 
         await _blogPostRepository.UpdateAsync(post, cancellationToken);
         await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        // Log post update
+        await LogAuditAsync(
+            AuditAction.PostUpdated,
+            post.Id,
+            post.Title,
+            $"Updated blog post '{post.Title}'",
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -100,7 +126,59 @@ public class PostsAdminFacade : IPostsAdminFacade
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
+        // Get post info before deletion for audit log
+        var post = await _blogPostRepository.GetByIdAsync(id, partitionKey, cancellationToken);
+
         await _blogPostRepository.DeleteAsync(id, partitionKey, softDelete: true, cancellationToken: cancellationToken);
         await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        // Log post deletion
+        if (post != null)
+        {
+            await LogAuditAsync(
+                AuditAction.PostDeleted,
+                post.Id,
+                post.Title,
+                $"Deleted blog post '{post.Title}'",
+                cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Helper method to log audit entries
+    /// </summary>
+    private async Task LogAuditAsync(
+        AuditAction action,
+        string entityId,
+        string entityName,
+        string description,
+        CancellationToken cancellationToken)
+    {
+        if (_auditLogService == null || _httpContextAccessor?.HttpContext == null)
+        {
+            return;
+        }
+
+        var user = _httpContextAccessor.HttpContext.User;
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        var userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
+        var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com";
+
+        await _auditLogService.LogActionAsync(
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            action: action,
+            entityType: EntityType.BlogPost,
+            entityId: entityId,
+            entityName: entityName,
+            description: description,
+            result: ActionResult.Success,
+            cancellationToken: cancellationToken);
     }
 }

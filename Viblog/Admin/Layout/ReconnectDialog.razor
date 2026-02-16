@@ -1,0 +1,55 @@
+@* 
+    ReconnectDialog - Static HTML for Blazor Server reconnection states
+    No C# logic needed - uses pure HTML + JavaScript for page reload
+*@
+
+<!-- Reconnecting State -->
+<div class="show components-reconnect-show">
+    <div class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-icon">
+                <TelerikSvgIcon Icon="@SvgIcon.ArrowRotateCw" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" Class="spin" />
+            </div>
+            <h3 class="dialog-title">Connection Lost</h3>
+            <p class="dialog-message">Attempting to reconnect to the server...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Failed State -->
+<div class="failed components-reconnect-failed">
+    <div class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-icon error">
+                <TelerikSvgIcon Icon="@SvgIcon.XCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+            </div>
+            <h3 class="dialog-title">Connection Failed</h3>
+            <p class="dialog-message">Unable to reconnect to the server.</p>
+            <button type="button" 
+                    class="k-button k-button-md k-button-solid k-button-solid-primary k-rounded-md"
+                    onclick="window.location.reload()">
+                Reload Page
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Rejected State -->
+<div class="rejected components-reconnect-rejected">
+    <div class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-icon error">
+                <TelerikSvgIcon Icon="@SvgIcon.XCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+            </div>
+            <h3 class="dialog-title">Connection Rejected</h3>
+            <p class="dialog-message">The server rejected the connection.</p>
+            <button type="button" 
+                    class="k-button k-button-md k-button-solid k-button-solid-primary k-rounded-md"
+                    onclick="window.location.reload()">
+                Reload Page
+            </button>
+        </div>
+    </div>
+</div>
+
+@* No @code block needed - this is pure static HTML! *@

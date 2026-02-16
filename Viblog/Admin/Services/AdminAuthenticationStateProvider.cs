@@ -3,55 +3,75 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Viblog.Admin.Configuration;
+using Viblog.Infrastructure.Shared.Authentication;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Services;
 
 /// <summary>
-/// Authentication state provider for admin area using hardcoded credentials
-/// This is a temporary solution that will be replaced with an external authentication service
+/// Authentication state provider for admin area using pluggable authentication provider
 /// </summary>
 public class AdminAuthenticationStateProvider : RevalidatingServerAuthenticationStateProvider
 {
-    private readonly AdminAuthenticationSettings _settings;
+    private readonly IAuthenticationProvider _authenticationProvider;
+    private readonly IUserRepository _userRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<AdminAuthenticationStateProvider> _logger;
 
     public AdminAuthenticationStateProvider(
-        AdminAuthenticationSettings settings,
+        IAuthenticationProvider authenticationProvider,
+        IUserRepository userRepository,
         IHttpContextAccessor httpContextAccessor,
         ILoggerFactory loggerFactory)
         : base(loggerFactory)
     {
-        _settings = settings;
-        _httpContextAccessor = httpContextAccessor;
+        _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _logger = loggerFactory?.CreateLogger<AdminAuthenticationStateProvider>() ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
 
     /// <summary>
-    /// Validate credentials against hardcoded values
+    /// Validate credentials using the authentication provider
     /// </summary>
-    public bool ValidateCredentials(string email, string password)
+    public async Task<AuthenticationResult> ValidateCredentialsAsync(string email, string password, CancellationToken cancellationToken = default)
     {
-        return email == _settings.AdminEmail && password == _settings.AdminPassword;
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+
+        return await _authenticationProvider.AuthenticateAsync(email, password, cancellationToken);
     }
 
     /// <summary>
     /// Create authenticated user with optional persistent cookie
     /// </summary>
-    /// <param name="email">User's email address</param>
+    /// <param name="user">The authenticated user</param>
     /// <param name="isPersistent">Whether to create a persistent cookie that survives browser restart</param>
-    public async Task MarkUserAsAuthenticated(string email, bool isPersistent = false)
+    public async Task MarkUserAsAuthenticatedAsync(User user, bool isPersistent = false)
     {
-        var identity = new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.Name, email),
-            new Claim(ClaimTypes.Email, email),
-            new Claim(ClaimTypes.Role, "Admin")
-        }, AdminAuthenticationSettings.AuthenticationScheme);
+        ArgumentNullException.ThrowIfNull(user);
 
-        var user = new ClaimsPrincipal(identity);
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Name, user.Name),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, "Admin")
+        };
+
+        // Add user-specific claims
+        foreach (var userClaim in user.Claims)
+        {
+            claims.Add(new Claim("permission", userClaim));
+        }
+
+        var identity = new ClaimsIdentity(claims, AdminAuthenticationSettings.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
 
         // Sign in with cookie authentication
         var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext != null)
+        if (httpContext is not null)
         {
             var authProperties = new AuthenticationProperties
             {
@@ -64,30 +84,48 @@ public class AdminAuthenticationStateProvider : RevalidatingServerAuthentication
 
             await httpContext.SignInAsync(
                 AdminAuthenticationSettings.AuthenticationScheme,
-                user,
+                principal,
                 authProperties);
+
+            _logger.LogInformation("User {Email} signed in successfully", user.Email);
         }
     }
 
     /// <summary>
     /// Sign out the user
     /// </summary>
-    public async Task MarkUserAsLoggedOut()
+    public async Task MarkUserAsLoggedOutAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext != null)
+        if (httpContext is not null)
         {
             await httpContext.SignOutAsync(AdminAuthenticationSettings.AuthenticationScheme);
+            _logger.LogInformation("User signed out");
         }
     }
 
     protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
 
-    protected override Task<bool> ValidateAuthenticationStateAsync(
+    protected override async Task<bool> ValidateAuthenticationStateAsync(
         AuthenticationState authenticationState, CancellationToken cancellationToken)
     {
-        // Return true to keep the authentication state valid
-        // You can add custom logic here to revalidate the user
-        return Task.FromResult(authenticationState.User.Identity?.IsAuthenticated ?? false);
+        var user = authenticationState.User;
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            return false;
+        }
+
+        // Get user ID from claims
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim is null)
+        {
+            return false;
+        }
+
+        // Verify user still exists and is active
+        var dbUser = await _userRepository.GetByIdAsync(userIdClaim.Value, "users", cancellationToken);
+
+        return dbUser is not null && dbUser.IsActive;
     }
 }

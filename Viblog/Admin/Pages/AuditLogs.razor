@@ -1,0 +1,185 @@
+@page "/admin/audit-logs"
+@attribute [Authorize(Policy = AdminPolicies.Admin)]
+@layout AdminLayout
+@using Viblog.Infrastructure.Shared.Data.Common
+@using Viblog.Infrastructure.Shared.Data.Entities
+@inject IAuditLogFacade AuditLogFacade
+
+<PageTitle>Audit Logs - Viblog Admin</PageTitle>
+
+<div class="admin-page">
+    <div class="page-header">
+        <h1>Audit Logs</h1>
+        <p class="page-description">View system activity and user actions</p>
+    </div>
+
+    <div class="page-content">
+        <TelerikGrid TItem="@AuditLog"
+                     OnRead="@OnReadAsync"
+                     Pageable="true"
+                     PageSize="@_pageSize"
+                     Sortable="true"
+                     FilterMode="@GridFilterMode.FilterRow"
+                     Height="auto"
+                     Class="audit-logs-grid">
+            <GridColumns>
+                <GridColumn Field="@nameof(AuditLog.Timestamp)" 
+                           Title="Time"
+                           Width="180px"
+                           Filterable="false">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <span title="@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")">
+                                @log.Timestamp.ToString("MMM dd, yyyy h:mm tt")
+                            </span>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.UserName)"
+                           Title="User"
+                           Width="200px">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <div>
+                                <div class="user-name">@log.UserName</div>
+                                <div class="user-email">@log.UserEmail</div>
+                            </div>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.Action)"
+                           Title="Action"
+                           Width="150px">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <span class="action-badge action-@log.Action.ToString().ToLowerInvariant()">
+                                @FormatAction(log.Action)
+                            </span>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.EntityType)"
+                           Title="Entity"
+                           Width="120px">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <span class="entity-badge">@log.EntityType</span>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.Description)"
+                           Title="Description"
+                           Filterable="false">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <div class="description">
+                                @log.Description
+                                @if (!string.IsNullOrEmpty(log.EntityName))
+                                {
+                                    <span class="entity-name">(@log.EntityName)</span>
+                                }
+                            </div>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.Result)"
+                           Title="Result"
+                           Width="100px"
+                           Filterable="false">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            <span class="result-badge result-@log.Result.ToString().ToLowerInvariant()">
+                                @log.Result
+                            </span>
+                        }
+                    </Template>
+                </GridColumn>
+
+                <GridColumn Field="@nameof(AuditLog.IpAddress)"
+                           Title="IP Address"
+                           Width="140px"
+                           Filterable="false">
+                    <Template>
+                        @{
+                            var log = (AuditLog)context;
+                            @(log.IpAddress ?? "—")
+                        }
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </TelerikGrid>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<AuditLog> _auditLogs = Enumerable.Empty<AuditLog>();
+    private int _totalCount;
+    private int _pageSize = 50;
+
+    private async Task OnReadAsync(GridReadEventArgs args)
+    {
+        try
+        {
+            var pageNumber = (args.Request.Page - 1) * args.Request.PageSize / _pageSize + 1;
+            var pagingParams = new PagingParameters 
+            { 
+                PageNumber = pageNumber, 
+                PageSize = _pageSize 
+            };
+
+            // Get recent audit logs (we can enhance this with filters later)
+            var result = await AuditLogFacade.GetRecentActivityAsync(1000);
+            
+            // For now, convert to list and apply paging manually
+            var allLogs = result.OrderByDescending(l => l.Timestamp).ToList();
+            _totalCount = allLogs.Count;
+            
+            var skip = (pageNumber - 1) * _pageSize;
+            _auditLogs = allLogs.Skip(skip).Take(_pageSize);
+
+            args.Data = _auditLogs;
+            args.Total = _totalCount;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading audit logs: {ex.Message}");
+            _auditLogs = Enumerable.Empty<AuditLog>();
+            _totalCount = 0;
+        }
+    }
+
+    private string FormatAction(AuditAction action)
+    {
+        return action switch
+        {
+            AuditAction.Login => "Login",
+            AuditAction.Logout => "Logout",
+            AuditAction.LoginFailed => "Login Failed",
+            AuditAction.PasswordChanged => "Password Changed",
+            AuditAction.PasswordReset => "Password Reset",
+            AuditAction.UserCreated => "User Created",
+            AuditAction.UserUpdated => "User Updated",
+            AuditAction.UserDeleted => "User Deleted",
+            AuditAction.UserActivated => "User Activated",
+            AuditAction.UserDeactivated => "User Deactivated",
+            AuditAction.UserClaimsModified => "Claims Modified",
+            AuditAction.PostCreated => "Post Created",
+            AuditAction.PostUpdated => "Post Updated",
+            AuditAction.PostDeleted => "Post Deleted",
+            AuditAction.PostPublished => "Post Published",
+            AuditAction.PostScheduled => "Post Scheduled",
+            _ => action.ToString()
+        };
+    }
+}

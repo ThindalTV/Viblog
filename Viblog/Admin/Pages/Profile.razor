@@ -1,0 +1,316 @@
+@page "/admin/profile"
+@attribute [Authorize(Policy = AdminPolicies.Admin)]
+@layout AdminLayout
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.User
+@using Viblog.Infrastructure.Shared.Authentication
+@using Viblog.Admin.Services
+@using System.Security.Claims
+@inject IUserProfileFacade UserProfileFacade
+@inject IMessageService MessageService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>My Profile - Viblog Admin</PageTitle>
+
+<div class="admin-page">
+    <div class="page-header">
+        <h1>My Profile</h1>
+    </div>
+
+    <div class="page-content">
+        @if (_isLoading)
+        {
+            <div class="loading-indicator">
+                <TelerikLoader Size="@ThemeConstants.Loader.Size.Medium" />
+                <p>Loading profile...</p>
+            </div>
+        }
+        else if (_currentUser != null)
+        {
+            <!-- User Info Display -->
+            <div class="card profile-info-card">
+                <h2>Account Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Name</label>
+                        <div class="info-value">@_currentUser.Name</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Email</label>
+                        <div class="info-value">@_currentUser.Email</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Last Login</label>
+                        <div class="info-value">
+                            @if (_currentUser.LastLoginAt.HasValue)
+                            {
+                                @_currentUser.LastLoginAt.Value.ToString("MMM dd, yyyy h:mm tt")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Never</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <label>Account Created</label>
+                        <div class="info-value">@_currentUser.CreatedAt.ToString("MMM dd, yyyy")</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Profile Form -->
+            <div class="card profile-edit-card">
+                <h2>Edit Profile</h2>
+                <EditForm Model="@_profileModel" OnValidSubmit="@HandleProfileUpdate">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="name">Name</label>
+                            <TelerikTextBox @bind-Value="@_profileModel.Name"
+                                          Id="name"
+                                          Placeholder="Enter your name"
+                                          Width="100%" />
+                            <ValidationMessage For="@(() => _profileModel.Name)" />
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label for="email">Email</label>
+                            <TelerikTextBox @bind-Value="@_profileModel.Email"
+                                          Id="email"
+                                          Placeholder="Enter your email"
+                                          Width="100%" />
+                            <ValidationMessage For="@(() => _profileModel.Email)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <TelerikButton ButtonType="@ButtonType.Submit"
+                                     ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                                     Enabled="@(!_isSavingProfile)">
+                            @if (_isSavingProfile)
+                            {
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Update Profile</span>
+                            }
+                        </TelerikButton>
+                    </div>
+                </EditForm>
+            </div>
+
+            <!-- Change Password Form -->
+            <div class="card password-change-card">
+                <h2>Change Password</h2>
+                <EditForm Model="@_passwordModel" OnValidSubmit="@HandlePasswordChange">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <TelerikTextBox @bind-Value="@_passwordModel.CurrentPassword"
+                                      Id="currentPassword"
+                                      Password="true"
+                                      Placeholder="Enter current password"
+                                      Width="100%" />
+                        <ValidationMessage For="@(() => _passwordModel.CurrentPassword)" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="newPassword">New Password</label>
+                            <TelerikTextBox @bind-Value="@_passwordModel.NewPassword"
+                                          Id="newPassword"
+                                          Password="true"
+                                          Placeholder="Enter new password"
+                                          Width="100%" />
+                            <ValidationMessage For="@(() => _passwordModel.NewPassword)" />
+                            <small class="form-text text-muted">
+                                Must be at least 8 characters with uppercase, lowercase, number, and special character.
+                            </small>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <TelerikTextBox @bind-Value="@_passwordModel.ConfirmPassword"
+                                          Id="confirmPassword"
+                                          Password="true"
+                                          Placeholder="Confirm new password"
+                                          Width="100%" />
+                            <ValidationMessage For="@(() => _passwordModel.ConfirmPassword)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <TelerikButton ButtonType="@ButtonType.Submit"
+                                     ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                                     Enabled="@(!_isSavingPassword)">
+                            @if (_isSavingPassword)
+                            {
+                                <span>Changing Password...</span>
+                            }
+                            else
+                            {
+                                <span>Change Password</span>
+                            }
+                        </TelerikButton>
+                    </div>
+                </EditForm>
+            </div>
+        }
+        else
+        {
+            <div class="error-message">
+                <p>Unable to load profile. Please try refreshing the page.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private Viblog.Infrastructure.Shared.Data.Entities.User? _currentUser;
+    private ProfileEditModel _profileModel = new();
+    private PasswordChangeModel _passwordModel = new();
+    private bool _isLoading = true;
+    private bool _isSavingProfile;
+    private bool _isSavingPassword;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfileAsync();
+    }
+
+    private async Task LoadProfileAsync()
+    {
+        _isLoading = true;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                _currentUser = await UserProfileFacade.GetCurrentUserAsync(userId);
+
+                if (_currentUser != null)
+                {
+                    _profileModel = new ProfileEditModel
+                    {
+                        Name = _currentUser.Name,
+                        Email = _currentUser.Email
+                    };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Error loading profile");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleProfileUpdate()
+    {
+        if (_currentUser == null)
+        {
+            return;
+        }
+
+        _isSavingProfile = true;
+
+        try
+        {
+            var (user, validationResult) = await UserProfileFacade.UpdateProfileAsync(
+                _currentUser.Id,
+                _profileModel.Name,
+                _profileModel.Email
+            );
+
+            if (validationResult.IsValid && user != null)
+            {
+                _currentUser = user;
+                MessageService.SetSuccess("Profile updated successfully");
+            }
+            else
+            {
+                var errors = string.Join(", ", validationResult.Errors);
+                MessageService.SetFail(errors);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Error updating profile");
+        }
+        finally
+        {
+            _isSavingProfile = false;
+        }
+    }
+
+    private async Task HandlePasswordChange()
+    {
+        if (_currentUser == null)
+        {
+            return;
+        }
+
+        _isSavingPassword = true;
+
+        try
+        {
+            var result = await UserProfileFacade.ChangePasswordAsync(
+                _currentUser.Id,
+                _passwordModel.CurrentPassword,
+                _passwordModel.NewPassword
+            );
+
+            if (result.Success)
+            {
+                MessageService.SetSuccess("Password changed successfully");
+                _passwordModel = new PasswordChangeModel(); // Clear the form
+            }
+            else
+            {
+                MessageService.SetFail(result.ErrorMessage ?? "Failed to change password");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Error changing password");
+        }
+        finally
+        {
+            _isSavingPassword = false;
+        }
+    }
+
+    private class ProfileEditModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [MinLength(2, ErrorMessage = "Name must be at least 2 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    private class PasswordChangeModel
+    {
+        [Required(ErrorMessage = "Current password is required")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "New password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password confirmation is required")]
+        [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

@@ -1,5 +1,6 @@
 @page "/admin/posts/new"
 @page "/admin/posts/edit/{id}"
+@attribute [Authorize(Policy = RequirePostWrite)]
 @using Viblog.Admin.Components
 @using Viblog.Admin.Components.Input
 @using Viblog.Admin.Extensions

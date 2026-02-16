@@ -1,5 +1,5 @@
 @page "/admin/posts"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Policy = RequirePostWrite)]
 @layout AdminLayout
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavigationManager
