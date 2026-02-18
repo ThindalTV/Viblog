@@ -52,7 +52,7 @@ public static class FilesystemServiceExtensions
         services.AddScoped<IAuditLogRepository, FileSystemAuditLogRepository>();
 
         // Register media storage repository
-        services.AddScoped<IMediaStorageRepository, FileSystemMediaStorageRepository>();
+        services.AddScoped<IMediaStorageRepository, FileSystemMediaRepository>();
 
         return services;
     }

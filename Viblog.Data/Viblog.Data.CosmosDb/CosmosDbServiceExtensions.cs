@@ -76,6 +76,7 @@ public static class CosmosDbServiceExtensions
         services.AddScoped(typeof(IRepository<>), typeof(CosmosDbRepository<>));
 
         // Register specific repositories
+        services.AddScoped<IAuditLogRepository, CosmosDbAuditLogRepository>();
         services.AddScoped<IBlogPostRepository, CosmosDbBlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
         services.AddScoped<IPageRepository, CosmosDbPageRepository>();

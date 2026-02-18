@@ -7,15 +7,15 @@ namespace Viblog.Data.Filesystem.Storage;
 /// <summary>
 /// File system implementation of media storage repository
 /// </summary>
-public class FileSystemMediaStorageRepository : IMediaStorageRepository
+public class FileSystemMediaRepository : IMediaStorageRepository
 {
     private readonly string _basePath;
     private readonly string _baseUrl;
-    private readonly ILogger<FileSystemMediaStorageRepository> _logger;
+    private readonly ILogger<FileSystemMediaRepository> _logger;
 
-    public FileSystemMediaStorageRepository(
+    public FileSystemMediaRepository(
         IConfiguration configuration,
-        ILogger<FileSystemMediaStorageRepository> logger)
+        ILogger<FileSystemMediaRepository> logger)
     {
         _logger = logger;
 

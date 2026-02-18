@@ -144,9 +144,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.ToContainer("MediaItems");
             b.HasPartitionKey(m => m.GroupKey);
             b.HasNoDiscriminator();
-            
+
             // Configure dictionary property for additional metadata
             b.Property(m => m.AdditionalMetadata);
+        });
+
+        builder.Entity<AuditLog>(b =>
+        {
+            b.ToContainer("AuditLogs");
+            b.HasPartitionKey(a => a.GroupKey);
+            b.HasNoDiscriminator();
         });
     }
 
