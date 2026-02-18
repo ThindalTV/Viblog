@@ -241,11 +241,11 @@ public class BlogTestFixture : IDisposable
             });
 
         // Initialize repositories
-        BlogPostRepository = new BlogPostRepository(
+        BlogPostRepository = new FileSystemBlogPostRepository(
             storageOptions,
             blogRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<BlogPost>>());
 
-        var auditLogRepository = new AuditLogRepository(
+        var auditLogRepository = new FileSystemAuditLogRepository(
             storageOptions,
             auditRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<AuditLog>>());
 

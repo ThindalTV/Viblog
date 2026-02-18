@@ -11,9 +11,9 @@ namespace Viblog.Data.Filesystem.Data.Repositories;
 /// <summary>
 /// Filesystem-based repository implementation for media metadata operations
 /// </summary>
-public class MediaMetadataRepository : FilesystemRepository<MediaItem>, IMediaMetadataRepository
+public class FileSystemMediaMetadataRepository : FilesystemRepository<MediaItem>, IMediaMetadataRepository
 {
-    public MediaMetadataRepository(
+    public FileSystemMediaMetadataRepository(
         IOptions<FilesystemStorageOptions> options,
         ILogger<FilesystemRepository<MediaItem>> logger)
         : base(options, logger)

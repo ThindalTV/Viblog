@@ -43,7 +43,7 @@ public class FileSystemTestFixture : IDisposable
         });
 
         // Initialize repository with test data path
-        UserRepository = new UserRepository(
+        UserRepository = new FileSystemUserRepository(
             storageOptions,
             repositoryLoggerFactory.CreateLogger<FilesystemRepository<Viblog.Infrastructure.Shared.Data.Entities.User>>());
 

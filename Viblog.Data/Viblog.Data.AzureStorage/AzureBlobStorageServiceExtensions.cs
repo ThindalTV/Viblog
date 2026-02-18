@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Viblog.Data.AzureBlobStorage.Storage;
+using Viblog.Data.AzureStorage.Storage;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.AzureBlobStorage;
+namespace Viblog.Data.AzureStorage;
 
 /// <summary>
 /// Extension methods for registering Azure Blob Storage services
@@ -17,7 +17,7 @@ public static class AzureBlobStorageServiceExtensions
     public static IServiceCollection AddAzureBlobStorageRepository(this IServiceCollection services)
     {
         // Register media storage repository
-        services.AddScoped<IMediaStorageRepository, BlobStorageRepository>();
+        services.AddScoped<IMediaStorageRepository, AzureBlobStorageMediaRepository>();
 
         return services;
     }

@@ -309,11 +309,11 @@ public class PageTestFixture : IDisposable
             });
 
         // Initialize repositories
-        PageRepository = new PageRepository(
+        PageRepository = new FileSystemPageRepository(
             storageOptions,
             pageRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<Page>>());
 
-        var auditLogRepository = new AuditLogRepository(
+        var auditLogRepository = new FileSystemAuditLogRepository(
             storageOptions,
             auditRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<AuditLog>>());
 

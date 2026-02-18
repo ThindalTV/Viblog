@@ -6,21 +6,21 @@ using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Infrastructure.Shared.Helpers;
 
-namespace Viblog.Data.AzureBlobStorage.Storage;
+namespace Viblog.Data.AzureStorage.Storage;
 
 /// <summary>
 /// Azure Blob Storage implementation of media storage repository
 /// </summary>
-public class BlobStorageRepository : IMediaStorageRepository
+public class AzureBlobStorageMediaRepository : IMediaStorageRepository
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _containerName;
     private readonly string? _cdnUrl;
-    private readonly ILogger<BlobStorageRepository> _logger;
+    private readonly ILogger<AzureBlobStorageMediaRepository> _logger;
 
-    public BlobStorageRepository(
+    public AzureBlobStorageMediaRepository(
         IConfiguration configuration,
-        ILogger<BlobStorageRepository> logger)
+        ILogger<AzureBlobStorageMediaRepository> logger)
     {
         _logger = logger;
 

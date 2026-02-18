@@ -45,14 +45,14 @@ public static class FilesystemServiceExtensions
         services.AddScoped(typeof(IRepository<>), typeof(FilesystemRepository<>));
 
         // Register specific repositories
-        services.AddScoped<IBlogPostRepository, BlogPostRepository>();
-        services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
-        services.AddScoped<IPageRepository, PageRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IBlogPostRepository, FileSystemBlogPostRepository>();
+        services.AddScoped<IMediaMetadataRepository, FileSystemMediaMetadataRepository>();
+        services.AddScoped<IPageRepository, FileSystemPageRepository>();
+        services.AddScoped<IUserRepository, FileSystemUserRepository>();
+        services.AddScoped<IAuditLogRepository, FileSystemAuditLogRepository>();
 
         // Register media storage repository
-        services.AddScoped<IMediaStorageRepository, FileSystemStorageRepository>();
+        services.AddScoped<IMediaStorageRepository, FileSystemMediaStorageRepository>();
 
         return services;
     }

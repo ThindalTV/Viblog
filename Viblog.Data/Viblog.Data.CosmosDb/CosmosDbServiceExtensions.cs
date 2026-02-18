@@ -73,12 +73,12 @@ public static class CosmosDbServiceExtensions
     public static IServiceCollection AddCosmosDbRepositories(this IServiceCollection services)
     {
         // Register the generic repository
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped(typeof(IRepository<>), typeof(CosmosDbRepository<>));
 
         // Register specific repositories
-        services.AddScoped<IBlogPostRepository, BlogPostRepository>();
-        services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
-        services.AddScoped<IPageRepository, PageRepository>();
+        services.AddScoped<IBlogPostRepository, CosmosDbBlogPostRepository>();
+        services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
+        services.AddScoped<IPageRepository, CosmosDbPageRepository>();
 
         return services;
     }

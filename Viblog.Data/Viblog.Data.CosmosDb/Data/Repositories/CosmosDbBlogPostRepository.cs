@@ -1,22 +1,53 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Viblog.Data.Filesystem.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Viblog.Data.CosmosDb.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.Filesystem.Data.Repositories;
+namespace Viblog.Data.CosmosDb.Data.Repositories;
 
 /// <summary>
-/// Filesystem-based repository implementation for blog post operations
+/// CosmosDB-specific repository implementation for blog post operations
 /// </summary>
-public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepository
+public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPostRepository
 {
-    public BlogPostRepository(
-        IOptions<FilesystemStorageOptions> options,
-        ILogger<FilesystemRepository<BlogPost>> logger)
-        : base(options, logger)
+    public CosmosDbBlogPostRepository(ApplicationDbContext context) : base(context)
     {
+    }
+
+    /// <inheritdoc/>
+    public override async Task AddAsync(BlogPost entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        entity.SetPartitionKey(); // Ensure partition key is set based on publication date
+        entity.UpdateSearchIndex();
+        await base.AddAsync(entity, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public override async Task AddRangeAsync(IEnumerable<BlogPost> entities, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
+
+        var entityList = entities.ToList();
+        foreach (var entity in entityList)
+        {
+            entity.SetPartitionKey(); // Ensure partition key is set based on publication date
+            entity.UpdateSearchIndex();
+        }
+
+        await base.AddRangeAsync(entityList, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public override Task UpdateAsync(BlogPost entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        entity.SetPartitionKey(); // Update partition key based on published state
+        entity.UpdateSearchIndex();
+        return base.UpdateAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -26,12 +57,14 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        return await FindAsync(
-            p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow,
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+
+        return await ApplyPagingAndSortingAsync(
+            query,
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
-            includeDeleted: false,
             cancellationToken);
     }
 
@@ -45,13 +78,19 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         ArgumentException.ThrowIfNullOrWhiteSpace(categoryId);
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        return await FindAsync(
-            p => p.CategoryIds.Contains(categoryId) &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.CategoryIds.Contains(categoryId));
+
+        if (publishedOnly)
+        {
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+        }
+
+        return await ApplyPagingAndSortingAsync(
+            query,
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
-            includeDeleted: false,
             cancellationToken);
     }
 
@@ -65,13 +104,19 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        return await FindAsync(
-            p => p.Tags.Contains(tag) &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.Tags.Contains(tag));
+
+        if (publishedOnly)
+        {
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+        }
+
+        return await ApplyPagingAndSortingAsync(
+            query,
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
-            includeDeleted: false,
             cancellationToken);
     }
 
@@ -83,13 +128,19 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        return await FindAsync(
-            p => p.IsFeatured &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.IsFeatured);
+
+        if (publishedOnly)
+        {
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+        }
+
+        return await ApplyPagingAndSortingAsync(
+            query,
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
-            includeDeleted: false,
             cancellationToken);
     }
 
@@ -101,11 +152,15 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
 
-        return await FirstOrDefaultAsync(
-            p => p.Slug == slug &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
-            includeDeleted: false,
-            cancellationToken);
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.Slug == slug);
+
+        if (publishedOnly)
+        {
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -115,17 +170,9 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
 
-        await _indexManager.LoadIndexAsync(cancellationToken);
-
-        // Search through all entries to find matching ID
-        var entry = _indexManager.GetAllEntries()
-            .FirstOrDefault(e => e.Id == id && !e.IsDeleted);
-
-        if (entry is null)
-            return null;
-
-        var filePath = Path.Combine(_entityDirectory, entry.FileName);
-        return await ReadEntityFromFileAsync(filePath, cancellationToken);
+        return await _dbSet
+            .Where(p => p.Id == id && !p.IsDeleted)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -138,13 +185,19 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         ArgumentException.ThrowIfNullOrWhiteSpace(authorId);
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        return await FindAsync(
-            p => p.AuthorId == authorId &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+        var query = _dbSet
+            .Where(p => !p.IsDeleted && p.AuthorId == authorId);
+
+        if (publishedOnly)
+        {
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+        }
+
+        return await ApplyPagingAndSortingAsync(
+            query,
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
-            includeDeleted: false,
             cancellationToken);
     }
 
@@ -157,12 +210,16 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
-        var post = await GetByIdAsync(id, partitionKey, cancellationToken);
-        if (post is not null)
+        var post = await _dbSet
+            .WithPartitionKey(partitionKey)
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+
+        if (post != null)
         {
             post.ViewCount++;
             post.UpdatedAt = DateTimeOffset.UtcNow;
-            await SaveEntityAsync(post, cancellationToken);
+            _dbSet.Update(post);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -194,13 +251,14 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         int maxPosts = 5,
         CancellationToken cancellationToken = default)
     {
-        if (post?.Tags is null || post.Tags.Count == 0)
+        if (post?.Tags == null || !post.Tags.Any())
         {
             return [];
         }
 
+        // Find posts that share at least one tag, excluding the current post
         var relatedPosts = await FindAsync(
-            p => p.IsPublished &&
+            p => p.IsPublished && 
                  p.Id != post.Id &&
                  p.Tags.Any(tag => post.Tags.Contains(tag)),
             new PagingParameters(1, maxPosts),
@@ -222,38 +280,43 @@ public class BlogPostRepository : FilesystemRepository<BlogPost>, IBlogPostRepos
         ArgumentException.ThrowIfNullOrWhiteSpace(postId);
         ArgumentException.ThrowIfNullOrWhiteSpace(currentPartitionKey);
 
-        var post = await GetByIdAsync(postId, currentPartitionKey, cancellationToken);
-        if (post is null)
+        var post = await _dbSet.FirstOrDefaultAsync(
+            p => p.Id == postId && p.GroupKey == currentPartitionKey,
+            cancellationToken);
+
+        if (post == null)
         {
             return null;
         }
 
-        var oldPartitionKey = post.GroupKey;
+        var oldPublishedAt = post.PublishedAt;
         post.PublishedAt = newPublishedAt;
         
-        // Update partition key based on new date
-        var newYear = newPublishedAt.Year.ToString();
-        post.GroupKey = newYear;
+        var oldPartitionKey = post.GroupKey;
+        post.SetPartitionKey();
+        var newPartitionKey = post.GroupKey;
 
-        // If partition key changed, we need to delete old file and create new one
-        if (oldPartitionKey != post.GroupKey)
+        // If partition key hasn't changed, just update normally
+        if (oldPartitionKey == newPartitionKey)
         {
-            var oldFilePath = GetEntityFilePath(post.Id, oldPartitionKey);
-            
-            // Save to new location
-            await SaveEntityAsync(post, cancellationToken);
-            
-            // Delete old file
-            if (File.Exists(oldFilePath))
-            {
-                File.Delete(oldFilePath);
-                await _indexManager.RemoveAsync(post.Id, oldPartitionKey, cancellationToken);
-            }
+            post.UpdatedAt = DateTimeOffset.UtcNow;
+            _dbSet.Update(post);
+            await _context.SaveChangesAsync(cancellationToken);
+            return post;
         }
-        else
-        {
-            await UpdateAsync(post, cancellationToken);
-        }
+
+        // Partition key changed (year changed or published/draft status changed)
+        // We need to delete the old document and create a new one
+        // CosmosDB doesn't allow updating partition keys directly
+        
+        // Remove from old partition
+        _dbSet.Remove(post);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        // Create new document with same ID but different partition key
+        post.UpdatedAt = DateTimeOffset.UtcNow;
+        await _dbSet.AddAsync(post, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return post;
     }
