@@ -239,6 +239,34 @@ public class AuthenticationIntegrationTests : IClassFixture<FileSystemTestFixtur
         var originalName = "Original Name";
         var originalEmail = $"original-{Guid.NewGuid()}@example.com";
         var newName = "Updated Name";
+        var password = "SecurePass123!";
+        var claims = new List<string> { UserClaims.PostWrite };
+
+        var (user, _) = await _userManagementService.CreateUserAsync(
+            originalName, originalEmail, password, claims);
+
+        // Act - Update profile (keeping same email as email cannot be changed)
+        var (updatedUser, validationResult) = await _userManagementService.UpdateUserAsync(
+            user!.Id, newName, originalEmail, claims, isActive: true);
+
+        // Assert - Update successful
+        Assert.True(validationResult.IsValid);
+        Assert.NotNull(updatedUser);
+        Assert.Equal(newName, updatedUser.Name);
+        Assert.Equal(originalEmail.ToLowerInvariant(), updatedUser.Email);
+        Assert.Single(updatedUser.Claims);
+
+        // Verify original email still works for authentication
+        var authResult = await _authProvider.AuthenticateAsync(originalEmail, password);
+        Assert.True(authResult.Success);
+    }
+
+    [Fact]
+    public async Task UpdateUserProfile_AttemptEmailChange_Fails()
+    {
+        // Arrange
+        var originalName = "Original Name";
+        var originalEmail = $"original-{Guid.NewGuid()}@example.com";
         var newEmail = $"updated-{Guid.NewGuid()}@example.com";
         var password = "SecurePass123!";
         var claims = new List<string> { UserClaims.PostWrite };
@@ -246,24 +274,22 @@ public class AuthenticationIntegrationTests : IClassFixture<FileSystemTestFixtur
         var (user, _) = await _userManagementService.CreateUserAsync(
             originalName, originalEmail, password, claims);
 
-        // Act - Update profile
+        // Act - Attempt to change email (should be blocked for security)
         var (updatedUser, validationResult) = await _userManagementService.UpdateUserAsync(
-            user!.Id, newName, newEmail, claims, isActive: true);
+            user!.Id, originalName, newEmail, claims, isActive: true);
 
-        // Assert - Update successful
-        Assert.True(validationResult.IsValid);
-        Assert.NotNull(updatedUser);
-        Assert.Equal(newName, updatedUser.Name);
-        Assert.Equal(newEmail.ToLowerInvariant(), updatedUser.Email);
-        Assert.Single(updatedUser.Claims);
+        // Assert - Email change blocked
+        Assert.False(validationResult.IsValid);
+        Assert.Null(updatedUser);
+        Assert.Contains(validationResult.Errors, e => e.Contains("Email cannot be changed"));
 
-        // Verify old email no longer works
-        var oldEmailAuth = await _authProvider.AuthenticateAsync(originalEmail, password);
-        Assert.False(oldEmailAuth.Success);
+        // Verify original email still works
+        var authResult = await _authProvider.AuthenticateAsync(originalEmail, password);
+        Assert.True(authResult.Success);
 
-        // Verify new email works
+        // Verify new email does NOT work
         var newEmailAuth = await _authProvider.AuthenticateAsync(newEmail, password);
-        Assert.True(newEmailAuth.Success);
+        Assert.False(newEmailAuth.Success);
     }
 
     [Fact]
