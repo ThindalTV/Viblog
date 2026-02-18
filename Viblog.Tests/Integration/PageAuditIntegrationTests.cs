@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Viblog.Admin.Facades;
-using Viblog.Data.Filesystem.Auditing;
+using Viblog.Admin.Services.Auditing;
 using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;

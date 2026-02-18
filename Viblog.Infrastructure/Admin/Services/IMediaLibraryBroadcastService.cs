@@ -1,6 +1,6 @@
 using Viblog.Infrastructure.Shared.Data.Entities;
 
-namespace Viblog.Admin.Services;
+namespace Viblog.Infrastructure.Admin.Services;
 
 /// <summary>
 /// Service for broadcasting media library folder content changes across all users/circuits

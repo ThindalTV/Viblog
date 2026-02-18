@@ -5,10 +5,10 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.Filesystem.Authentication;
+namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
-/// User management service implementation for local storage
+/// User management service implementation
 /// </summary>
 public class UserManagementService : IUserManagementService
 {

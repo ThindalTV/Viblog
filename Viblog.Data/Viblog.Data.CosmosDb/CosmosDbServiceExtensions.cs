@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Viblog.Data.CosmosDb.Data;
 using Viblog.Data.CosmosDb.Data.Repositories;
+using Viblog.Data.CosmosDb.Indexing;
+using Viblog.Infrastructure.Shared.Data.Indexing;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Data.CosmosDb;

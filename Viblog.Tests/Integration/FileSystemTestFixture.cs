@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Viblog.Data.Filesystem.Authentication;
+using Viblog.Admin.Services.Authentication;
 using Viblog.Data.Filesystem.Configuration;
 using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Authentication;

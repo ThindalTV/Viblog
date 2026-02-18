@@ -1,4 +1,5 @@
 using Viblog.Admin.Services;
+using Viblog.Infrastructure.Admin.Services;
 
 namespace Viblog.Tests.Services;
 

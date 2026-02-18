@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Viblog.Data.Filesystem.Authentication;
+using Viblog.Admin.Services.Authentication;
 using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Common;

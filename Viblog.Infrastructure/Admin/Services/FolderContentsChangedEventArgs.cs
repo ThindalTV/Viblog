@@ -1,6 +1,6 @@
 using Viblog.Infrastructure.Shared.Data.Entities;
 
-namespace Viblog.Admin.Services;
+namespace Viblog.Infrastructure.Admin.Services;
 
 /// <summary>
 /// Event arguments for folder content changes

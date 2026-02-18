@@ -4,29 +4,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Viblog.Data.Filesystem.Configuration;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Indexing;
 
 namespace Viblog.Data.Filesystem.Indexing;
 
 /// <summary>
-/// Index entry for fast entity lookups
-/// </summary>
-public record IndexEntry
-{
-    public string Id { get; init; } = string.Empty;
-    public string PartitionKey { get; init; } = string.Empty;
-    public string FileName { get; init; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; init; }
-    public DateTimeOffset UpdatedAt { get; init; }
-    public bool IsDeleted { get; init; }
-}
-
-/// <summary>
-/// Manages JSON-based index files for fast entity lookups without scanning all files
+/// Filesystem-based implementation of index manager for fast entity lookups without scanning all files
 /// </summary>
 /// <typeparam name="TEntity">The entity type</typeparam>
-public class IndexManager<TEntity> where TEntity : BaseEntity
+public class IndexManager<TEntity> : IIndexManager<TEntity> where TEntity : BaseEntity
 {
     private readonly string _indexFilePath;
+    private readonly string _entityDirectory;
     private readonly FilesystemStorageOptions _options;
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _indexLock = new(1, 1);
@@ -40,9 +29,10 @@ public class IndexManager<TEntity> where TEntity : BaseEntity
     {
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
+
         ArgumentException.ThrowIfNullOrWhiteSpace(entityDirectory);
 
+        _entityDirectory = entityDirectory;
         _indexFilePath = Path.Combine(entityDirectory, _options.IndexFileName);
     }
 
@@ -161,10 +151,8 @@ public class IndexManager<TEntity> where TEntity : BaseEntity
     /// <summary>
     /// Rebuild index from all entity files in directory
     /// </summary>
-    public async Task RebuildIndexAsync(string entityDirectory, CancellationToken cancellationToken = default)
+    public async Task RebuildIndexAsync(CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(entityDirectory);
-
         if (!_options.UseIndexing)
             return;
 
@@ -175,10 +163,10 @@ public class IndexManager<TEntity> where TEntity : BaseEntity
         {
             _indexCache.Clear();
 
-            if (!Directory.Exists(entityDirectory))
+            if (!Directory.Exists(_entityDirectory))
                 return;
 
-            var jsonFiles = Directory.GetFiles(entityDirectory, "*.json", SearchOption.AllDirectories)
+            var jsonFiles = Directory.GetFiles(_entityDirectory, "*.json", SearchOption.AllDirectories)
                 .Where(f => !f.EndsWith(_options.IndexFileName, StringComparison.OrdinalIgnoreCase));
 
             foreach (var file in jsonFiles)
@@ -190,7 +178,7 @@ public class IndexManager<TEntity> where TEntity : BaseEntity
 
                     if (entity is not null)
                     {
-                        var fileName = Path.GetRelativePath(entityDirectory, file);
+                        var fileName = Path.GetRelativePath(_entityDirectory, file);
                         var entry = new IndexEntry
                         {
                             Id = entity.Id,

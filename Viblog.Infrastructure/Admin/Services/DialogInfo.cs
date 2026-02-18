@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Components;
-
-namespace Viblog.Admin.Services;
+namespace Viblog.Infrastructure.Admin.Services;
 
 /// <summary>
 /// Dialog type enumeration

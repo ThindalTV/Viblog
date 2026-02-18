@@ -1,4 +1,4 @@
-namespace Viblog.Admin.Services;
+namespace Viblog.Infrastructure.Admin.Services;
 
 /// <summary>
 /// Types of messages that can be displayed

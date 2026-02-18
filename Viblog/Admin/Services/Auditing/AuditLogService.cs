@@ -4,7 +4,7 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.Filesystem.Auditing;
+namespace Viblog.Admin.Services.Auditing;
 
 /// <summary>
 /// Service implementation for audit logging operations

@@ -30,12 +30,6 @@ builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions
 // Configure Filesystem Data Access (replacing CosmosDB)
 builder.Services.AddFilesystemDataAccess(builder.Configuration);
 
-// Add authentication services (must be registered before audit logging)
-builder.Services.AddLocalAuthentication();
-
-// Add audit logging
-builder.Services.AddAuditLogging();
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Register blog services

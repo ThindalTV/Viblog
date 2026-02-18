@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
-using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Admin.Services;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Admin.Services.Auditing;
+using Viblog.Admin.Services.Authentication;
+using Viblog.Infrastructure.Admin.Facades;
+using Viblog.Infrastructure.Admin.Services;
+using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Authentication;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Admin;
 
@@ -33,11 +37,18 @@ public static class RegisterAdminExtensions
             collection.AddScoped<IUserManagementFacade, UserManagementFacade>();
             collection.AddScoped<IUserProfileFacade, UserProfileFacade>();
             collection.AddScoped<IAuditLogFacade, AuditLogFacade>();
-            
+
             // Register admin services
             collection.AddScoped<IMessageService, MessageService>();
             collection.AddScoped<IDialogService, DialogService>();
-            
+
+            // Register authentication and user management services
+            collection.AddScoped<IAuthenticationProvider, LocalAuthenticationProvider>();
+            collection.AddScoped<IUserManagementService, UserManagementService>();
+
+            // Register audit logging service
+            collection.AddScoped<IAuditLogService, AuditLogService>();
+
             // Register media library broadcast service (singleton for cross-user notifications)
             collection.AddSingleton<IMediaLibraryBroadcastService, InMemoryMediaLibraryBroadcastService>();
             

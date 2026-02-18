@@ -5,7 +5,7 @@ using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.Filesystem.Authentication;
+namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
 /// Local authentication provider with password hashing for any repository-based storage
