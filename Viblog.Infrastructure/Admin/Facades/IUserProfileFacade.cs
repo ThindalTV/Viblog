@@ -32,13 +32,14 @@ public interface IUserProfileFacade
 
     /// <summary>
     /// Change the current user's password
+    /// TODO: Will be replaced with Auth0 password reset in Step 14
     /// </summary>
     /// <param name="userId">The user ID</param>
     /// <param name="currentPassword">The user's current password</param>
     /// <param name="newPassword">The new password</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Password change result</returns>
-    Task<PasswordChangeResult> ChangePasswordAsync(
+    /// <returns>Validation result</returns>
+    Task<UserValidationResult> ChangePasswordAsync(
         string userId,
         string currentPassword,
         string newPassword,

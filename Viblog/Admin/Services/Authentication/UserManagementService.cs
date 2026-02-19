@@ -1,34 +1,28 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Data.CosmosDb.Data;
 
 namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
 /// User management service implementation
-/// NOTE: Still uses UserManager temporarily - will be removed in Step 5
+/// TEMPORARY STUB: Authentication operations disabled during Auth0 migration (Phase 1)
+/// Will be fully implemented with Auth0 sync in Step 11 (Phase 2)
 /// </summary>
 public class UserManagementService : IUserManagementService
 {
-    private readonly UserManager<AdminUser> _userManager;
-    private readonly IAuthenticationProvider _authenticationProvider;
-    private readonly IAuditLogService? _auditLogService;
+    private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<UserManagementService> _logger;
 
     public UserManagementService(
-        UserManager<AdminUser> userManager,
-        IAuthenticationProvider authenticationProvider,
-        ILogger<UserManagementService> logger,
-        IAuditLogService? auditLogService = null)
+        ApplicationDbContext dbContext,
+        ILogger<UserManagementService> logger)
     {
-        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _auditLogService = auditLogService; // Optional dependency
     }
 
     /// <inheritdoc/>
@@ -39,7 +33,8 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        var query = _userManager.Users.Where(u => !u.IsDeleted);
+        // Direct DB query without UserManager
+        var query = _dbContext.Set<AdminUser>().Where(u => !u.IsDeleted);
 
         if (!includeInactive)
         {
@@ -62,8 +57,10 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-        var user = await _userManager.FindByIdAsync(userId);
-        return user != null && !user.IsDeleted ? user : null;
+        var user = await _dbContext.Set<AdminUser>()
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+
+        return user;
     }
 
     /// <inheritdoc/>
@@ -71,79 +68,22 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
-        var user = await _userManager.FindByEmailAsync(email);
-        return user != null && !user.IsDeleted ? user : null;
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _dbContext.Set<AdminUser>()
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && !u.IsDeleted, cancellationToken);
+
+        return user;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    public virtual Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
         IEnumerable<string> claims,
         CancellationToken cancellationToken = default)
     {
-        var claimsList = claims.ToList();
-
-        // Validate user data
-        var validationResult = await ValidateUserDataAsync(name, email, null, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return (null, validationResult);
-        }
-
-        // Validate password
-        var passwordValidation = _authenticationProvider.ValidatePassword(password);
-        if (!passwordValidation.IsValid)
-        {
-            return (null, passwordValidation);
-        }
-
-        try
-        {
-            var user = new AdminUser
-            {
-                Id = Guid.NewGuid().ToString(),
-                Email = email.Trim().ToLowerInvariant(),
-                DisplayName = name.Trim(),
-                CustomClaims = claimsList,
-                IsActive = true,
-                GroupKey = "users",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
-            };
-
-            var result = await _userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return (null, UserValidationResult.Invalid(errors));
-            }
-
-            // Log user creation
-            if (_auditLogService != null)
-            {
-                await _auditLogService.LogActionAsync(
-                    userId: user.Id,
-                    userName: user.DisplayName,
-                    userEmail: user.Email!,
-                    action: AuditAction.UserCreated,
-                    entityType: EntityType.User,
-                    entityId: user.Id,
-                    entityName: user.DisplayName,
-                    description: $"User account created for {user.Email}",
-                    result: ActionResult.Success,
-                    cancellationToken: cancellationToken);
-            }
-
-            _logger.LogInformation("Created user {Email} with ID {UserId}", email, user.Id);
-            return (user, UserValidationResult.Valid());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating user {Email}", email);
-            return (null, UserValidationResult.Invalid("An error occurred while creating the user."));
-        }
+        throw new NotImplementedException("User creation will be implemented with Auth0 sync in Step 11");
     }
 
     /// <inheritdoc/>
@@ -159,7 +99,7 @@ public class UserManagementService : IUserManagementService
 
         var claimsList = claims.ToList();
 
-        // Validate user data (excluding email uniqueness check since we're not changing it)
+        // Validate user data
         var validationResult = await ValidateUserDataAsync(name, email, userId, cancellationToken);
         if (!validationResult.IsValid)
         {
@@ -168,8 +108,10 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user is null || user.IsDeleted)
+            var user = await _dbContext.Set<AdminUser>()
+                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+
+            if (user is null)
             {
                 return (null, UserValidationResult.Invalid("User not found."));
             }
@@ -191,45 +133,7 @@ public class UserManagementService : IUserManagementService
             user.IsActive = isActive;
             user.UpdatedAt = DateTimeOffset.UtcNow;
 
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return (null, UserValidationResult.Invalid(errors));
-            }
-
-            // Log user update
-            if (_auditLogService != null)
-            {
-                var changes = new List<string>();
-                if (oldActive != isActive)
-                {
-                    changes.Add(isActive ? "activated" : "deactivated");
-                }
-                if (!oldClaims.SequenceEqual(claimsList))
-                {
-                    changes.Add("claims modified");
-                }
-
-                var action = !isActive && oldActive ? AuditAction.UserDeactivated :
-                            isActive && !oldActive ? AuditAction.UserActivated :
-                            !oldClaims.SequenceEqual(claimsList) ? AuditAction.UserClaimsModified :
-                            AuditAction.UserUpdated;
-
-                await _auditLogService.LogActionAsync(
-                    userId: userId,
-                    userName: user.DisplayName,
-                    userEmail: user.Email!,
-                    action: action,
-                    entityType: EntityType.User,
-                    entityId: user.Id,
-                    entityName: user.DisplayName,
-                    description: changes.Any()
-                        ? $"User updated: {string.Join(", ", changes)}"
-                        : "User profile updated",
-                    result: ActionResult.Success,
-                    cancellationToken: cancellationToken);
-            }
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Updated user {UserId}", userId);
             return (user, UserValidationResult.Valid());
@@ -248,38 +152,19 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user is null || user.IsDeleted)
+            var user = await _dbContext.Set<AdminUser>()
+                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+
+            if (user is null)
             {
                 return false;
             }
 
-            // Soft delete
             user.IsDeleted = true;
             user.DeletedAt = DateTimeOffset.UtcNow;
             user.UpdatedAt = DateTimeOffset.UtcNow;
 
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-            {
-                return false;
-            }
-
-            // Log user deletion
-            if (_auditLogService != null)
-            {
-                await _auditLogService.LogActionAsync(
-                    userId: userId,
-                    userName: user.DisplayName,
-                    userEmail: user.Email!,
-                    action: AuditAction.UserDeleted,
-                    entityType: EntityType.User,
-                    entityId: user.Id,
-                    entityName: user.DisplayName,
-                    description: $"User account deleted: {user.Email}",
-                    result: ActionResult.Success,
-                    cancellationToken: cancellationToken);
-            }
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Deleted user {UserId}", userId);
             return true;
@@ -322,8 +207,11 @@ public class UserManagementService : IUserManagementService
         else
         {
             // Check email uniqueness
-            var existingUser = await _userManager.FindByEmailAsync(email);
-            if (existingUser != null && !existingUser.IsDeleted)
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            var existingUser = await _dbContext.Set<AdminUser>()
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail && !u.IsDeleted, cancellationToken);
+
+            if (existingUser != null)
             {
                 // If we're updating and it's the same user, that's OK
                 if (string.IsNullOrWhiteSpace(excludeUserId) || existingUser.Id != excludeUserId)
@@ -341,97 +229,23 @@ public class UserManagementService : IUserManagementService
     /// <inheritdoc/>
     public virtual async Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default)
     {
-        return await _userManager.Users.AnyAsync(u => !u.IsDeleted, cancellationToken);
+        return await _dbContext.Set<AdminUser>()
+            .AnyAsync(u => !u.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
+    public virtual Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating default admin user");
-
-        var adminUser = new AdminUser
-        {
-            Id = Guid.NewGuid().ToString(),
-            Email = "admin@viblog.local",
-            DisplayName = "Administrator",
-            CustomClaims = UserClaims.DefaultAdminClaims.ToList(),
-            IsActive = true,
-            GroupKey = "users",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-
-        var result = await _userManager.CreateAsync(adminUser, "admin123!");
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Failed to create default admin user: {errors}");
-        }
-
-        _logger.LogInformation("Default admin user created with email {Email}", adminUser.Email);
-        return adminUser;
+        throw new NotImplementedException("Default admin creation will be implemented with Auth0 sync in Step 11");
     }
 
     /// <inheritdoc/>
-    public virtual async Task<UserValidationResult> ResetPasswordAsync(
+    public virtual Task<UserValidationResult> ResetPasswordAsync(
         string userId,
         string newPassword,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-
-        // Validate password
-        var passwordValidation = _authenticationProvider.ValidatePassword(newPassword);
-        if (!passwordValidation.IsValid)
-        {
-            return passwordValidation;
-        }
-
-        try
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user is null || user.IsDeleted)
-            {
-                return UserValidationResult.Invalid("User not found.");
-            }
-
-            // Remove old password and set new one
-            await _userManager.RemovePasswordAsync(user);
-            var result = await _userManager.AddPasswordAsync(user, newPassword);
-
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return UserValidationResult.Invalid(errors);
-            }
-
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-            await _userManager.UpdateAsync(user);
-
-            // Log password reset (admin-initiated)
-            if (_auditLogService != null)
-            {
-                await _auditLogService.LogActionAsync(
-                    userId: user.Id,
-                    userName: user.DisplayName,
-                    userEmail: user.Email!,
-                    action: AuditAction.PasswordReset,
-                    entityType: EntityType.User,
-                    entityId: user.Id,
-                    entityName: user.DisplayName,
-                    description: $"Password reset by administrator for {user.Email}",
-                    result: ActionResult.Success,
-                    cancellationToken: cancellationToken);
-            }
-
-            _logger.LogInformation("Password reset for user {UserId}", userId);
-            return UserValidationResult.Valid();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error resetting password for user {UserId}", userId);
-            return UserValidationResult.Invalid("An error occurred while resetting the password.");
-        }
+        throw new NotImplementedException("Password reset will be handled by Auth0 in Step 11");
     }
 
     private static bool IsValidEmail(string email)

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
-using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services;
 using Viblog.Admin.Services.Auditing;
@@ -21,16 +20,12 @@ public static class RegisterAdminExtensions
     {
         public IServiceCollection AddViblogAdmin()
         {
-            // Register admin authentication settings
-            var adminSettings = new AdminAuthenticationSettings();
-            collection.AddSingleton(adminSettings);
-
-            // Register HTTP context accessor for cookie authentication
+            // Register HTTP context accessor for authentication
             collection.AddHttpContextAccessor();
 
             // Register admin authentication state provider
             collection.AddScoped<AdminAuthenticationStateProvider>();
-            
+
             // Register admin facades
             collection.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
             collection.AddScoped<IPagesAdminFacade, PagesAdminFacade>();
@@ -42,8 +37,7 @@ public static class RegisterAdminExtensions
             collection.AddScoped<IMessageService, MessageService>();
             collection.AddScoped<IDialogService, DialogService>();
 
-            // Register authentication and user management services
-            collection.AddScoped<IAuthenticationProvider, LocalAuthenticationProvider>();
+            // Register user management service
             collection.AddScoped<IUserManagementService, UserManagementService>();
 
             // Register audit logging service
@@ -51,14 +45,16 @@ public static class RegisterAdminExtensions
 
             // Register media library broadcast service (singleton for cross-user notifications)
             collection.AddSingleton<IMediaLibraryBroadcastService, InMemoryMediaLibraryBroadcastService>();
-            
+
             // Add Telerik UI for Blazor services
             collection.AddTelerikBlazor();
 
             collection.AddCascadingAuthenticationState();
             collection.AddScoped<AuthenticationStateProvider, AdminAuthenticationStateProvider>();
 
-            // Configure cookie authentication with custom admin login path
+            // TODO: Authentication middleware will be configured in Step 12 (Auth0 OpenID Connect)
+            // Temporarily comment out to allow compilation
+            /*
             collection.AddAuthentication(AdminAuthenticationSettings.AuthenticationScheme)
                 .AddCookie(AdminAuthenticationSettings.AuthenticationScheme, options =>
                 {
@@ -71,13 +67,14 @@ public static class RegisterAdminExtensions
                     options.Cookie.SameSite = SameSiteMode.Lax;
                     options.Cookie.Name = "Viblog.Admin.Auth";
                 });
+            */
 
             // Configure authorization policies based on claims
             collection.AddAuthorizationBuilder()
                 .AddPolicy(AdminPolicies.Admin, policy =>
                 {
                     policy.RequireAuthenticatedUser();
-                    policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
+                    // policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
                 })
                 .AddPolicy(AdminPolicies.RequirePostWrite, policy =>
                 {
@@ -166,11 +163,16 @@ public static class RegisterAdminExtensions
 
     /// <summary>
     /// Maps admin endpoints (login, logout)
+    /// TODO: These endpoints will be replaced with Auth0 endpoints in Step 10
     /// </summary>
     extension(IEndpointRouteBuilder endpoints)
     {
         public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
+            // TODO: Auth0 endpoints will be added in Step 10
+            // Old login/logout endpoints removed
+
+            /* REMOVED - Will be replaced with Auth0 endpoints
             // Map admin login endpoint
             endpoints.MapPost("/admin/api/login", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>
             {
@@ -201,7 +203,7 @@ public static class RegisterAdminExtensions
                     context.Response.Redirect("/admin/login?error=invalid");
                 }
             })
-            .AllowAnonymous(); // Allow anonymous access to the login endpoint
+            .AllowAnonymous();
 
             // Map admin logout endpoint
             endpoints.MapPost("/admin/api/logout", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>
@@ -209,8 +211,8 @@ public static class RegisterAdminExtensions
                 await authProvider.MarkUserAsLoggedOutAsync();
                 context.Response.Redirect("/admin/login");
             })
-            .RequireAuthorization(); // Require authentication for logout
-
+            .RequireAuthorization();
+            */
             return endpoints;
         }
     }

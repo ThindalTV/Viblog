@@ -6,18 +6,17 @@ namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for UserProfileFacade
+/// NOTE: Password change tests marked as Skip - will be updated for Auth0 in Step 15
 /// </summary>
 public class UserProfileFacadeTests
 {
     private readonly Mock<IUserManagementService> _mockUserManagementService;
-    private readonly Mock<IAuthenticationProvider> _mockAuthProvider;
     private readonly UserProfileFacade _facade;
 
     public UserProfileFacadeTests()
     {
         _mockUserManagementService = new Mock<IUserManagementService>();
-        _mockAuthProvider = new Mock<IAuthenticationProvider>();
-        _facade = new UserProfileFacade(_mockUserManagementService.Object, _mockAuthProvider.Object);
+        _facade = new UserProfileFacade(_mockUserManagementService.Object);
     }
 
     [Fact]
@@ -25,7 +24,7 @@ public class UserProfileFacadeTests
     {
         // Arrange
         var userId = "user-1";
-        var expectedUser = new AdminUser { Id = userId, Email = "test@example.com" };
+        var expectedUser = new AdminUser { Id = userId, Email = "test@example.com", DisplayName = "Test" };
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -119,48 +118,11 @@ public class UserProfileFacadeTests
         Assert.Contains(validationResult.Errors, e => e.Contains("not found"));
     }
 
-    [Fact]
-    public async Task ChangePasswordAsync_CallsAuthProvider()
+    [Fact(Skip = "Password change removed - will be replaced with Auth0 in Step 14")]
+    public async Task ChangePasswordAsync_WillBeReplacedWithAuth0()
     {
-        // Arrange
-        var userId = "user-1";
-        var currentPassword = "OldPass123!";
-        var newPassword = "NewPass456!";
-
-        _mockAuthProvider
-            .Setup(p => p.ChangePasswordAsync(userId, currentPassword, newPassword, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(PasswordChangeResult.Successful());
-
-        // Act
-        var result = await _facade.ChangePasswordAsync(userId, currentPassword, newPassword);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.Null(result.ErrorMessage);
-
-        _mockAuthProvider.Verify(
-            p => p.ChangePasswordAsync(userId, currentPassword, newPassword, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task ChangePasswordAsync_WithInvalidCurrentPassword_ReturnsError()
-    {
-        // Arrange
-        var userId = "user-1";
-        var currentPassword = "WrongPass123!";
-        var newPassword = "NewPass456!";
-
-        _mockAuthProvider
-            .Setup(p => p.ChangePasswordAsync(userId, currentPassword, newPassword, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(PasswordChangeResult.Failed("Current password is incorrect."));
-
-        // Act
-        var result = await _facade.ChangePasswordAsync(userId, currentPassword, newPassword);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal("Current password is incorrect.", result.ErrorMessage);
+        // This test will be rewritten when Auth0 password reset is implemented
+        await Task.CompletedTask;
     }
 }
 

@@ -267,14 +267,15 @@
                 _passwordModel.NewPassword
             );
 
-            if (result.Success)
+            if (result.IsValid)
             {
                 MessageService.SetSuccess("Password changed successfully");
                 _passwordModel = new PasswordChangeModel(); // Clear the form
             }
             else
             {
-                MessageService.SetFail(result.ErrorMessage ?? "Failed to change password");
+                var errors = string.Join(", ", result.Errors);
+                MessageService.SetFail(errors);
             }
         }
         catch (Exception ex)
