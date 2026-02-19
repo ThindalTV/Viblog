@@ -1,27 +1,25 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Data.CosmosDb.Data;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
 /// User management service implementation
-/// TEMPORARY STUB: Authentication operations disabled during Auth0 migration (Phase 1)
-/// Will be fully implemented with Auth0 sync in Step 11 (Phase 2)
+/// Handles user business logic using repository pattern
 /// </summary>
 public class UserManagementService : IUserManagementService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IAdminUserRepository _userRepository;
     private readonly ILogger<UserManagementService> _logger;
 
     public UserManagementService(
-        ApplicationDbContext dbContext,
+        IAdminUserRepository userRepository,
         ILogger<UserManagementService> logger)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -33,23 +31,7 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        // Direct DB query without UserManager
-        var query = _dbContext.Set<AdminUser>().Where(u => !u.IsDeleted);
-
-        if (!includeInactive)
-        {
-            query = query.Where(u => u.IsActive);
-        }
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var users = await query
-            .OrderBy(u => u.Email)
-            .Skip(pagingParameters.Skip)
-            .Take(pagingParameters.PageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<AdminUser>(users, totalCount, pagingParameters.PageNumber, pagingParameters.PageSize);
+        return await _userRepository.GetAllAsync(pagingParameters, includeInactive, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -57,10 +39,7 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-        var user = await _dbContext.Set<AdminUser>()
-            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
-
-        return user;
+        return await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -68,11 +47,7 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
-        var normalizedEmail = email.Trim().ToLowerInvariant();
-        var user = await _dbContext.Set<AdminUser>()
-            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && !u.IsDeleted, cancellationToken);
-
-        return user;
+        return await _userRepository.GetByEmailAsync(email, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -108,8 +83,7 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _dbContext.Set<AdminUser>()
-                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+            var user = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
 
             if (user is null)
             {
@@ -125,15 +99,12 @@ public class UserManagementService : IUserManagementService
                 return (null, UserValidationResult.Invalid("Email cannot be changed. Create a new account if a different email is needed."));
             }
 
-            var oldActive = user.IsActive;
-            var oldClaims = user.CustomClaims.ToList();
-
             user.DisplayName = name.Trim();
             user.CustomClaims = claimsList;
             user.IsActive = isActive;
             user.UpdatedAt = DateTimeOffset.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _userRepository.UpdateAsync(user, cancellationToken);
 
             _logger.LogInformation("Updated user {UserId}", userId);
             return (user, UserValidationResult.Valid());
@@ -152,21 +123,8 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _dbContext.Set<AdminUser>()
-                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken);
+            await _userRepository.DeleteAsync(userId, "users", softDelete: true, cancellationToken);
 
-            if (user is null)
-            {
-                return false;
-            }
-
-            user.IsDeleted = true;
-            user.DeletedAt = DateTimeOffset.UtcNow;
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Deleted user {UserId}", userId);
             return true;
         }
         catch (Exception ex)
@@ -207,9 +165,7 @@ public class UserManagementService : IUserManagementService
         else
         {
             // Check email uniqueness
-            var normalizedEmail = email.Trim().ToLowerInvariant();
-            var existingUser = await _dbContext.Set<AdminUser>()
-                .FirstOrDefaultAsync(u => u.Email == normalizedEmail && !u.IsDeleted, cancellationToken);
+            var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
 
             if (existingUser != null)
             {
@@ -229,8 +185,7 @@ public class UserManagementService : IUserManagementService
     /// <inheritdoc/>
     public virtual async Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<AdminUser>()
-            .AnyAsync(u => !u.IsDeleted, cancellationToken);
+        return await _userRepository.AnyAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -238,10 +193,7 @@ public class UserManagementService : IUserManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(externalUserId);
 
-        var user = await _dbContext.Set<AdminUser>()
-            .FirstOrDefaultAsync(u => u.ExternalUserId == externalUserId && !u.IsDeleted, cancellationToken);
-
-        return user;
+        return await _userRepository.GetByExternalIdAsync(externalUserId, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -269,7 +221,7 @@ public class UserManagementService : IUserManagementService
                 existingUser.UpdatedAt = DateTimeOffset.UtcNow;
                 existingUser.LastLoginAt = DateTimeOffset.UtcNow;
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _userRepository.UpdateAsync(existingUser, cancellationToken);
                 return existingUser;
             }
 
@@ -281,7 +233,7 @@ public class UserManagementService : IUserManagementService
                 // Link existing local user to external provider
                 await LinkToExternalProviderAsync(userByEmail.Id, externalUserId, cancellationToken);
                 userByEmail.LastLoginAt = DateTimeOffset.UtcNow;
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _userRepository.UpdateAsync(userByEmail, cancellationToken);
                 return userByEmail;
             }
 
@@ -295,15 +247,12 @@ public class UserManagementService : IUserManagementService
                 ExternalUserLastSync = DateTimeOffset.UtcNow,
                 CustomClaims = claims?.ToList() ?? [],
                 IsActive = true,
-                GroupKey = "users",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
                 LastLoginAt = DateTimeOffset.UtcNow
             };
 
-            _dbContext.Set<AdminUser>().Add(newUser);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
+            await _userRepository.AddAsync(newUser, cancellationToken);
             return newUser;
         }
         catch (Exception ex)
@@ -335,7 +284,7 @@ public class UserManagementService : IUserManagementService
             user.ExternalUserLastSync = DateTimeOffset.UtcNow;
             user.UpdatedAt = DateTimeOffset.UtcNow;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _userRepository.UpdateAsync(user, cancellationToken);
             return true;
         }
         catch (Exception ex)
