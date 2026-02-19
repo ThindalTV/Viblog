@@ -100,6 +100,42 @@ public interface IUserManagementService
     Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get a user by external identity provider ID (e.g., Auth0 user ID)
+    /// </summary>
+    /// <param name="externalUserId">The external user ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The user or null if not found</returns>
+    Task<AdminUser?> GetUserByExternalIdAsync(string externalUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create or update a user from external identity provider login
+    /// </summary>
+    /// <param name="externalUserId">External identity provider user ID</param>
+    /// <param name="email">User's email address</param>
+    /// <param name="displayName">User's display name</param>
+    /// <param name="claims">Optional claims to assign (only for new users)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The synced user</returns>
+    Task<AdminUser?> CreateOrUpdateFromExternalLoginAsync(
+        string externalUserId,
+        string email,
+        string displayName,
+        IEnumerable<string>? claims = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Link an existing local user to an external identity provider
+    /// </summary>
+    /// <param name="userId">Local user ID</param>
+    /// <param name="externalUserId">External identity provider user ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if linked successfully</returns>
+    Task<bool> LinkToExternalProviderAsync(
+        string userId,
+        string externalUserId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Create the default admin user
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>

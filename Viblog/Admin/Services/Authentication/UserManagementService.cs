@@ -234,6 +234,119 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
+    public virtual async Task<AdminUser?> GetUserByExternalIdAsync(string externalUserId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalUserId);
+
+        var user = await _dbContext.Set<AdminUser>()
+            .FirstOrDefaultAsync(u => u.ExternalUserId == externalUserId && !u.IsDeleted, cancellationToken);
+
+        return user;
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<AdminUser?> CreateOrUpdateFromExternalLoginAsync(
+        string externalUserId,
+        string email,
+        string displayName,
+        IEnumerable<string>? claims = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalUserId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        try
+        {
+            // Check if user exists by external ID
+            var existingUser = await GetUserByExternalIdAsync(externalUserId, cancellationToken);
+
+            if (existingUser != null)
+            {
+                // Update existing user
+                existingUser.Email = email.Trim().ToLowerInvariant();
+                existingUser.DisplayName = displayName?.Trim() ?? email;
+                existingUser.ExternalUserLastSync = DateTimeOffset.UtcNow;
+                existingUser.UpdatedAt = DateTimeOffset.UtcNow;
+                existingUser.LastLoginAt = DateTimeOffset.UtcNow;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                return existingUser;
+            }
+
+            // Check if user exists by email (migration scenario)
+            var userByEmail = await GetUserByEmailAsync(email, cancellationToken);
+
+            if (userByEmail != null)
+            {
+                // Link existing local user to external provider
+                await LinkToExternalProviderAsync(userByEmail.Id, externalUserId, cancellationToken);
+                userByEmail.LastLoginAt = DateTimeOffset.UtcNow;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                return userByEmail;
+            }
+
+            // Create new user
+            var newUser = new AdminUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = email.Trim().ToLowerInvariant(),
+                DisplayName = displayName?.Trim() ?? email,
+                ExternalUserId = externalUserId,
+                ExternalUserLastSync = DateTimeOffset.UtcNow,
+                CustomClaims = claims?.ToList() ?? [],
+                IsActive = true,
+                GroupKey = "users",
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                LastLoginAt = DateTimeOffset.UtcNow
+            };
+
+            _dbContext.Set<AdminUser>().Add(newUser);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return newUser;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating or updating user from external login. ExternalUserId: {ExternalUserId}, Email: {Email}",
+                externalUserId, email);
+            return null;
+        }
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<bool> LinkToExternalProviderAsync(
+        string userId,
+        string externalUserId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalUserId);
+
+        try
+        {
+            var user = await GetUserByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.ExternalUserId = externalUserId;
+            user.ExternalUserLastSync = DateTimeOffset.UtcNow;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error linking user {UserId} to external provider {ExternalUserId}",
+                userId, externalUserId);
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
     public virtual Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("Default admin creation will be implemented with Auth0 sync in Step 11");

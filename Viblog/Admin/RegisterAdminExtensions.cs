@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components.Authorization;
 using Viblog.Admin.Configuration;
@@ -174,33 +175,21 @@ public static class RegisterAdminExtensions
     }
 
     /// <summary>
-    /// Adds admin authentication middleware (does not initialize default admin - call InitializeViblogAdminAsync separately)
-    /// </summary>
-    extension(IApplicationBuilder app)
-    {
-        public IApplicationBuilder UseViblogAdmin()
-        {
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            return app;
-        }
-    }
-
-    /// <summary>
     /// Initialize admin system asynchronously (creates default admin user if needed)
+    /// Uses Auth0 for user creation
     /// </summary>
     extension(WebApplication app)
     {
         public async Task InitializeViblogAdminAsync()
         {
             using var scope = app.Services.CreateScope();
+            var syncService = scope.ServiceProvider.GetService<IIdentityProviderSyncService>();
             var userManagementService = scope.ServiceProvider.GetService<IUserManagementService>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<IUserManagementService>>();
 
-            if (userManagementService == null)
+            if (syncService == null || userManagementService == null)
             {
-                logger.LogWarning("IUserManagementService not registered. Skipping default admin user initialization.");
+                logger.LogWarning("Identity provider sync service or user management service not registered. Skipping default admin user initialization.");
                 return;
             }
 
@@ -212,9 +201,11 @@ public static class RegisterAdminExtensions
 
                 if (!usersExist)
                 {
-                    logger.LogInformation("No users found. Creating default admin user...");
-                    var defaultAdmin = await userManagementService.CreateDefaultAdminUserAsync();
-                    logger.LogWarning("Default admin user created: {Email} with password 'admin123!' - CHANGE THIS PASSWORD IMMEDIATELY!", defaultAdmin.Email);
+                    logger.LogInformation("No users found. Creating default admin user in Auth0...");
+                    var defaultAdmin = await syncService.GetOrCreateDefaultAdminAsync();
+                    logger.LogWarning(
+                        "Default admin user created: {Email} - Login via Auth0 and CHANGE PASSWORD IMMEDIATELY!",
+                        defaultAdmin.Email);
                 }
                 else
                 {
@@ -229,57 +220,46 @@ public static class RegisterAdminExtensions
     }
 
     /// <summary>
-    /// Maps admin endpoints (login, logout)
-    /// TODO: These endpoints will be replaced with Auth0 endpoints in Step 10
+    /// Maps admin authentication endpoints (Auth0 integration)
     /// </summary>
     extension(IEndpointRouteBuilder endpoints)
     {
         public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
-            // TODO: Auth0 endpoints will be added in Step 10
-            // Old login/logout endpoints removed
-
-            /* REMOVED - Will be replaced with Auth0 endpoints
-            // Map admin login endpoint
-            endpoints.MapPost("/admin/api/login", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>
+            // Auth0 Challenge endpoint - initiates Auth0 login
+            endpoints.MapGet("/admin/auth/challenge", async (HttpContext context, string? returnUrl = null) =>
             {
-                var form = await context.Request.ReadFormAsync();
-                var email = form["email"].ToString();
-                var password = form["password"].ToString();
-                var rememberMe = form["rememberMe"].ToString() == "on";
-
-                var result = await authProvider.ValidateCredentialsAsync(email, password);
-                if (result.Success && result.User is not null)
+                var properties = new AuthenticationProperties
                 {
-                    await authProvider.MarkUserAsAuthenticatedAsync(result.User, rememberMe);
+                    RedirectUri = returnUrl ?? "/admin"
+                };
 
-                    // Check if there's a return URL, otherwise redirect to admin dashboard
-                    var returnUrl = context.Request.Query["ReturnUrl"].FirstOrDefault();
-                    if (!string.IsNullOrEmpty(returnUrl) && Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
-                    {
-                        context.Response.Redirect(returnUrl);
-                    }
-                    else
-                    {
-                        context.Response.Redirect("/admin");
-                    }
-                }
-                else
-                {
-                    // Redirect back to login with error
-                    context.Response.Redirect("/admin/login?error=invalid");
-                }
+                await context.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme, properties);
             })
             .AllowAnonymous();
 
-            // Map admin logout endpoint
-            endpoints.MapPost("/admin/api/logout", async (HttpContext context, AdminAuthenticationStateProvider authProvider) =>
+            // Auth0 Logout endpoint
+            endpoints.MapGet("/admin/logout", async (HttpContext context) =>
             {
-                await authProvider.MarkUserAsLoggedOutAsync();
-                context.Response.Redirect("/admin/login");
+                var properties = new AuthenticationProperties
+                {
+                    RedirectUri = "/admin/login"
+                };
+
+                // Sign out from both cookie and Auth0
+                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, properties);
             })
             .RequireAuthorization();
-            */
+
+            // Access denied page
+            endpoints.MapGet("/admin/access-denied", (HttpContext context) =>
+            {
+                context.Response.Redirect("/admin/login?error=access_denied");
+                return Task.CompletedTask;
+            })
+            .AllowAnonymous();
+
             return endpoints;
         }
     }

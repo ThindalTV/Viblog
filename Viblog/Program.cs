@@ -60,8 +60,8 @@ var app = builder.Build();
 // Seed database with sample data if empty
 await SeedDatabaseAsync(app);
 
-// TODO: Initialize admin system - will be updated for Auth0 in Step 11
-// await app.InitializeViblogAdminAsync();
+// Initialize admin system (creates default admin user in Auth0 if needed)
+await app.InitializeViblogAdminAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -101,7 +101,6 @@ if (!string.IsNullOrEmpty(mediaBasePath))
 }
 
 app.UseViblogFrontend();
-app.UseViblogAdmin();
 
 // Authentication & Authorization middleware
 // Must be after UseRouting() and before MapRazorComponents()
