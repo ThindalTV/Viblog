@@ -13,13 +13,13 @@ namespace Viblog.Admin.Services.Authentication;
 /// </summary>
 public class UserManagementService : IUserManagementService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<AdminUser> _userManager;
     private readonly IAuthenticationProvider _authenticationProvider;
     private readonly IAuditLogService? _auditLogService;
     private readonly ILogger<UserManagementService> _logger;
 
     public UserManagementService(
-        UserManager<ApplicationUser> userManager,
+        UserManager<AdminUser> userManager,
         IAuthenticationProvider authenticationProvider,
         ILogger<UserManagementService> logger,
         IAuditLogService? auditLogService = null)
@@ -31,7 +31,7 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PagedResult<ApplicationUser>> GetUsersAsync(
+    public virtual async Task<PagedResult<AdminUser>> GetUsersAsync(
         PagingParameters pagingParameters,
         bool includeInactive = false,
         CancellationToken cancellationToken = default)
@@ -53,11 +53,11 @@ public class UserManagementService : IUserManagementService
             .Take(pagingParameters.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ApplicationUser>(users, totalCount, pagingParameters.PageNumber, pagingParameters.PageSize);
+        return new PagedResult<AdminUser>(users, totalCount, pagingParameters.PageNumber, pagingParameters.PageSize);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<ApplicationUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
+    public virtual async Task<AdminUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
@@ -66,7 +66,7 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<ApplicationUser?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    public virtual async Task<AdminUser?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
@@ -75,7 +75,7 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    public virtual async Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
@@ -100,7 +100,7 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = new ApplicationUser
+            var user = new AdminUser
             {
                 Id = Guid.NewGuid().ToString(),
                 UserName = email.Trim().ToLowerInvariant(),
@@ -148,7 +148,7 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
+    public virtual async Task<(AdminUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
         string userId,
         string name,
         string email,
@@ -346,11 +346,11 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<ApplicationUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating default admin user");
 
-        var adminUser = new ApplicationUser
+        var adminUser = new AdminUser
         {
             Id = Guid.NewGuid().ToString(),
             UserName = "admin@viblog.local",

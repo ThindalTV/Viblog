@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Identity;
 namespace Viblog.Infrastructure.Shared.Data.Entities;
 
 /// <summary>
-/// Application user entity extending ASP.NET Core Identity with blog-specific properties
+/// Admin user entity for blog administration
+/// All users are admin users - there is no public user registration
 /// </summary>
-public class ApplicationUser : IdentityUser
+public class AdminUser : IdentityUser
 {
     /// <summary>
     /// User's display name (for blog author attribution)
@@ -13,7 +14,7 @@ public class ApplicationUser : IdentityUser
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Additional claims assigned to this user (beyond Identity claims)
+    /// Additional claims assigned to this user for authorization
     /// </summary>
     public List<string> CustomClaims { get; set; } = [];
 

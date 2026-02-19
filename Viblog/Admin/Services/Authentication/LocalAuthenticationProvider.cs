@@ -11,12 +11,12 @@ namespace Viblog.Admin.Services.Authentication;
 /// </summary>
 public class LocalAuthenticationProvider : IAuthenticationProvider
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<AdminUser> _userManager;
     private readonly IAuditLogService? _auditLogService;
     private readonly ILogger<LocalAuthenticationProvider> _logger;
 
     public LocalAuthenticationProvider(
-        UserManager<ApplicationUser> userManager,
+        UserManager<AdminUser> userManager,
         ILogger<LocalAuthenticationProvider> logger,
         IAuditLogService? auditLogService = null)
     {

@@ -66,7 +66,7 @@ This document outlines the complete migration plan for replacing the current ASP
 - `UserManagementService` - user CRUD operations using UserManager
 
 #### Database Entities (CosmosDB Containers)
-- `Users` - ApplicationUser (extends IdentityUser)
+- `Users` - AdminUser (extends IdentityUser)
 - `Roles` - IdentityRole
 - `UserClaims` - IdentityUserClaim<string>
 - `UserRoles` - IdentityUserRole<string>
@@ -75,13 +75,13 @@ This document outlines the complete migration plan for replacing the current ASP
 #### Service Registrations
 1. `Program.cs` line 59:
    ```csharp
-   builder.Services.AddIdentity<ApplicationUser, ApplicationUser>();
+   builder.Services.AddIdentity<AdminUser, AdminUser>();
    ```
 
 2. `Viblog.Data.CosmosDb/CosmosDbServiceExtensions.cs` lines 93-96:
    ```csharp
-   // Register Identity infrastructure for ApplicationUser
-   services.AddIdentityCore<ApplicationUser>()
+   // Register Identity infrastructure for AdminUser
+   services.AddIdentityCore<AdminUser>()
        .AddEntityFrameworkStores<ApplicationDbContext>();
    ```
 
@@ -109,7 +109,7 @@ This document outlines the complete migration plan for replacing the current ASP
 **1. `Viblog.Data/Viblog.Data.CosmosDb/Data/ApplicationDbContext.cs`**
 
 Changes:
-- Remove base class: `IdentityDbContext<ApplicationUser>` → `DbContext`
+- Remove base class: `IdentityDbContext<AdminUser>` → `DbContext`
 - Remove `base.OnModelCreating(builder);` call
 - Remove `RemoveIdentityIndexes()` method (lines 34-49)
 - Remove `ConfigureIdentityEntities()` method (lines 51-105)
@@ -119,14 +119,14 @@ Changes:
   - IdentityUserRole<string>
   - IdentityUserLogin<string>
 - Keep only `ConfigureBlogEntities()` method
-- Keep ApplicationUser configuration but move to blog entities section
+- Keep AdminUser configuration but move to blog entities section
 
 **2. `Viblog.Data/Viblog.Data.CosmosDb/CosmosDbServiceExtensions.cs`**
 
 Changes:
 - Remove lines 93-96:
   ```csharp
-  services.AddIdentityCore<ApplicationUser>()
+  services.AddIdentityCore<AdminUser>()
       .AddEntityFrameworkStores<ApplicationDbContext>();
   ```
 - Remove associated TODO comment (lines 91-92)
@@ -136,7 +136,7 @@ Changes:
 Changes:
 - Remove line 59:
   ```csharp
-  builder.Services.AddIdentity<ApplicationUser, ApplicationUser>();
+  builder.Services.AddIdentity<AdminUser, AdminUser>();
   ```
 
 **4. `Viblog/Viblog.csproj`**
@@ -209,7 +209,7 @@ Changes:
 
 **Example new structure:**
 ```csharp
-public class ApplicationUser
+public class AdminUser
 {
     public string Id { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

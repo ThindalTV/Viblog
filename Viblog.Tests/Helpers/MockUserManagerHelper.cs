@@ -11,15 +11,15 @@ public static class MockUserManagerHelper
     /// <summary>
     /// Create a mock UserManager with default setup
     /// </summary>
-    public static Mock<UserManager<ApplicationUser>> CreateMockUserManager()
+    public static Mock<UserManager<AdminUser>> CreateMockUserManager()
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        var mockUserManager = new Mock<UserManager<ApplicationUser>>(
+        var store = new Mock<IUserStore<AdminUser>>();
+        var mockUserManager = new Mock<UserManager<AdminUser>>(
             store.Object,
             null!, null!, null!, null!, null!, null!, null!, null!);
         
-        mockUserManager.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
-        mockUserManager.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
+        mockUserManager.Object.UserValidators.Add(new UserValidator<AdminUser>());
+        mockUserManager.Object.PasswordValidators.Add(new PasswordValidator<AdminUser>());
 
         return mockUserManager;
     }

@@ -25,7 +25,7 @@ public class UserProfileFacadeTests
     {
         // Arrange
         var userId = "user-1";
-        var expectedUser = new ApplicationUser { Id = userId, Email = "test@example.com" };
+        var expectedUser = new AdminUser { Id = userId, Email = "test@example.com" };
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -46,7 +46,7 @@ public class UserProfileFacadeTests
         var userId = "user-1";
         var newName = "Updated Name";
         var newEmail = "updated@example.com";
-        var existingUser = new ApplicationUser
+        var existingUser = new AdminUser
         {
             Id = userId,
             Email = "old@example.com",
@@ -54,7 +54,7 @@ public class UserProfileFacadeTests
             CustomClaims = [UserClaims.PostWrite, UserClaims.PageWrite],
             IsActive = true
         };
-        var updatedUser = new ApplicationUser
+        var updatedUser = new AdminUser
         {
             Id = userId,
             Email = newEmail,
@@ -108,7 +108,7 @@ public class UserProfileFacadeTests
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ApplicationUser?)null);
+            .ReturnsAsync((AdminUser?)null);
 
         // Act
         var (user, validationResult) = await _facade.UpdateProfileAsync(userId, name, email);

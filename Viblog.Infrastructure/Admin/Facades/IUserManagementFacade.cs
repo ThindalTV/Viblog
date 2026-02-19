@@ -16,7 +16,7 @@ public interface IUserManagementFacade
     /// <param name="includeInactive">Whether to include inactive users</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paged result of users</returns>
-    Task<PagedResult<ApplicationUser>> GetUsersAsync(
+    Task<PagedResult<AdminUser>> GetUsersAsync(
         PagingParameters pagingParameters,
         bool includeInactive = false,
         CancellationToken cancellationToken = default);
@@ -27,7 +27,7 @@ public interface IUserManagementFacade
     /// <param name="userId">The user ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The user or null if not found</returns>
-    Task<ApplicationUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
+    Task<AdminUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Create a new user
@@ -38,7 +38,7 @@ public interface IUserManagementFacade
     /// <param name="claims">Claims to assign to the user</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created user and validation result</returns>
-    Task<(ApplicationUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
@@ -55,7 +55,7 @@ public interface IUserManagementFacade
     /// <param name="isActive">Whether the user is active</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The updated user and validation result</returns>
-    Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
+    Task<(AdminUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
         string userId,
         string name,
         string email,

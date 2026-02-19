@@ -27,8 +27,8 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     private static void ConfigureBlogEntities(ModelBuilder builder)
     {
-        // ApplicationUser configuration
-        builder.Entity<ApplicationUser>(b =>
+        // AdminUser configuration
+        builder.Entity<AdminUser>(b =>
         {
             b.ToContainer("Users");
             b.HasPartitionKey(u => u.GroupKey);

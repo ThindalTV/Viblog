@@ -21,7 +21,7 @@ public class UserProfileFacade : IUserProfileFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<ApplicationUser?> GetCurrentUserAsync(string userId, CancellationToken cancellationToken = default)
+    public virtual async Task<AdminUser?> GetCurrentUserAsync(string userId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
@@ -29,7 +29,7 @@ public class UserProfileFacade : IUserProfileFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateProfileAsync(
+    public virtual async Task<(AdminUser? User, UserValidationResult ValidationResult)> UpdateProfileAsync(
         string userId,
         string name,
         string email,

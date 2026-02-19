@@ -47,7 +47,7 @@ public class AdminAuthenticationStateProvider : RevalidatingServerAuthentication
     /// </summary>
     /// <param name="user">The authenticated user</param>
     /// <param name="isPersistent">Whether to create a persistent cookie that survives browser restart</param>
-    public async Task MarkUserAsAuthenticatedAsync(ApplicationUser user, bool isPersistent = false)
+    public async Task MarkUserAsAuthenticatedAsync(AdminUser user, bool isPersistent = false)
     {
         ArgumentNullException.ThrowIfNull(user);
 

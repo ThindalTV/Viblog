@@ -67,7 +67,7 @@ public class FileSystemTestFixture : IDisposable
     }
 
     /// <summary>
-    /// Simple DbContext for testing - includes ApplicationUser
+    /// Simple DbContext for testing - includes AdminUser
     /// </summary>
     public class TestDbContext : DbContext
     {
@@ -75,14 +75,14 @@ public class FileSystemTestFixture : IDisposable
         {
         }
 
-        public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
+        public DbSet<AdminUser> Users => Set<AdminUser>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Configure ApplicationUser with custom properties
-            builder.Entity<ApplicationUser>(b =>
+            // Configure AdminUser with custom properties
+            builder.Entity<AdminUser>(b =>
             {
                 b.Property(u => u.CustomClaims);
             });

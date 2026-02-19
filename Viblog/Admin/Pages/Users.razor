@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = RequireUserRead)]
 @layout AdminLayout
 @using Viblog.Infrastructure.Shared.Data.Entities
-@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.AdminUser
 @inject IUserManagementFacade UserManagementFacade
 @inject IDialogService DialogService
 @inject IMessageService MessageService

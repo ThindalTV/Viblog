@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = AdminPolicies.Admin)]
 @layout AdminLayout
 @using System.Security.Claims
-@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.AdminUser
 @inject IUserProfileFacade UserProfileFacade
 @inject IMessageService MessageService
 @inject AuthenticationStateProvider AuthStateProvider
@@ -167,7 +167,7 @@
 </div>
 
 @code {
-    private Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser? _currentUser;
+    private Viblog.Infrastructure.Shared.Data.Entities.AdminUser? _currentUser;
     private ProfileEditModel _profileModel = new();
     private PasswordChangeModel _passwordModel = new();
     private bool _isLoading = true;

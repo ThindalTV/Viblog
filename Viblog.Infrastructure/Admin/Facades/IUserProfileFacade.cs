@@ -14,7 +14,7 @@ public interface IUserProfileFacade
     /// <param name="userId">The user ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The user or null if not found</returns>
-    Task<ApplicationUser?> GetCurrentUserAsync(string userId, CancellationToken cancellationToken = default);
+    Task<AdminUser?> GetCurrentUserAsync(string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update the current user's profile information (name and email only)
@@ -24,7 +24,7 @@ public interface IUserProfileFacade
     /// <param name="email">Updated email address</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The updated user and validation result</returns>
-    Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateProfileAsync(
+    Task<(AdminUser? User, UserValidationResult ValidationResult)> UpdateProfileAsync(
         string userId,
         string name,
         string email,

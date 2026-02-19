@@ -24,9 +24,9 @@ public class UserManagementFacadeTests
     {
         // Arrange
         var pagingParams = new PagingParameters { PageNumber = 1, PageSize = 10 };
-        var expectedResult = new PagedResult<ApplicationUser>
+        var expectedResult = new PagedResult<AdminUser>
         {
-            Items = [new ApplicationUser { Email = "test@example.com" }],
+            Items = [new AdminUser { Email = "test@example.com" }],
             TotalCount = 1,
             PageNumber = 1,
             PageSize = 10
@@ -52,7 +52,7 @@ public class UserManagementFacadeTests
     {
         // Arrange
         var userId = "user-1";
-        var expectedUser = new ApplicationUser { Id = userId, Email = "test@example.com" };
+        var expectedUser = new AdminUser { Id = userId, Email = "test@example.com" };
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -74,7 +74,7 @@ public class UserManagementFacadeTests
         var email = "test@example.com";
         var password = "ValidPass123!";
         var claims = new List<string> { UserClaims.PostWrite };
-        var expectedUser = new ApplicationUser { DisplayName = name, Email = email };
+        var expectedUser = new AdminUser { DisplayName = name, Email = email };
 
         _mockUserManagementService
             .Setup(s => s.CreateUserAsync(name, email, password, claims, It.IsAny<CancellationToken>()))
@@ -98,7 +98,7 @@ public class UserManagementFacadeTests
         var email = "updated@example.com";
         var claims = new List<string> { UserClaims.PostWrite };
         var isActive = true;
-        var expectedUser = new ApplicationUser { Id = userId, DisplayName = name, Email = email };
+        var expectedUser = new AdminUser { Id = userId, DisplayName = name, Email = email };
 
         _mockUserManagementService
             .Setup(s => s.UpdateUserAsync(userId, name, email, claims, isActive, It.IsAny<CancellationToken>()))
