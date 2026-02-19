@@ -62,18 +62,18 @@ public class AdminUser
     /// </summary>
     public DateTimeOffset? DeletedAt { get; set; }
 
-    // Auth0 Integration Properties
-    // These link the local user to their Auth0 identity
+    // External Identity Provider Integration
+    // These link the local user to their external identity (e.g., Auth0, Azure AD B2C)
 
     /// <summary>
-    /// Auth0 user ID (e.g., "auth0|507f1f77bcf86cd799439011")
-    /// Links this local user record to their Auth0 identity
+    /// External identity provider user ID (e.g., "auth0|507f1f77bcf86cd799439011")
+    /// Links this local user record to their external identity
     /// </summary>
-    public string? Auth0UserId { get; set; }
+    public string? ExternalUserId { get; set; }
 
     /// <summary>
-    /// Last time this user was synchronized with Auth0
-    /// Used to track when user data was last updated from Auth0
+    /// Last time this user was synchronized with the external identity provider
+    /// Used to track when user data was last updated from the provider
     /// </summary>
-    public DateTimeOffset? Auth0LastSync { get; set; }
+    public DateTimeOffset? ExternalUserLastSync { get; set; }
 }

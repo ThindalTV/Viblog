@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
+using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services;
 using Viblog.Admin.Services.Auditing;
@@ -22,6 +23,14 @@ public static class RegisterAdminExtensions
         {
             // Register HTTP context accessor for authentication
             collection.AddHttpContextAccessor();
+
+            // Register Auth0 configuration
+            collection.Configure<Auth0Settings>(collection.BuildServiceProvider()
+                .GetRequiredService<IConfiguration>()
+                .GetSection(Auth0Settings.SectionName));
+
+            // Register identity provider sync service (Auth0 implementation)
+            collection.AddScoped<IIdentityProviderSyncService, Auth0SyncService>();
 
             // Register admin authentication state provider
             collection.AddScoped<AdminAuthenticationStateProvider>();
@@ -52,7 +61,7 @@ public static class RegisterAdminExtensions
             collection.AddCascadingAuthenticationState();
             collection.AddScoped<AuthenticationStateProvider, AdminAuthenticationStateProvider>();
 
-            // TODO: Authentication middleware will be configured in Step 12 (Auth0 OpenID Connect)
+            // TODO: Authentication middleware will be configured in Step 9 (Auth0 OpenID Connect)
             // Temporarily comment out to allow compilation
             /*
             collection.AddAuthentication(AdminAuthenticationSettings.AuthenticationScheme)
