@@ -5,8 +5,9 @@ namespace Viblog.Infrastructure.Shared.Data.Repositories;
 
 /// <summary>
 /// Repository interface for AdminUser entity
+/// Extends base repository with user-specific queries
 /// </summary>
-public interface IAdminUserRepository
+public interface IAdminUserRepository : IRepository<AdminUser>
 {
     /// <summary>
     /// Get all users with pagination
@@ -15,11 +16,6 @@ public interface IAdminUserRepository
         PagingParameters pagingParameters,
         bool includeInactive = false,
         CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get a user by ID
-    /// </summary>
-    Task<AdminUser?> GetByIdAsync(string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a user by email
@@ -35,19 +31,4 @@ public interface IAdminUserRepository
     /// Check if any users exist
     /// </summary>
     Task<bool> AnyAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Add a new user
-    /// </summary>
-    Task<AdminUser> AddAsync(AdminUser user, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Update an existing user
-    /// </summary>
-    Task<AdminUser> UpdateAsync(AdminUser user, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Delete a user (soft delete)
-    /// </summary>
-    Task<bool> DeleteAsync(string userId, CancellationToken cancellationToken = default);
 }
