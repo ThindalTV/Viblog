@@ -85,12 +85,6 @@ public static class CosmosDbServiceExtensions
         services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
         services.AddScoped<IPageRepository, CosmosDbPageRepository>();
 
-        // Register Identity infrastructure for ApplicationUser (without Identity UI/cookies)
-        // This provides UserManager<ApplicationUser> for password hashing and user management
-        // TODO: Remove this once migration to custom authentication is complete
-        services.AddIdentityCore<ApplicationUser>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
-
         return services;
     }
 

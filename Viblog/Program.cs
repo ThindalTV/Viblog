@@ -55,8 +55,6 @@ builder.Services.AddViblogFrontend();
 // Register Viblog Admin services (interactive server, with auth)
 builder.Services.AddViblogAdmin();
 
-builder.Services.AddIdentity<ApplicationUser, ApplicationUser>();
-
 var app = builder.Build();
 
 // Seed database with sample data if empty
