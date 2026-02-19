@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Components.Authorization;
 using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services;
@@ -32,8 +34,8 @@ public static class RegisterAdminExtensions
             // Register identity provider sync service (Auth0 implementation)
             collection.AddScoped<IIdentityProviderSyncService, Auth0SyncService>();
 
-            // Register admin authentication state provider
-            collection.AddScoped<AdminAuthenticationStateProvider>();
+            // Register Auth0 authentication state provider
+            collection.AddScoped<Auth0AuthenticationStateProvider>();
 
             // Register admin facades
             collection.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
@@ -59,31 +61,87 @@ public static class RegisterAdminExtensions
             collection.AddTelerikBlazor();
 
             collection.AddCascadingAuthenticationState();
-            collection.AddScoped<AuthenticationStateProvider, AdminAuthenticationStateProvider>();
+            collection.AddScoped<AuthenticationStateProvider, Auth0AuthenticationStateProvider>();
 
-            // TODO: Authentication middleware will be configured in Step 9 (Auth0 OpenID Connect)
-            // Temporarily comment out to allow compilation
-            /*
-            collection.AddAuthentication(AdminAuthenticationSettings.AuthenticationScheme)
-                .AddCookie(AdminAuthenticationSettings.AuthenticationScheme, options =>
+            // Configure Auth0 authentication
+            var config = collection.BuildServiceProvider().GetRequiredService<IConfiguration>();
+            var auth0Settings = config.GetSection(Auth0Settings.SectionName).Get<Auth0Settings>();
+
+            if (auth0Settings?.IsValid() == true)
+            {
+                collection.AddAuthentication(options =>
                 {
-                    options.LoginPath = AdminAuthenticationSettings.LoginPath;
-                    options.AccessDeniedPath = AdminAuthenticationSettings.AccessDeniedPath;
+                    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                })
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/admin/login";
+                    options.AccessDeniedPath = "/admin/access-denied";
                     options.ExpireTimeSpan = TimeSpan.FromHours(8);
                     options.SlidingExpiration = true;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     options.Cookie.SameSite = SameSiteMode.Lax;
                     options.Cookie.Name = "Viblog.Admin.Auth";
+                })
+                .AddOpenIdConnect(options =>
+                {
+                    options.Authority = $"https://{auth0Settings.Domain}";
+                    options.ClientId = auth0Settings.ClientId;
+                    options.ClientSecret = auth0Settings.ClientSecret;
+                    options.ResponseType = "code";
+                    options.CallbackPath = auth0Settings.CallbackPath;
+                    options.SignedOutRedirectUri = auth0Settings.LogoutRedirectUri;
+
+                    // Request scopes
+                    options.Scope.Clear();
+                    options.Scope.Add("openid");
+                    options.Scope.Add("profile");
+                    options.Scope.Add("email");
+
+                    // Save tokens for API calls
+                    options.SaveTokens = true;
+                    options.GetClaimsFromUserInfoEndpoint = true;
+
+                    // Map claims properly
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        NameClaimType = "name",
+                        RoleClaimType = "role"
+                    };
+
+                    // Transform claims after authentication
+                    options.Events = new OpenIdConnectEvents
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            var stateProvider = context.HttpContext.RequestServices
+                                .GetRequiredService<Auth0AuthenticationStateProvider>();
+
+                            var transformedPrincipal = await stateProvider.TransformAuth0ClaimsAsync(context.Principal!);
+                            context.Principal = transformedPrincipal;
+                        }
+                    };
                 });
-            */
+            }
+            else
+            {
+                // Auth0 not configured - add basic authentication for development
+                collection.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .AddCookie(options =>
+                    {
+                        options.LoginPath = "/admin/login";
+                        options.AccessDeniedPath = "/admin/access-denied";
+                    });
+            }
 
             // Configure authorization policies based on claims
             collection.AddAuthorizationBuilder()
                 .AddPolicy(AdminPolicies.Admin, policy =>
                 {
                     policy.RequireAuthenticatedUser();
-                    // policy.AuthenticationSchemes.Add(AdminAuthenticationSettings.AuthenticationScheme);
                 })
                 .AddPolicy(AdminPolicies.RequirePostWrite, policy =>
                 {

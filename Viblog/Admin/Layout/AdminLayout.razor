@@ -2,7 +2,6 @@
 @implements IDisposable
 @using Viblog.Admin.Components
 @using Viblog.Admin.Services
-@inject AdminAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
 <HeadContent>
@@ -192,10 +191,10 @@
         return item?.Text ?? "Dashboard";
     }
 
-    private async Task HandleLogout()
+    private void HandleLogout()
     {
-        await AuthStateProvider.MarkUserAsLoggedOutAsync();
-        Navigation.NavigateTo("/admin/login", forceLoad: true);
+        // Redirect to logout endpoint which will handle Auth0 logout
+        Navigation.NavigateTo("/admin/logout", forceLoad: true);
     }
 
     public void Dispose()
