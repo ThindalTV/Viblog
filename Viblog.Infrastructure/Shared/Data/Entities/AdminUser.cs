@@ -1,13 +1,22 @@
-using Microsoft.AspNetCore.Identity;
-
 namespace Viblog.Infrastructure.Shared.Data.Entities;
 
 /// <summary>
 /// Admin user entity for blog administration
 /// All users are admin users - there is no public user registration
+/// Authentication is handled by Auth0, authorization (permissions) stored locally
 /// </summary>
-public class AdminUser : IdentityUser
+public class AdminUser
 {
+    /// <summary>
+    /// Unique identifier for the user
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// User's email address (unique, immutable after creation)
+    /// </summary>
+    public string Email { get; set; } = string.Empty;
+
     /// <summary>
     /// User's display name (for blog author attribution)
     /// </summary>
@@ -53,9 +62,18 @@ public class AdminUser : IdentityUser
     /// </summary>
     public DateTimeOffset? DeletedAt { get; set; }
 
-    // Note: Identity already provides:
-    // - Email / NormalizedEmail (from IdentityUser)
-    // - PasswordHash (from IdentityUser)
-    // - UserName (from IdentityUser)
-    // - EmailConfirmed, PhoneNumber, etc.
+    // Auth0 Integration Properties
+    // These link the local user to their Auth0 identity
+
+    /// <summary>
+    /// Auth0 user ID (e.g., "auth0|507f1f77bcf86cd799439011")
+    /// Links this local user record to their Auth0 identity
+    /// </summary>
+    public string? Auth0UserId { get; set; }
+
+    /// <summary>
+    /// Last time this user was synchronized with Auth0
+    /// Used to track when user data was last updated from Auth0
+    /// </summary>
+    public DateTimeOffset? Auth0LastSync { get; set; }
 }

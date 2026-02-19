@@ -9,7 +9,8 @@ using Viblog.Infrastructure.Shared.Data.Entities;
 namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
-/// User management service implementation using ASP.NET Core Identity
+/// User management service implementation
+/// NOTE: Still uses UserManager temporarily - will be removed in Step 5
 /// </summary>
 public class UserManagementService : IUserManagementService
 {
@@ -103,15 +104,13 @@ public class UserManagementService : IUserManagementService
             var user = new AdminUser
             {
                 Id = Guid.NewGuid().ToString(),
-                UserName = email.Trim().ToLowerInvariant(),
                 Email = email.Trim().ToLowerInvariant(),
                 DisplayName = name.Trim(),
                 CustomClaims = claimsList,
                 IsActive = true,
                 GroupKey = "users",
                 CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                EmailConfirmed = true // Auto-confirm for admin-created users
+                UpdatedAt = DateTimeOffset.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, password);
@@ -353,15 +352,13 @@ public class UserManagementService : IUserManagementService
         var adminUser = new AdminUser
         {
             Id = Guid.NewGuid().ToString(),
-            UserName = "admin@viblog.local",
             Email = "admin@viblog.local",
             DisplayName = "Administrator",
             CustomClaims = UserClaims.DefaultAdminClaims.ToList(),
             IsActive = true,
             GroupKey = "users",
             CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
-            EmailConfirmed = true
+            UpdatedAt = DateTimeOffset.UtcNow
         };
 
         var result = await _userManager.CreateAsync(adminUser, "admin123!");
