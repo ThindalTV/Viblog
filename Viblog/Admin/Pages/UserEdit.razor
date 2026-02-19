@@ -142,10 +142,10 @@
             {
                 _model = new UserEditModel
                 {
-                    Name = user.Name,
+                    Name = user.DisplayName,
                     Email = user.Email,
                     IsActive = user.IsActive,
-                    Claims = new List<string>(user.Claims)
+                    Claims = new List<string>(user.CustomClaims)
                 };
             }
         }
@@ -188,7 +188,7 @@
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            (Viblog.Infrastructure.Shared.Data.Entities.User? user, UserValidationResult validationResult) result;
+            (Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser? user, UserValidationResult validationResult) result;
 
             if (IsNewUser)
             {
@@ -314,3 +314,4 @@
         public List<string> Claims { get; set; } = [];
     }
 }
+

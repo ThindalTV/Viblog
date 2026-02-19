@@ -1,79 +1,81 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
-/// User management service implementation
+/// User management service implementation using ASP.NET Core Identity
 /// </summary>
 public class UserManagementService : IUserManagementService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuthenticationProvider _authenticationProvider;
     private readonly IAuditLogService? _auditLogService;
     private readonly ILogger<UserManagementService> _logger;
 
     public UserManagementService(
-        IUserRepository userRepository,
+        UserManager<ApplicationUser> userManager,
         IAuthenticationProvider authenticationProvider,
         ILogger<UserManagementService> logger,
         IAuditLogService? auditLogService = null)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditLogService = auditLogService; // Optional dependency
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PagedResult<User>> GetUsersAsync(
+    public virtual async Task<PagedResult<ApplicationUser>> GetUsersAsync(
         PagingParameters pagingParameters,
         bool includeInactive = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        if (includeInactive)
+        var query = _userManager.Users.Where(u => !u.IsDeleted);
+
+        if (!includeInactive)
         {
-            return await _userRepository.GetAllAsync(
-                pagingParameters,
-                u => u.Email,
-                ascending: true,
-                includeDeleted: false,
-                cancellationToken);
+            query = query.Where(u => u.IsActive);
         }
 
-        return await _userRepository.FindAsync(
-            u => u.IsActive,
-            pagingParameters,
-            u => u.Email,
-            ascending: true,
-            includeDeleted: false,
-            cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .OrderBy(u => u.Email)
+            .Skip(pagingParameters.Skip)
+            .Take(pagingParameters.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ApplicationUser>(users, totalCount, pagingParameters.PageNumber, pagingParameters.PageSize);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<User?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
+    public virtual async Task<ApplicationUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
-        return await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
+        var user = await _userManager.FindByIdAsync(userId);
+        return user != null && !user.IsDeleted ? user : null;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    public virtual async Task<ApplicationUser?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
-        return await _userRepository.GetByEmailAsync(email, cancellationToken);
+        var user = await _userManager.FindByEmailAsync(email);
+        return user != null && !user.IsDeleted ? user : null;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(User? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
@@ -98,33 +100,38 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = new User
+            var user = new ApplicationUser
             {
                 Id = Guid.NewGuid().ToString(),
-                GroupKey = "users",
-                Name = name.Trim(),
+                UserName = email.Trim().ToLowerInvariant(),
                 Email = email.Trim().ToLowerInvariant(),
-                PasswordHash = _authenticationProvider.HashPassword(password),
-                Claims = claimsList,
+                DisplayName = name.Trim(),
+                CustomClaims = claimsList,
                 IsActive = true,
+                GroupKey = "users",
                 CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                UpdatedAt = DateTimeOffset.UtcNow,
+                EmailConfirmed = true // Auto-confirm for admin-created users
             };
 
-            await _userRepository.AddAsync(user, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return (null, UserValidationResult.Invalid(errors));
+            }
 
             // Log user creation
             if (_auditLogService != null)
             {
                 await _auditLogService.LogActionAsync(
                     userId: user.Id,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: AuditAction.UserCreated,
                     entityType: EntityType.User,
                     entityId: user.Id,
-                    entityName: user.Name,
+                    entityName: user.DisplayName,
                     description: $"User account created for {user.Email}",
                     result: ActionResult.Success,
                     cancellationToken: cancellationToken);
@@ -141,7 +148,7 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(User? User, UserValidationResult ValidationResult)> UpdateUserAsync(
+    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
         string userId,
         string name,
         string email,
@@ -162,38 +169,39 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
-            if (user is null)
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null || user.IsDeleted)
             {
                 return (null, UserValidationResult.Invalid("User not found."));
             }
 
             // SECURITY: Email is the login identifier and cannot be changed
-            // If a different email is needed, a new account must be created
             var normalizedEmail = email.Trim().ToLowerInvariant();
             if (user.Email != normalizedEmail)
             {
-                _logger.LogWarning("Attempt to change email for user {UserId} from {OldEmail} to {NewEmail} was blocked", 
+                _logger.LogWarning("Attempt to change email for user {UserId} from {OldEmail} to {NewEmail} was blocked",
                     userId, user.Email, normalizedEmail);
                 return (null, UserValidationResult.Invalid("Email cannot be changed. Create a new account if a different email is needed."));
             }
 
             var oldActive = user.IsActive;
-            var oldClaims = user.Claims.ToList();
+            var oldClaims = user.CustomClaims.ToList();
 
-            user.Name = name.Trim();
-            // Email deliberately NOT updated - see security note above
-            user.Claims = claimsList;
+            user.DisplayName = name.Trim();
+            user.CustomClaims = claimsList;
             user.IsActive = isActive;
             user.UpdatedAt = DateTimeOffset.UtcNow;
 
-            await _userRepository.UpdateAsync(user, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return (null, UserValidationResult.Invalid(errors));
+            }
 
             // Log user update
             if (_auditLogService != null)
             {
-                // Determine what changed
                 var changes = new List<string>();
                 if (oldActive != isActive)
                 {
@@ -211,13 +219,13 @@ public class UserManagementService : IUserManagementService
 
                 await _auditLogService.LogActionAsync(
                     userId: userId,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: action,
                     entityType: EntityType.User,
                     entityId: user.Id,
-                    entityName: user.Name,
-                    description: changes.Any() 
+                    entityName: user.DisplayName,
+                    description: changes.Any()
                         ? $"User updated: {string.Join(", ", changes)}"
                         : "User profile updated",
                     result: ActionResult.Success,
@@ -241,23 +249,34 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            // Get user info before deleting for audit log
-            var user = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null || user.IsDeleted)
+            {
+                return false;
+            }
 
-            await _userRepository.DeleteAsync(userId, "users", softDelete: true, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
+            // Soft delete
+            user.IsDeleted = true;
+            user.DeletedAt = DateTimeOffset.UtcNow;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return false;
+            }
 
             // Log user deletion
-            if (_auditLogService != null && user != null)
+            if (_auditLogService != null)
             {
                 await _auditLogService.LogActionAsync(
                     userId: userId,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: AuditAction.UserDeleted,
                     entityType: EntityType.User,
                     entityId: user.Id,
-                    entityName: user.Name,
+                    entityName: user.DisplayName,
                     description: $"User account deleted: {user.Email}",
                     result: ActionResult.Success,
                     cancellationToken: cancellationToken);
@@ -304,13 +323,14 @@ public class UserManagementService : IUserManagementService
         else
         {
             // Check email uniqueness
-            var emailExists = string.IsNullOrWhiteSpace(excludeUserId)
-                ? await _userRepository.EmailExistsAsync(email, cancellationToken)
-                : await _userRepository.EmailExistsAsync(email, excludeUserId, cancellationToken);
-
-            if (emailExists)
+            var existingUser = await _userManager.FindByEmailAsync(email);
+            if (existingUser != null && !existingUser.IsDeleted)
             {
-                errors.Add("Email address is already in use.");
+                // If we're updating and it's the same user, that's OK
+                if (string.IsNullOrWhiteSpace(excludeUserId) || existingUser.Id != excludeUserId)
+                {
+                    errors.Add("Email address is already in use.");
+                }
             }
         }
 
@@ -322,29 +342,34 @@ public class UserManagementService : IUserManagementService
     /// <inheritdoc/>
     public virtual async Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default)
     {
-        return await _userRepository.AnyAsync(u => true, includeDeleted: false, cancellationToken);
+        return await _userManager.Users.AnyAsync(u => !u.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<User> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<ApplicationUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating default admin user");
 
-        var adminUser = new User
+        var adminUser = new ApplicationUser
         {
             Id = Guid.NewGuid().ToString(),
-            GroupKey = "users",
-            Name = "Administrator",
+            UserName = "admin@viblog.local",
             Email = "admin@viblog.local",
-            PasswordHash = _authenticationProvider.HashPassword("admin123!"),
-            Claims = UserClaims.DefaultAdminClaims.ToList(),
+            DisplayName = "Administrator",
+            CustomClaims = UserClaims.DefaultAdminClaims.ToList(),
             IsActive = true,
+            GroupKey = "users",
             CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
+            EmailConfirmed = true
         };
 
-        await _userRepository.AddAsync(adminUser, cancellationToken);
-        await _userRepository.SaveChangesAsync(cancellationToken);
+        var result = await _userManager.CreateAsync(adminUser, "admin123!");
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Failed to create default admin user: {errors}");
+        }
 
         _logger.LogInformation("Default admin user created with email {Email}", adminUser.Email);
         return adminUser;
@@ -367,29 +392,36 @@ public class UserManagementService : IUserManagementService
 
         try
         {
-            var user = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
-            if (user is null)
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null || user.IsDeleted)
             {
                 return UserValidationResult.Invalid("User not found.");
             }
 
-            user.PasswordHash = _authenticationProvider.HashPassword(newPassword);
-            user.UpdatedAt = DateTimeOffset.UtcNow;
+            // Remove old password and set new one
+            await _userManager.RemovePasswordAsync(user);
+            var result = await _userManager.AddPasswordAsync(user, newPassword);
 
-            await _userRepository.UpdateAsync(user, cancellationToken);
-            await _userRepository.SaveChangesAsync(cancellationToken);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return UserValidationResult.Invalid(errors);
+            }
+
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await _userManager.UpdateAsync(user);
 
             // Log password reset (admin-initiated)
             if (_auditLogService != null)
             {
                 await _auditLogService.LogActionAsync(
                     userId: user.Id,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: AuditAction.PasswordReset,
                     entityType: EntityType.User,
                     entityId: user.Id,
-                    entityName: user.Name,
+                    entityName: user.DisplayName,
                     description: $"Password reset by administrator for {user.Email}",
                     result: ActionResult.Success,
                     cancellationToken: cancellationToken);

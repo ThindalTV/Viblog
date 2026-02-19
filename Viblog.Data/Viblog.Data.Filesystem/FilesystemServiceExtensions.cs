@@ -48,8 +48,9 @@ public static class FilesystemServiceExtensions
         services.AddScoped<IBlogPostRepository, FileSystemBlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, FileSystemMediaMetadataRepository>();
         services.AddScoped<IPageRepository, FileSystemPageRepository>();
-        services.AddScoped<IUserRepository, FileSystemUserRepository>();
         services.AddScoped<IAuditLogRepository, FileSystemAuditLogRepository>();
+
+        // User management now uses ASP.NET Core Identity's UserManager<ApplicationUser>
 
         // Register media storage repository
         services.AddScoped<IMediaStorageRepository, FileSystemMediaRepository>();

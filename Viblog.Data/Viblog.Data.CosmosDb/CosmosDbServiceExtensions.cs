@@ -4,9 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Viblog.Data.CosmosDb.Data;
 using Viblog.Data.CosmosDb.Data.Repositories;
-using Viblog.Data.CosmosDb.Indexing;
-using Viblog.Infrastructure.Shared.Data.Indexing;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
 
 namespace Viblog.Data.CosmosDb;
 
@@ -26,14 +27,17 @@ public static class CosmosDbServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration,
         bool isDevelopment)
-    {
-        var cosmosConnectionString = configuration.GetConnectionString("CosmosConnection")
+    {/*
+        var cosmosConnectionString =
+            configuration.GetConnectionString("aspireCosmosDatabase") // Aspire
+            //?? configuration.GetConnectionString("CosmosConnection")
             ?? throw new InvalidOperationException("Connection string 'CosmosConnection' not found.");
-        var cosmosDatabaseName = configuration["CosmosDb:DatabaseName"]
-            ?? throw new InvalidOperationException("CosmosDb:DatabaseName configuration not found.");
-
-        services.AddDbContext<ApplicationDbContext>(options =>
-        {
+        var cosmosDatabaseName = "aspireCosmosDatabase"; configuration.GetConnectionString("cosmosStorage")
+            //?? configuration["CosmosDb:DatabaseName"]
+            ?? throw new InvalidOperationException("CosmosDb:DatabaseName configuration not found.");*/
+        //services.AddCosmosDbContext<ApplicationDbContext>();
+        //services.AddCosmosDbContext<ApplicationDbContext>(cosmosConnectionString);/*options =>
+        /*{
             options.UseCosmos(
                 cosmosConnectionString,
                 cosmosDatabaseName,
@@ -43,13 +47,13 @@ public static class CosmosDbServiceExtensions
                     if (isDevelopment)
                     {
                         // Use Gateway mode for the emulator (required for localhost)
-                        cosmosOptions.ConnectionMode(Microsoft.Azure.Cosmos.ConnectionMode.Gateway);
+                        // cosmosOptions.ConnectionMode(Microsoft.Azure.Cosmos.ConnectionMode.Gateway);
 
                         // Limit to endpoint to prevent DNS resolution to internal Docker IPs
-                        cosmosOptions.LimitToEndpoint();
+                        // cosmosOptions.LimitToEndpoint();
 
                         // Accept self-signed certificates from the emulator
-                        cosmosOptions.HttpClientFactory(() => new HttpClient(new HttpClientHandler
+                        /*cosmosOptions.HttpClientFactory(() => new HttpClient(new HttpClientHandler
                         {
                             ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                         }));
@@ -60,7 +64,7 @@ public static class CosmosDbServiceExtensions
                         cosmosOptions.ConnectionMode(Microsoft.Azure.Cosmos.ConnectionMode.Direct);
                     }
                 });
-        });
+        });*/
 
         return services;
     }
@@ -80,6 +84,12 @@ public static class CosmosDbServiceExtensions
         services.AddScoped<IBlogPostRepository, CosmosDbBlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
         services.AddScoped<IPageRepository, CosmosDbPageRepository>();
+
+        // Register Identity infrastructure for ApplicationUser (without Identity UI/cookies)
+        // This provides UserManager<ApplicationUser> for password hashing and user management
+        // TODO: Remove this once migration to custom authentication is complete
+        services.AddIdentityCore<ApplicationUser>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
         return services;
     }

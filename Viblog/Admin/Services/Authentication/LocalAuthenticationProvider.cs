@@ -1,34 +1,26 @@
-using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Services.Authentication;
 
 /// <summary>
-/// Local authentication provider with password hashing for any repository-based storage
-/// (Filesystem, SQL, CosmosDB, etc.)
+/// Local authentication provider using ASP.NET Core Identity
 /// </summary>
 public class LocalAuthenticationProvider : IAuthenticationProvider
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAuditLogService? _auditLogService;
     private readonly ILogger<LocalAuthenticationProvider> _logger;
-    private const int SaltSize = 16;
-    private const int HashSize = 32;
-    private const int Iterations = 100000;
-
-    // Dummy hash used for timing attack mitigation when user doesn't exist
-    private static readonly string _dummyPasswordHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
     public LocalAuthenticationProvider(
-        IUserRepository userRepository,
+        UserManager<ApplicationUser> userManager,
         ILogger<LocalAuthenticationProvider> logger,
         IAuditLogService? auditLogService = null)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditLogService = auditLogService; // Optional dependency
     }
@@ -44,12 +36,13 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
 
         try
         {
-            var user = await _userRepository.GetByEmailAsync(email, cancellationToken);
+            var user = await _userManager.FindByEmailAsync(email);
 
-            // Always perform password verification to prevent timing attacks
-            // Use dummy hash if user doesn't exist to maintain constant time
-            var hashToVerify = user?.PasswordHash ?? _dummyPasswordHash;
-            var passwordValid = VerifyPassword(password, hashToVerify);
+            // Filter out deleted users
+            if (user != null && user.IsDeleted)
+            {
+                user = null;
+            }
 
             if (user is null)
             {
@@ -82,8 +75,8 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
                 {
                     await _auditLogService.LogActionAsync(
                         userId: user.Id,
-                        userName: user.Name,
-                        userEmail: user.Email,
+                        userName: user.DisplayName,
+                        userEmail: user.Email!,
                         action: AuditAction.LoginFailed,
                         entityType: EntityType.Authentication,
                         description: $"Failed login attempt - account inactive",
@@ -95,6 +88,9 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
                 return AuthenticationResult.Failed("User account is inactive.");
             }
 
+            // Use Identity's built-in password verification
+            var passwordValid = await _userManager.CheckPasswordAsync(user, password);
+
             if (!passwordValid)
             {
                 _logger.LogWarning("Authentication failed: Invalid password for {Email}", email);
@@ -104,8 +100,8 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
                 {
                     await _auditLogService.LogActionAsync(
                         userId: user.Id,
-                        userName: user.Name,
-                        userEmail: user.Email,
+                        userName: user.DisplayName,
+                        userEmail: user.Email!,
                         action: AuditAction.LoginFailed,
                         entityType: EntityType.Authentication,
                         description: $"Failed login attempt - invalid password",
@@ -118,15 +114,17 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
             }
 
             // Update last login timestamp
-            await _userRepository.UpdateLastLoginAsync(user.Id, DateTimeOffset.UtcNow, cancellationToken);
+            user.LastLoginAt = DateTimeOffset.UtcNow;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await _userManager.UpdateAsync(user);
 
             // Log successful login
             if (_auditLogService != null)
             {
                 await _auditLogService.LogActionAsync(
                     userId: user.Id,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: AuditAction.Login,
                     entityType: EntityType.Authentication,
                     description: $"User logged in successfully",
@@ -141,69 +139,6 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
         {
             _logger.LogError(ex, "Error during authentication for {Email}", email);
             return AuthenticationResult.Failed("An error occurred during authentication.");
-        }
-    }
-
-    /// <inheritdoc/>
-    public virtual string HashPassword(string password)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(password);
-
-        // Generate random salt using modern static method
-        var salt = RandomNumberGenerator.GetBytes(SaltSize);
-
-        // Use static Pbkdf2 method instead of creating instance
-        var hash = Rfc2898DeriveBytes.Pbkdf2(
-            password,
-            salt,
-            Iterations,
-            HashAlgorithmName.SHA256,
-            HashSize);
-
-        // Combine salt and hash for storage
-        var hashBytes = new byte[SaltSize + HashSize];
-        Array.Copy(salt, 0, hashBytes, 0, SaltSize);
-        Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
-
-        return Convert.ToBase64String(hashBytes);
-    }
-
-    /// <inheritdoc/>
-    public virtual bool VerifyPassword(string password, string passwordHash)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(password);
-        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
-
-        try
-        {
-            var hashBytes = Convert.FromBase64String(passwordHash);
-
-            if (hashBytes.Length != SaltSize + HashSize)
-            {
-                return false;
-            }
-
-            // Extract salt from stored hash
-            var salt = new byte[SaltSize];
-            Array.Copy(hashBytes, 0, salt, 0, SaltSize);
-
-            // Compute hash using static Pbkdf2 method
-            var hash = Rfc2898DeriveBytes.Pbkdf2(
-                password,
-                salt,
-                Iterations,
-                HashAlgorithmName.SHA256,
-                HashSize);
-
-            // Use constant-time comparison to prevent timing attacks
-            return CryptographicOperations.FixedTimeEquals(
-                hashBytes.AsSpan(SaltSize),
-                hash);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error verifying password hash");
-            return false;
         }
     }
 
@@ -261,78 +196,62 @@ public class LocalAuthenticationProvider : IAuthenticationProvider
 
         try
         {
-            var user = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
+            var user = await _userManager.FindByIdAsync(userId);
 
-            if (user is null)
+            if (user is null || user.IsDeleted)
             {
                 return PasswordChangeResult.Failed("User not found.");
             }
 
-            // Verify current password
-            if (!VerifyPassword(currentPassword, user.PasswordHash))
+            // Use Identity's built-in password change method (verifies current password internally)
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+            if (!result.Succeeded)
             {
-                _logger.LogWarning("Password change failed: Invalid current password for user {UserId}", userId);
+                var errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+
+                _logger.LogWarning("Password change failed for user {UserId}: {Error}", userId, errorMessage);
 
                 // Log failed password change attempt
                 if (_auditLogService != null)
                 {
+                    // Check if it's a current password error or validation error
+                    var isCurrentPasswordError = result.Errors.Any(e => e.Code.Contains("Password", StringComparison.OrdinalIgnoreCase) && 
+                                                                          e.Description.Contains("incorrect", StringComparison.OrdinalIgnoreCase));
+
                     await _auditLogService.LogActionAsync(
                         userId: user.Id,
-                        userName: user.Name,
-                        userEmail: user.Email,
+                        userName: user.DisplayName,
+                        userEmail: user.Email!,
                         action: AuditAction.PasswordChanged,
                         entityType: EntityType.User,
                         entityId: user.Id,
-                        entityName: user.Name,
-                        description: "Failed password change - incorrect current password",
-                        result: ActionResult.Failed,
-                        errorMessage: "Invalid current password",
+                        entityName: user.DisplayName,
+                        description: isCurrentPasswordError 
+                            ? "Failed password change - incorrect current password" 
+                            : "Failed password change - validation error",
+                        result: isCurrentPasswordError ? ActionResult.Failed : ActionResult.ValidationError,
+                        errorMessage: errorMessage,
                         cancellationToken: cancellationToken);
                 }
 
-                return PasswordChangeResult.Failed("Current password is incorrect.");
+                return PasswordChangeResult.Failed(errorMessage);
             }
 
-            // Validate new password
-            var validationResult = ValidatePassword(newPassword);
-            if (!validationResult.IsValid)
-            {
-                // Log failed password change due to validation
-                if (_auditLogService != null)
-                {
-                    await _auditLogService.LogActionAsync(
-                        userId: user.Id,
-                        userName: user.Name,
-                        userEmail: user.Email,
-                        action: AuditAction.PasswordChanged,
-                        entityType: EntityType.User,
-                        entityId: user.Id,
-                        entityName: user.Name,
-                        description: "Failed password change - validation error",
-                        result: ActionResult.ValidationError,
-                        errorMessage: string.Join(", ", validationResult.Errors),
-                        cancellationToken: cancellationToken);
-                }
-
-                return PasswordChangeResult.Failed(string.Join(" ", validationResult.Errors));
-            }
-
-            // Update password
-            user.PasswordHash = HashPassword(newPassword);
             user.UpdatedAt = DateTimeOffset.UtcNow;
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            await _userManager.UpdateAsync(user);
 
             // Log successful password change
             if (_auditLogService != null)
             {
                 await _auditLogService.LogActionAsync(
                     userId: user.Id,
-                    userName: user.Name,
-                    userEmail: user.Email,
+                    userName: user.DisplayName,
+                    userEmail: user.Email!,
                     action: AuditAction.PasswordChanged,
                     entityType: EntityType.User,
                     entityId: user.Id,
-                    entityName: user.Name,
+                    entityName: user.DisplayName,
                     description: "Password changed successfully",
                     result: ActionResult.Success,
                     cancellationToken: cancellationToken);

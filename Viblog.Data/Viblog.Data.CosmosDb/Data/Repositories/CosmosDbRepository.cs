@@ -19,6 +19,8 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = context.Set<TEntity>();
+
+        _context.Database.EnsureCreatedAsync();
     }
 
     /// <inheritdoc/>

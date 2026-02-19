@@ -29,14 +29,14 @@ public static class BlogPostSeeder
         ArgumentNullException.ThrowIfNull(logger);
 
         // If options are provided, check if data folder is empty first
-        if (options?.Value != null)
+        /*if (options?.Value != null)
         {
             if (!IsDataFolderEmpty(options.Value, logger))
             {
                 logger.LogInformation("Data folder is not empty. Skipping seeding.");
                 return;
             }
-        }
+        }*/
 
         // Check if we already have blog posts
         var existingPosts = await repository.GetAllAsync(
@@ -212,6 +212,8 @@ public static class BlogPostSeeder
         {
             await repository.AddAsync(post, cancellationToken);
         }
+
+        logger.LogInformation("Database seeding data created");
 
         // Save changes (no-op for filesystem but included for consistency)
         await repository.SaveChangesAsync(cancellationToken);

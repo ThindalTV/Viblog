@@ -2,8 +2,7 @@
 @attribute [Authorize(Policy = RequireUserRead)]
 @layout AdminLayout
 @using Viblog.Infrastructure.Shared.Data.Entities
-@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.User
-@using Viblog.Admin.Services
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser
 @inject IUserManagementFacade UserManagementFacade
 @inject IDialogService DialogService
 @inject IMessageService MessageService
@@ -56,7 +55,7 @@
                         </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(UserEntity.Name)" 
+                    <GridColumn Field="@nameof(UserEntity.DisplayName)" 
                                Title="Name" 
                                Sortable="true">
                     </GridColumn>
@@ -84,8 +83,8 @@
                             }
                         </Template>
                     </GridColumn>
-                    
-                    <GridColumn Field="@nameof(UserEntity.Claims)" 
+
+                    <GridColumn Field="@nameof(UserEntity.CustomClaims)" 
                                Title="Permissions" 
                                Width="250px"
                                Filterable="false"
@@ -93,16 +92,16 @@
                         <Template>
                             @{
                                 var user = context as UserEntity;
-                                if (user?.Claims?.Any() == true)
+                                if (user?.CustomClaims?.Any() == true)
                                 {
                                     <div class="claims-list">
-                                        @foreach (var claim in user.Claims.Take(3))
+                                        @foreach (var claim in user.CustomClaims.Take(3))
                                         {
                                             <span class="badge badge-info">@GetClaimDisplayName(claim)</span>
                                         }
-                                        @if (user.Claims.Count > 3)
+                                        @if (user.CustomClaims.Count > 3)
                                         {
-                                            <span class="badge badge-secondary">+@(user.Claims.Count - 3) more</span>
+                                            <span class="badge badge-secondary">+@(user.CustomClaims.Count - 3) more</span>
                                         }
                                     </div>
                                 }
@@ -174,7 +173,7 @@
     {
         DialogService.ShowConfirmationAsync(
             "Delete User",
-            $"Are you sure you want to delete the user '{user.Name}'?",
+            $"Are you sure you want to delete the user '{user.DisplayName}'?",
             async () =>
             {
                 try
@@ -184,7 +183,7 @@
                     if (success)
                     {
                         _gridRef!.Rebind();
-                        MessageService.SetSuccess($"User '{user.Name}' deleted successfully");
+                        MessageService.SetSuccess($"User '{user.DisplayName}' deleted successfully");
                     }
                     else
                     {
@@ -220,3 +219,5 @@
         return authState.User.HasClaim("permission", UserClaims.UserWrite);
     }
 }
+
+

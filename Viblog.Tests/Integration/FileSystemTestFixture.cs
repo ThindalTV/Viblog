@@ -1,62 +1,67 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Viblog.Admin.Services.Authentication;
-using Viblog.Data.Filesystem.Configuration;
-using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace Viblog.Tests.Integration;
 
 /// <summary>
-/// Test fixture that provides isolated filesystem-based test environment
-/// Each test class gets a fresh database in a temporary directory
+/// Test fixture that provides isolated InMemory database test environment with Identity
+/// Each test class gets a fresh database
 /// </summary>
 public class FileSystemTestFixture : IDisposable
 {
-    private readonly string _testDataPath;
+    private readonly ServiceProvider _serviceProvider;
     private bool _disposed;
 
-    public IUserRepository UserRepository { get; }
+    public UserManager<ApplicationUser> UserManager { get; }
     public IAuthenticationProvider AuthenticationProvider { get; }
     public IUserManagementService UserManagementService { get; }
+    public TestDbContext DbContext { get; }
 
     public FileSystemTestFixture()
     {
-        // Create unique temporary directory for this test run
-        _testDataPath = Path.Combine(
-            Path.GetTempPath(),
-            "Viblog.Tests",
-            $"Auth_{Guid.NewGuid()}");
+        var services = new ServiceCollection();
 
-        Directory.CreateDirectory(_testDataPath);
+        // Add InMemory database for testing
+        services.AddDbContext<TestDbContext>(options =>
+            options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"));
 
-        // Create logger factories
-        var repositoryLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var authProviderLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var userServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-
-        // Create options for filesystem storage
-        var storageOptions = Options.Create(new FilesystemStorageOptions
+        // Add Identity with ApplicationUser
+        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
-            RootPath = _testDataPath
-        });
+            // Disable password requirements for easier testing
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequiredLength = 1;
+            options.Password.RequiredUniqueChars = 0;
+        })
+        .AddEntityFrameworkStores<TestDbContext>()
+        .AddDefaultTokenProviders();
 
-        // Initialize repository with test data path
-        UserRepository = new FileSystemUserRepository(
-            storageOptions,
-            repositoryLoggerFactory.CreateLogger<FilesystemRepository<Viblog.Infrastructure.Shared.Data.Entities.User>>());
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
 
-        // Initialize authentication provider
-        AuthenticationProvider = new LocalAuthenticationProvider(
-            UserRepository,
-            authProviderLoggerFactory.CreateLogger<LocalAuthenticationProvider>());
+        // Add services
+        services.AddScoped<IAuthenticationProvider, LocalAuthenticationProvider>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
 
-        // Initialize user management service
-        UserManagementService = new UserManagementService(
-            UserRepository,
-            AuthenticationProvider,
-            userServiceLoggerFactory.CreateLogger<UserManagementService>());
+        _serviceProvider = services.BuildServiceProvider();
+
+        // Get services from DI
+        UserManager = _serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        AuthenticationProvider = _serviceProvider.GetRequiredService<IAuthenticationProvider>();
+        UserManagementService = _serviceProvider.GetRequiredService<IUserManagementService>();
+        DbContext = _serviceProvider.GetRequiredService<TestDbContext>();
+
+        // Ensure database is created
+        DbContext.Database.EnsureCreated();
     }
 
     public void Dispose()
@@ -74,20 +79,32 @@ public class FileSystemTestFixture : IDisposable
 
         if (disposing)
         {
-            // Clean up test data directory
-            try
-            {
-                if (Directory.Exists(_testDataPath))
-                {
-                    Directory.Delete(_testDataPath, recursive: true);
-                }
-            }
-            catch
-            {
-                // Ignore cleanup errors in tests
-            }
+            DbContext?.Dispose();
+            _serviceProvider?.Dispose();
         }
 
         _disposed = true;
     }
+
+    /// <summary>
+    /// Simple DbContext for testing - only includes Identity entities
+    /// </summary>
+    public class TestDbContext : IdentityDbContext<ApplicationUser>
+    {
+        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Configure ApplicationUser with custom properties
+            builder.Entity<ApplicationUser>(b =>
+            {
+                b.Property(u => u.CustomClaims);
+            });
+        }
+    }
 }
+

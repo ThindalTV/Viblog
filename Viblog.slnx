@@ -2,6 +2,10 @@
   <Folder Name="/.github/">
     <File Path=".github/copilot-instructions.md" />
   </Folder>
+  <Folder Name="/Aspire/">
+    <Project Path="Aspire/AppHost.ServiceDefaults/AppHost.ServiceDefaults.csproj" Id="64c91f26-9620-4789-9801-127b0a474441" />
+    <Project Path="Aspire/AppHost/AppHost.csproj" Id="e6930de0-f6db-492a-8984-a3471dbbea1c" />
+  </Folder>
   <Folder Name="/Pipelines/" />
   <Folder Name="/Viblog.Data/">
     <Project Path="Viblog.Data/Viblog.Data.AzureStorage/Viblog.Data.AzureStorage.csproj" Id="9b7ca11b-8e74-4a4f-9378-1e4984cca577" />

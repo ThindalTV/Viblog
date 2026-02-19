@@ -53,13 +53,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     /// </summary>
     private static void ConfigureIdentityEntities(ModelBuilder builder)
     {
-        // ApplicationUser configuration
+        // ApplicationUser configuration with custom blog properties
         builder.Entity<ApplicationUser>(b =>
         {
             b.ToContainer("Users");
             b.HasPartitionKey(u => u.Id);
             b.Property(u => u.ConcurrencyStamp).IsETagConcurrency();
             b.HasNoDiscriminator();
+
+            // Configure custom list properties
+            b.Property(u => u.CustomClaims);
         });
 
         // IdentityRole configuration
@@ -124,7 +127,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.ToContainer("BlogPosts");
             b.HasPartitionKey(p => p.GroupKey);
             b.HasNoDiscriminator();
-            
+
             // Configure list properties
             b.Property(p => p.Tags);
             b.Property(p => p.CategoryIds);
@@ -155,6 +158,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.HasPartitionKey(a => a.GroupKey);
             b.HasNoDiscriminator();
         });
+
+        // User entity has been removed - ApplicationUser is now used for all user management
     }
 
     /// <summary>

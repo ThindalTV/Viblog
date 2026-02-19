@@ -24,7 +24,9 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
     {
         _logger = logger;
 
-        var connectionString = configuration["MediaStorage:BlobStorage:ConnectionString"]
+        var connectionString =
+            configuration.GetConnectionString("blogStorage") // Aspire
+            ?? configuration["MediaStorage:BlobStorage:ConnectionString"]
             ?? throw new InvalidOperationException("BlobStorage ConnectionString is not configured");
 
         _containerName = configuration["MediaStorage:BlobStorage:ContainerName"]

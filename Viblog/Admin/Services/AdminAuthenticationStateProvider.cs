@@ -5,29 +5,28 @@ using Microsoft.AspNetCore.Components.Server;
 using Viblog.Admin.Configuration;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Admin.Services;
 
 /// <summary>
-/// Authentication state provider for admin area using pluggable authentication provider
+/// Authentication state provider for admin area using custom authentication
 /// </summary>
 public class AdminAuthenticationStateProvider : RevalidatingServerAuthenticationStateProvider
 {
     private readonly IAuthenticationProvider _authenticationProvider;
-    private readonly IUserRepository _userRepository;
+    private readonly IUserManagementService _userManagementService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<AdminAuthenticationStateProvider> _logger;
 
     public AdminAuthenticationStateProvider(
         IAuthenticationProvider authenticationProvider,
-        IUserRepository userRepository,
+        IUserManagementService userManagementService,
         IHttpContextAccessor httpContextAccessor,
         ILoggerFactory loggerFactory)
         : base(loggerFactory)
     {
         _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userManagementService = userManagementService ?? throw new ArgumentNullException(nameof(userManagementService));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = loggerFactory?.CreateLogger<AdminAuthenticationStateProvider>() ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
@@ -48,20 +47,20 @@ public class AdminAuthenticationStateProvider : RevalidatingServerAuthentication
     /// </summary>
     /// <param name="user">The authenticated user</param>
     /// <param name="isPersistent">Whether to create a persistent cookie that survives browser restart</param>
-    public async Task MarkUserAsAuthenticatedAsync(User user, bool isPersistent = false)
+    public async Task MarkUserAsAuthenticatedAsync(ApplicationUser user, bool isPersistent = false)
     {
         ArgumentNullException.ThrowIfNull(user);
 
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.Name),
-            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Name, user.DisplayName),
+            new(ClaimTypes.Email, user.Email!),
             new(ClaimTypes.Role, "Admin")
         };
 
         // Add user-specific claims
-        foreach (var userClaim in user.Claims)
+        foreach (var userClaim in user.CustomClaims)
         {
             claims.Add(new Claim("permission", userClaim));
         }
@@ -124,8 +123,8 @@ public class AdminAuthenticationStateProvider : RevalidatingServerAuthentication
         }
 
         // Verify user still exists and is active
-        var dbUser = await _userRepository.GetByIdAsync(userIdClaim.Value, "users", cancellationToken);
+        var dbUser = await _userManagementService.GetUserByIdAsync(userIdClaim.Value, cancellationToken);
 
-        return dbUser is not null && dbUser.IsActive;
+        return dbUser is not null && dbUser.IsActive && !dbUser.IsDeleted;
     }
 }

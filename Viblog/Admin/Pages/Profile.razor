@@ -1,10 +1,8 @@
 @page "/admin/profile"
 @attribute [Authorize(Policy = AdminPolicies.Admin)]
 @layout AdminLayout
-@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.User
-@using Viblog.Infrastructure.Shared.Authentication
-@using Viblog.Admin.Services
 @using System.Security.Claims
+@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser
 @inject IUserProfileFacade UserProfileFacade
 @inject IMessageService MessageService
 @inject AuthenticationStateProvider AuthStateProvider
@@ -32,7 +30,7 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Name</label>
-                        <div class="info-value">@_currentUser.Name</div>
+                        <div class="info-value">@_currentUser.DisplayName</div>
                     </div>
                     <div class="info-item">
                         <label>Email</label>
@@ -169,7 +167,7 @@
 </div>
 
 @code {
-    private Viblog.Infrastructure.Shared.Data.Entities.User? _currentUser;
+    private Viblog.Infrastructure.Shared.Data.Entities.ApplicationUser? _currentUser;
     private ProfileEditModel _profileModel = new();
     private PasswordChangeModel _passwordModel = new();
     private bool _isLoading = true;
@@ -188,7 +186,7 @@
         try
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId))
             {
@@ -198,7 +196,7 @@
                 {
                     _profileModel = new ProfileEditModel
                     {
-                        Name = _currentUser.Name,
+                        Name = _currentUser.DisplayName,
                         Email = _currentUser.Email
                     };
                 }
@@ -314,3 +312,5 @@
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
+
+

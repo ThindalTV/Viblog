@@ -15,7 +15,7 @@ public class AuthenticationResult
     /// <summary>
     /// The authenticated user (null if authentication failed)
     /// </summary>
-    public User? User { get; init; }
+    public ApplicationUser? User { get; init; }
 
     /// <summary>
     /// Error message if authentication failed
@@ -25,7 +25,7 @@ public class AuthenticationResult
     /// <summary>
     /// Create a successful authentication result
     /// </summary>
-    public static AuthenticationResult Successful(User user) => new()
+    public static AuthenticationResult Successful(ApplicationUser user) => new()
     {
         Success = true,
         User = user

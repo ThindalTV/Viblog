@@ -8,8 +8,15 @@ using Viblog.Shared.Configuration;
 using Viblog.Admin;
 using Viblog.Shared.Extensions;
 using Microsoft.Extensions.Options;
+using Viblog.Data.CosmosDb;
+using Viblog.Data.AzureStorage;
+using Viblog.Data.CosmosDb.Data;
+using Viblog.Infrastructure.Shared.Data.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Aspire
+builder.AddServiceDefaults();
 
 // Configure all Viblog settings using the IOptions pattern
 builder.Services.AddViblogConfiguration(builder.Configuration);
@@ -27,8 +34,12 @@ builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions
     }
 });
 
+builder.AddCosmosDbContext<ApplicationDbContext>("aspireCosmosDatabase");
+
 // Configure Filesystem Data Access (replacing CosmosDB)
-builder.Services.AddFilesystemDataAccess(builder.Configuration);
+builder.Services.AddCosmosDbContext(builder.Configuration, false);
+builder.Services.AddCosmosDbRepositories();
+// builder.Services.AddFilesystemDataAccess(builder.Configuration);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -36,13 +47,15 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddBlogServices();
 
 // Register media storage services
-builder.Services.AddMediaStorage(builder.Configuration);
+builder.Services.AddAzureBlobStorageRepository();
 
 // Register Viblog Frontend services (statically rendered, no auth)
 builder.Services.AddViblogFrontend();
 
 // Register Viblog Admin services (interactive server, with auth)
 builder.Services.AddViblogAdmin();
+
+builder.Services.AddIdentity<ApplicationUser, ApplicationUser>();
 
 var app = builder.Build();
 

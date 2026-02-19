@@ -18,7 +18,7 @@ public class UserManagementFacade : IUserManagementFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PagedResult<User>> GetUsersAsync(
+    public virtual async Task<PagedResult<ApplicationUser>> GetUsersAsync(
         PagingParameters pagingParameters,
         bool includeInactive = false,
         CancellationToken cancellationToken = default)
@@ -29,7 +29,7 @@ public class UserManagementFacade : IUserManagementFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<User?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
+    public virtual async Task<ApplicationUser?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
@@ -37,7 +37,7 @@ public class UserManagementFacade : IUserManagementFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(User? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
@@ -53,7 +53,7 @@ public class UserManagementFacade : IUserManagementFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<(User? User, UserValidationResult ValidationResult)> UpdateUserAsync(
+    public virtual async Task<(ApplicationUser? User, UserValidationResult ValidationResult)> UpdateUserAsync(
         string userId,
         string name,
         string email,

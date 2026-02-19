@@ -25,7 +25,7 @@ public class UserProfileFacadeTests
     {
         // Arrange
         var userId = "user-1";
-        var expectedUser = new User { Id = userId, Email = "test@example.com" };
+        var expectedUser = new ApplicationUser { Id = userId, Email = "test@example.com" };
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -46,20 +46,20 @@ public class UserProfileFacadeTests
         var userId = "user-1";
         var newName = "Updated Name";
         var newEmail = "updated@example.com";
-        var existingUser = new User
+        var existingUser = new ApplicationUser
         {
             Id = userId,
             Email = "old@example.com",
-            Name = "Old Name",
-            Claims = [UserClaims.PostWrite, UserClaims.PageWrite],
+            DisplayName = "Old Name",
+            CustomClaims = [UserClaims.PostWrite, UserClaims.PageWrite],
             IsActive = true
         };
-        var updatedUser = new User
+        var updatedUser = new ApplicationUser
         {
             Id = userId,
             Email = newEmail,
-            Name = newName,
-            Claims = existingUser.Claims,
+            DisplayName = newName,
+            CustomClaims = existingUser.CustomClaims,
             IsActive = existingUser.IsActive
         };
 
@@ -72,7 +72,7 @@ public class UserProfileFacadeTests
                 userId,
                 newName,
                 newEmail,
-                It.Is<IEnumerable<string>>(c => c.SequenceEqual(existingUser.Claims)),
+                It.Is<IEnumerable<string>>(c => c.SequenceEqual(existingUser.CustomClaims)),
                 existingUser.IsActive,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((updatedUser, UserValidationResult.Valid()));
@@ -83,16 +83,16 @@ public class UserProfileFacadeTests
         // Assert
         Assert.NotNull(user);
         Assert.True(validationResult.IsValid);
-        Assert.Equal(newName, user.Name);
+        Assert.Equal(newName, user.DisplayName);
         Assert.Equal(newEmail, user.Email);
-        Assert.Equal(2, user.Claims.Count);
+        Assert.Equal(2, user.CustomClaims.Count);
 
         _mockUserManagementService.Verify(
             s => s.UpdateUserAsync(
                 userId,
                 newName,
                 newEmail,
-                It.Is<IEnumerable<string>>(c => c.SequenceEqual(existingUser.Claims)),
+                It.Is<IEnumerable<string>>(c => c.SequenceEqual(existingUser.CustomClaims)),
                 true,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -108,7 +108,7 @@ public class UserProfileFacadeTests
 
         _mockUserManagementService
             .Setup(s => s.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User?)null);
+            .ReturnsAsync((ApplicationUser?)null);
 
         // Act
         var (user, validationResult) = await _facade.UpdateProfileAsync(userId, name, email);
@@ -163,3 +163,6 @@ public class UserProfileFacadeTests
         Assert.Equal("Current password is incorrect.", result.ErrorMessage);
     }
 }
+
+
+

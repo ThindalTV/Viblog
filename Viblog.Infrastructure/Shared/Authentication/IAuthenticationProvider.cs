@@ -17,21 +17,6 @@ public interface IAuthenticationProvider
     Task<AuthenticationResult> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Hash a password for secure storage
-    /// </summary>
-    /// <param name="password">The plain text password</param>
-    /// <returns>Hashed password</returns>
-    string HashPassword(string password);
-
-    /// <summary>
-    /// Verify a password against a hash
-    /// </summary>
-    /// <param name="password">The plain text password</param>
-    /// <param name="passwordHash">The stored password hash</param>
-    /// <returns>True if the password matches the hash</returns>
-    bool VerifyPassword(string password, string passwordHash);
-
-    /// <summary>
     /// Validate password strength
     /// </summary>
     /// <param name="password">The password to validate</param>
