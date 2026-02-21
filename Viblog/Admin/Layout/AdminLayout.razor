@@ -20,7 +20,7 @@
                             <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
                             @if (_expanded)
                             {
-                                <span class="logo-text">Admin<strong>K</strong></span>
+                                <span class="logo-text">Viblo<strong>G</strong></span>
                             }
                         </div>
                     </div>
@@ -91,30 +91,8 @@
                         </div>
                         
                         <div class="header-right">
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@SvgIcon.Pencil">
-                            </TelerikButton>
-                            <div class="notification-badge">
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.Envelop">
-                                </TelerikButton>
-                                <span class="badge">4</span>
-                            </div>
-                            <div class="notification-badge">
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.Bell">
-                                </TelerikButton>
-                                <span class="badge">1</span>
-                            </div>
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@SvgIcon.GlobeOutline">
-                            </TelerikButton>
                             <div class="user-menu">
-                                <img src="https://via.placeholder.com/32" alt="User" class="user-avatar" />
                                 <span class="user-name">@authContext.User.Identity?.Name</span>
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.ChevronDown">
-                                </TelerikButton>
                             </div>
                         </div>
                     </header>
