@@ -84,7 +84,9 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
             query = query.Where(e => !e.IsDeleted);
         }
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        query = query.Where(predicate);
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -193,7 +195,10 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
             query = query.Where(e => !e.IsDeleted);
         }
 
-        return await query.AnyAsync(predicate, cancellationToken);
+        query = query.Where(predicate);
+
+        // Use FirstOrDefaultAsync != null instead of AnyAsync due to CosmosDB query generation issues
+        return await query.FirstOrDefaultAsync(cancellationToken) != null;
     }
 
     /// <inheritdoc/>

@@ -84,12 +84,6 @@ public class UserManagementFacade : IUserManagementFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default)
-    {
-        return await _userManagementService.AnyUsersExistAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
     public virtual async Task<UserValidationResult> ResetPasswordAsync(
         string userId,
         string newPassword,

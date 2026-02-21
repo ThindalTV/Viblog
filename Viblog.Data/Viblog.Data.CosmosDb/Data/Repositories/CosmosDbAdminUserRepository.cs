@@ -1,19 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using Viblog.Data.CosmosDb.Data;
-using Viblog.Data.CosmosDb.Data.Repositories;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Data.CosmosDb.Repositories;
+namespace Viblog.Data.CosmosDb.Data.Repositories;
 
 /// <summary>
 /// CosmosDB implementation of AdminUser repository
 /// Inherits base CRUD operations and adds user-specific queries
 /// </summary>
-public class AdminUserRepository : CosmosDbRepository<AdminUser>, IAdminUserRepository
+public class CosmosDbAdminUserRepository : CosmosDbRepository<AdminUser>, IAdminUserRepository
 {
-    public AdminUserRepository(ApplicationDbContext context) : base(context)
+    public CosmosDbAdminUserRepository(ApplicationDbContext context) : base(context)
     {
     }
 
@@ -25,7 +23,10 @@ public class AdminUserRepository : CosmosDbRepository<AdminUser>, IAdminUserRepo
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
-        var query = _dbSet.Where(u => !u.IsDeleted);
+        // Use WithPartitionKey for optimal CosmosDB query performance
+        var query = _dbSet
+            .WithPartitionKey("users")
+            .Where(u => !u.IsDeleted);
 
         if (!includeInactive)
         {
@@ -50,6 +51,7 @@ public class AdminUserRepository : CosmosDbRepository<AdminUser>, IAdminUserRepo
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
         return await _dbSet
+            .WithPartitionKey("users")
             .FirstOrDefaultAsync(u => u.Email == normalizedEmail && !u.IsDeleted, cancellationToken);
     }
 
@@ -59,12 +61,18 @@ public class AdminUserRepository : CosmosDbRepository<AdminUser>, IAdminUserRepo
         ArgumentException.ThrowIfNullOrWhiteSpace(externalUserId);
 
         return await _dbSet
+            .WithPartitionKey("users")
             .FirstOrDefaultAsync(u => u.ExternalUserId == externalUserId && !u.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<bool> AnyAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(u => !u.IsDeleted, cancellationToken);
+        // Use WithPartitionKey for optimal CosmosDB query performance
+        // All AdminUser entities use "users" as their partition key
+        // Note: Using FirstOrDefaultAsync != null instead of AnyAsync due to CosmosDB query generation issues
+        return await _dbSet
+            .WithPartitionKey("users")
+            .FirstOrDefaultAsync(u => !u.IsDeleted, cancellationToken) is not null;
     }
 }

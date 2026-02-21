@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Viblog.Data.CosmosDb.Data;
 using Viblog.Data.CosmosDb.Data.Repositories;
 using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Builder;
 
 namespace Viblog.Data.CosmosDb;
 
@@ -80,6 +76,7 @@ public static class CosmosDbServiceExtensions
         services.AddScoped(typeof(IRepository<>), typeof(CosmosDbRepository<>));
 
         // Register specific repositories
+        services.AddScoped<IAdminUserRepository, CosmosDbAdminUserRepository>();
         services.AddScoped<IAuditLogRepository, CosmosDbAuditLogRepository>();
         services.AddScoped<IBlogPostRepository, CosmosDbBlogPostRepository>();
         services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
@@ -130,3 +127,4 @@ public static class CosmosDbServiceExtensions
         }
     }
 }
+

@@ -5,26 +5,27 @@ using Microsoft.Extensions.Options;
 using Viblog.Admin.Configuration;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Admin.Services.Authentication;
+namespace Viblog.Admin.Authentication;
 
 /// <summary>
 /// Auth0-specific implementation of identity provider synchronization service
-/// Handles syncing users between Auth0 and local database via UserManagementService
+/// Handles syncing users between Auth0 and local database via repository
 /// </summary>
 public class Auth0SyncService : IIdentityProviderSyncService
 {
     private readonly Auth0Settings _auth0Settings;
-    private readonly IUserManagementService _userManagementService;
+    private readonly IAdminUserRepository _userRepository;
     private readonly ILogger<Auth0SyncService> _logger;
 
     public Auth0SyncService(
         IOptions<Auth0Settings> auth0Settings,
-        IUserManagementService userManagementService,
+        IAdminUserRepository userRepository,
         ILogger<Auth0SyncService> logger)
     {
         _auth0Settings = auth0Settings?.Value ?? throw new ArgumentNullException(nameof(auth0Settings));
-        _userManagementService = userManagementService ?? throw new ArgumentNullException(nameof(userManagementService));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -37,25 +38,85 @@ public class Auth0SyncService : IIdentityProviderSyncService
     {
         _logger.LogInformation("Syncing user from Auth0. ExternalUserId: {ExternalUserId}, Email: {Email}", externalUserId, email);
 
-        // Use UserManagementService to create or update user from external login
-        var user = await _userManagementService.CreateOrUpdateFromExternalLoginAsync(
-            externalUserId,
-            email,
-            name,
-            claims: null, // No default claims - admin must assign
-            cancellationToken);
+        try
+        {
+            // Check if user exists by external ID
+            var existingUser = await _userRepository.GetByExternalIdAsync(externalUserId, cancellationToken);
 
-        if (user != null)
-        {
-            _logger.LogInformation("Successfully synced user {UserId} from Auth0", user.Id);
+            if (existingUser != null)
+            {
+                // Update existing user
+                existingUser.Email = email.Trim().ToLowerInvariant();
+                existingUser.DisplayName = name?.Trim() ?? email;
+                existingUser.ExternalUserLastSync = DateTimeOffset.UtcNow;
+                existingUser.UpdatedAt = DateTimeOffset.UtcNow;
+                existingUser.LastLoginAt = DateTimeOffset.UtcNow;
+
+                await _userRepository.UpdateAsync(existingUser, cancellationToken);
+                await _userRepository.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Successfully synced existing user {UserId} from Auth0", existingUser.Id);
+                return existingUser;
+            }
+
+            // Check if user exists by email (migration scenario)
+            var userByEmail = await _userRepository.GetByEmailAsync(email, cancellationToken);
+
+            if (userByEmail != null)
+            {
+                // Link existing local user to Auth0
+                userByEmail.ExternalUserId = externalUserId;
+                userByEmail.ExternalUserLastSync = DateTimeOffset.UtcNow;
+                userByEmail.UpdatedAt = DateTimeOffset.UtcNow;
+                userByEmail.LastLoginAt = DateTimeOffset.UtcNow;
+
+                await _userRepository.UpdateAsync(userByEmail, cancellationToken);
+                await _userRepository.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Linked existing user {UserId} to Auth0", userByEmail.Id);
+                return userByEmail;
+            }
+
+            // Create new user (first-time Auth0 login)
+            // Check if this is the first user in the system
+            var isFirstUser = !(await _userRepository.AnyAsync(cancellationToken));
+
+            var newUser = new AdminUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = email.Trim().ToLowerInvariant(),
+                DisplayName = name?.Trim() ?? email,
+                ExternalUserId = externalUserId,
+                ExternalUserLastSync = DateTimeOffset.UtcNow,
+                CustomClaims = isFirstUser 
+                    ? UserClaims.AllClaims.ToList()
+                    : [], // First user gets full permissions, others get none
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                LastLoginAt = DateTimeOffset.UtcNow
+            };
+
+            await _userRepository.AddAsync(newUser, cancellationToken);
+            await _userRepository.SaveChangesAsync(cancellationToken);
+
+            if (isFirstUser)
+            {
+                _logger.LogWarning("Created FIRST ADMIN USER {UserId} ({Email}) with full permissions from Auth0 login", newUser.Id, newUser.Email);
+            }
+            else
+            {
+                _logger.LogInformation("Created new user {UserId} from Auth0 login with no permissions", newUser.Id);
+            }
+
+            return newUser;
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogError("Failed to sync user from Auth0. ExternalUserId: {ExternalUserId}, Email: {Email}",
+            _logger.LogError(ex, "Failed to sync user from Auth0. ExternalUserId: {ExternalUserId}, Email: {Email}",
                 externalUserId, email);
+            return null;
         }
-
-        return user;
     }
 
     /// <inheritdoc/>
@@ -70,8 +131,8 @@ public class Auth0SyncService : IIdentityProviderSyncService
         {
             _logger.LogInformation("Creating user in Auth0. Email: {Email}", email);
 
-            // Validate user data locally first
-            var validationResult = await _userManagementService.ValidateUserDataAsync(name, email, null, cancellationToken);
+            // Validate locally first
+            var validationResult = await ValidateUserDataAsync(name, email, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return (null, validationResult);
@@ -94,18 +155,22 @@ public class Auth0SyncService : IIdentityProviderSyncService
 
             _logger.LogInformation("Created user in Auth0. Auth0UserId: {Auth0UserId}, Email: {Email}", createdAuth0User.UserId, email);
 
-            // Create local user via UserManagementService
-            var localUser = await _userManagementService.CreateOrUpdateFromExternalLoginAsync(
-                createdAuth0User.UserId,
-                email,
-                name,
-                claims,
-                cancellationToken);
-
-            if (localUser == null)
+            // Create local user record with permissions
+            var localUser = new AdminUser
             {
-                return (null, UserValidationResult.Invalid("Failed to create local user record after Auth0 creation"));
-            }
+                Id = Guid.NewGuid().ToString(),
+                Email = email.Trim().ToLowerInvariant(),
+                DisplayName = name.Trim(),
+                ExternalUserId = createdAuth0User.UserId,
+                ExternalUserLastSync = DateTimeOffset.UtcNow,
+                CustomClaims = claims.ToList(),
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _userRepository.AddAsync(localUser, cancellationToken);
+            await _userRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Created local user {UserId} linked to Auth0", localUser.Id);
             return (localUser, UserValidationResult.Valid());
@@ -126,8 +191,8 @@ public class Auth0SyncService : IIdentityProviderSyncService
         {
             _logger.LogInformation("Initiating password reset for user {UserId}", userId);
 
-            // Get local user via UserManagementService
-            var localUser = await _userManagementService.GetUserByIdAsync(userId, cancellationToken);
+            // Get local user via repository
+            var localUser = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
 
             if (localUser == null)
             {
@@ -172,8 +237,8 @@ public class Auth0SyncService : IIdentityProviderSyncService
         {
             _logger.LogInformation("Deleting user {UserId} from Auth0", userId);
 
-            // Get local user via UserManagementService
-            var localUser = await _userManagementService.GetUserByIdAsync(userId, cancellationToken);
+            // Get local user via repository
+            var localUser = await _userRepository.GetByIdAsync(userId, "users", cancellationToken);
 
             if (localUser == null)
             {
@@ -197,15 +262,11 @@ public class Auth0SyncService : IIdentityProviderSyncService
                 }
             }
 
-            // Delete locally via UserManagementService
-            var deleted = await _userManagementService.DeleteUserAsync(userId, cancellationToken);
+            // Delete locally via repository
+            await _userRepository.DeleteAsync(userId, "users", softDelete: true, cancellationToken);
 
-            if (deleted)
-            {
-                _logger.LogInformation("Successfully deleted user {UserId}", userId);
-            }
-
-            return deleted;
+            _logger.LogInformation("Successfully deleted user {UserId}", userId);
+            return true;
         }
         catch (Exception ex)
         {
@@ -224,8 +285,8 @@ public class Auth0SyncService : IIdentityProviderSyncService
             const string defaultAdminEmail = "admin@viblog.local";
             const string defaultAdminPassword = "Admin123!@#"; // Strong password for initial setup
 
-            // Check if default admin already exists locally via UserManagementService
-            var existingAdmin = await _userManagementService.GetUserByEmailAsync(defaultAdminEmail, cancellationToken);
+            // Check if default admin already exists locally via repository
+            var existingAdmin = await _userRepository.GetByEmailAsync(defaultAdminEmail, cancellationToken);
 
             if (existingAdmin != null)
             {
@@ -261,18 +322,21 @@ public class Auth0SyncService : IIdentityProviderSyncService
                 _logger.LogInformation("Created default admin in Auth0. Auth0UserId: {Auth0UserId}", auth0User.UserId);
             }
 
-            // Create local user with all permissions via UserManagementService
-            var adminUser = await _userManagementService.CreateOrUpdateFromExternalLoginAsync(
-                auth0User.UserId,
-                defaultAdminEmail,
-                "Administrator",
-                UserClaims.DefaultAdminClaims,
-                cancellationToken);
-
-            if (adminUser == null)
+            // Create local user with all permissions
+            var adminUser = new AdminUser
             {
-                throw new InvalidOperationException("Failed to create local admin user record");
-            }
+                Id = Guid.NewGuid().ToString(),
+                Email = defaultAdminEmail,
+                DisplayName = "Administrator",
+                ExternalUserId = auth0User.UserId,
+                ExternalUserLastSync = DateTimeOffset.UtcNow,
+                CustomClaims = UserClaims.DefaultAdminClaims.ToList(),
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _userRepository.AddAsync(adminUser, cancellationToken);
 
             _logger.LogWarning(
                 "Default admin user created. Email: {Email}, Password: {Password} - CHANGE THIS PASSWORD IMMEDIATELY!",
@@ -313,6 +377,71 @@ public class Auth0SyncService : IIdentityProviderSyncService
         {
             _logger.LogError(ex, "Failed to get Auth0 Management API client");
             throw new InvalidOperationException("Failed to authenticate with Auth0 Management API", ex);
+        }
+    }
+
+    /// <summary>
+    /// Validate user data before creation
+    /// </summary>
+    private async Task<UserValidationResult> ValidateUserDataAsync(
+        string name,
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var errors = new List<string>();
+
+        // Validate name
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            errors.Add("Name is required.");
+        }
+        else if (name.Trim().Length < 2)
+        {
+            errors.Add("Name must be at least 2 characters long.");
+        }
+
+        // Validate email
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            errors.Add("Email is required.");
+        }
+        else if (!IsValidEmail(email))
+        {
+            errors.Add("Email address is not valid.");
+        }
+        else
+        {
+            // Check email uniqueness
+            var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
+            if (existingUser != null)
+            {
+                errors.Add("Email address is already in use.");
+            }
+        }
+
+        return errors.Count > 0
+            ? UserValidationResult.Invalid(errors)
+            : UserValidationResult.Valid();
+    }
+
+    /// <summary>
+    /// Validate email format
+    /// </summary>
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email.Trim();
+        }
+        catch
+        {
+            return false;
         }
     }
 }

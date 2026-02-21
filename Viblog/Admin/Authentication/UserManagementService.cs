@@ -4,7 +4,7 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
-namespace Viblog.Admin.Services.Authentication;
+namespace Viblog.Admin.Authentication;
 
 /// <summary>
 /// User management service implementation
@@ -13,13 +13,16 @@ namespace Viblog.Admin.Services.Authentication;
 public class UserManagementService : IUserManagementService
 {
     private readonly IAdminUserRepository _userRepository;
+    private readonly IIdentityProviderSyncService _identityProviderSyncService;
     private readonly ILogger<UserManagementService> _logger;
 
     public UserManagementService(
         IAdminUserRepository userRepository,
+        IIdentityProviderSyncService identityProviderSyncService,
         ILogger<UserManagementService> logger)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _identityProviderSyncService = identityProviderSyncService ?? throw new ArgumentNullException(nameof(identityProviderSyncService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -51,14 +54,48 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
+    public virtual async Task<(AdminUser? User, UserValidationResult ValidationResult)> CreateUserAsync(
         string name,
         string email,
         string password,
         IEnumerable<string> claims,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("User creation will be implemented with Auth0 sync in Step 11");
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+
+        try
+        {
+            _logger.LogInformation("Creating new user. Email: {Email}", email);
+
+            // Delegate to identity provider sync service (Auth0)
+            // This creates the user in Auth0 AND in the local database
+            var result = await _identityProviderSyncService.CreateUserAsync(
+                email,
+                name,
+                password,
+                claims,
+                cancellationToken);
+
+            if (result.User != null)
+            {
+                _logger.LogInformation("Successfully created user {UserId} with email {Email}",
+                    result.User.Id, email);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to create user. Email: {Email}, Errors: {Errors}",
+                    email, string.Join(", ", result.ValidationResult.Errors));
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating user. Email: {Email}", email);
+            return (null, UserValidationResult.Invalid($"An unexpected error occurred: {ex.Message}"));
+        }
     }
 
     /// <inheritdoc/>
@@ -96,7 +133,7 @@ public class UserManagementService : IUserManagementService
             {
                 _logger.LogWarning("Attempt to change email for user {UserId} from {OldEmail} to {NewEmail} was blocked",
                     userId, user.Email, normalizedEmail);
-                return (null, UserValidationResult.Invalid("Email cannot be changed. Create a new account if a different email is needed."));
+                return (null, UserValidationResult.Invalid("Email cannot be changed"));
             }
 
             user.DisplayName = name.Trim();
@@ -146,21 +183,21 @@ public class UserManagementService : IUserManagementService
         // Validate name
         if (string.IsNullOrWhiteSpace(name))
         {
-            errors.Add("Name is required.");
+            errors.Add("Name is required");
         }
         else if (name.Trim().Length < 2)
         {
-            errors.Add("Name must be at least 2 characters long.");
+            errors.Add("Name must be at least 2 characters long");
         }
 
         // Validate email
         if (string.IsNullOrWhiteSpace(email))
         {
-            errors.Add("Email is required.");
+            errors.Add("Email is required");
         }
         else if (!IsValidEmail(email))
         {
-            errors.Add("Email address is not valid.");
+            errors.Add("Email address is not valid");
         }
         else
         {
@@ -172,7 +209,7 @@ public class UserManagementService : IUserManagementService
                 // If we're updating and it's the same user, that's OK
                 if (string.IsNullOrWhiteSpace(excludeUserId) || existingUser.Id != excludeUserId)
                 {
-                    errors.Add("Email address is already in use.");
+                    errors.Add("Email address is already in use");
                 }
             }
         }
@@ -296,18 +333,61 @@ public class UserManagementService : IUserManagementService
     }
 
     /// <inheritdoc/>
-    public virtual Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<AdminUser> CreateDefaultAdminUserAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("Default admin creation will be implemented with Auth0 sync in Step 11");
+        try
+        {
+            _logger.LogInformation("Creating default admin user via Auth0");
+
+            // Delegate to identity provider sync service (Auth0)
+            // This creates the default admin in Auth0 AND in the local database
+            var defaultAdmin = await _identityProviderSyncService.GetOrCreateDefaultAdminAsync(cancellationToken);
+
+            _logger.LogInformation("Default admin user created/retrieved. UserId: {UserId}, Email: {Email}",
+                defaultAdmin.Id, defaultAdmin.Email);
+
+            return defaultAdmin;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating default admin user");
+            throw new InvalidOperationException("Failed to create default admin user", ex);
+        }
     }
 
     /// <inheritdoc/>
-    public virtual Task<UserValidationResult> ResetPasswordAsync(
+    public virtual async Task<UserValidationResult> ResetPasswordAsync(
         string userId,
         string newPassword,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("Password reset will be handled by Auth0 in Step 11");
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        try
+        {
+            _logger.LogInformation("Initiating password reset for user {UserId}", userId);
+
+            // Delegate to identity provider sync service (Auth0)
+            // This triggers Auth0 password reset email
+            var result = await _identityProviderSyncService.ResetPasswordAsync(userId, cancellationToken);
+
+            if (result.IsValid)
+            {
+                _logger.LogInformation("Password reset initiated for user {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to reset password for user {UserId}. Errors: {Errors}",
+                    userId, string.Join(", ", result.Errors));
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting password for user {UserId}", userId);
+            return UserValidationResult.Invalid($"An unexpected error occurred: {ex.Message}");
+        }
     }
 
     private static bool IsValidEmail(string email)

@@ -148,22 +148,6 @@ public class UserManagementFacadeTests
         Assert.Contains(UserClaims.UserRead, result);
         Assert.Contains(UserClaims.UserWrite, result);
     }
-
-    [Fact]
-    public async Task AnyUsersExistAsync_CallsService()
-    {
-        // Arrange
-        _mockUserManagementService
-            .Setup(s => s.AnyUsersExistAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _facade.AnyUsersExistAsync();
-
-        // Assert
-        Assert.True(result);
-    }
 }
-
 
 

@@ -2,12 +2,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Viblog.Admin.Services;
+using Viblog.Admin.Authentication;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Xunit;
 
-namespace Viblog.Tests.Admin.Services;
+namespace Viblog.Tests.Admin.Authentication;
 
 /// <summary>
 /// Unit tests for Auth0AuthenticationStateProvider
@@ -49,11 +49,11 @@ public class Auth0AuthenticationStateProviderTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.False(result.Identity?.IsAuthenticated);
+        Assert.Null(result.Identity);
     }
 
     [Fact]
-    public async Task TransformAuth0ClaimsAsync_WhenMissingRequiredClaims_ReturnsEmptyPrincipal()
+    public async Task TransformAuth0ClaimsAsync_WhenMissingRequiredClaims_ReturnsOriginalPrincipal()
     {
         // Arrange
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "Test") }, "Auth0");
@@ -64,11 +64,13 @@ public class Auth0AuthenticationStateProviderTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.False(result.Identity?.IsAuthenticated);
+        Assert.NotNull(result.Identity);
+        Assert.True(result.Identity.IsAuthenticated);
+        Assert.Equal(claimsPrincipal, result); // Should return original principal
     }
 
     [Fact]
-    public async Task TransformAuth0ClaimsAsync_WhenSyncFails_ReturnsEmptyPrincipal()
+    public async Task TransformAuth0ClaimsAsync_WhenSyncFails_ReturnsOriginalPrincipal()
     {
         // Arrange
         var identity = new ClaimsIdentity(new[]
@@ -87,7 +89,9 @@ public class Auth0AuthenticationStateProviderTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.False(result.Identity?.IsAuthenticated);
+        Assert.NotNull(result.Identity);
+        Assert.True(result.Identity.IsAuthenticated);
+        Assert.Equal(claimsPrincipal, result); // Should return original principal
     }
 
     [Fact]

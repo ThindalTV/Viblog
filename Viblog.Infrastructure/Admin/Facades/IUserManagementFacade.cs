@@ -78,13 +78,6 @@ public interface IUserManagementFacade
     IReadOnlyList<string> GetAvailableClaims();
 
     /// <summary>
-    /// Check if any users exist in the system
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if at least one user exists</returns>
-    Task<bool> AnyUsersExistAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Reset a user's password (admin operation)
     /// </summary>
     /// <param name="userId">The user ID</param>

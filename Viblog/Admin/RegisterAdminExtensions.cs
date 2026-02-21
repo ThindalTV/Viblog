@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
+using Viblog.Admin.Authentication;
 using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services;
 using Viblog.Admin.Services.Auditing;
-using Viblog.Admin.Services.Authentication;
 using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Infrastructure.Admin.Services;
 using Viblog.Infrastructure.Shared.Auditing;
@@ -94,6 +95,9 @@ public static class RegisterAdminExtensions
                     options.ClientSecret = auth0Settings.ClientSecret;
                     options.ResponseType = "code";
                     options.CallbackPath = auth0Settings.CallbackPath;
+
+                    // Configure sign-out paths
+                    options.SignedOutCallbackPath = "/admin/signout-callback";
                     options.SignedOutRedirectUri = auth0Settings.LogoutRedirectUri;
 
                     // Request scopes
@@ -105,6 +109,10 @@ public static class RegisterAdminExtensions
                     // Save tokens for API calls
                     options.SaveTokens = true;
                     options.GetClaimsFromUserInfoEndpoint = true;
+
+                    // Clear default claim actions to prevent NullReferenceException 
+                    // We handle all claim transformation in OnTokenValidated via TransformAuth0ClaimsAsync
+                    options.ClaimActions.Clear();
 
                     // Map claims properly
                     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -123,6 +131,28 @@ public static class RegisterAdminExtensions
 
                             var transformedPrincipal = await stateProvider.TransformAuth0ClaimsAsync(context.Principal!);
                             context.Principal = transformedPrincipal;
+                        },
+                        OnRedirectToIdentityProviderForSignOut = context =>
+                        {
+                            // Customize the logout redirect URL sent to Auth0
+                            var logoutUri = $"https://{auth0Settings.Domain}/v2/logout?client_id={auth0Settings.ClientId}";
+
+                            var postLogoutUri = context.Properties.RedirectUri;
+                            if (!string.IsNullOrEmpty(postLogoutUri))
+                            {
+                                if (postLogoutUri.StartsWith("/"))
+                                {
+                                    // Convert relative URL to absolute
+                                    var request = context.Request;
+                                    postLogoutUri = $"{request.Scheme}://{request.Host}{postLogoutUri}";
+                                }
+                                logoutUri += $"&returnTo={Uri.EscapeDataString(postLogoutUri)}";
+                            }
+
+                            context.Response.Redirect(logoutUri);
+                            context.HandleResponse();
+
+                            return Task.CompletedTask;
                         }
                     };
                 });
@@ -192,30 +222,6 @@ public static class RegisterAdminExtensions
                 logger.LogWarning("Identity provider sync service or user management service not registered. Skipping default admin user initialization.");
                 return;
             }
-
-            try
-            {
-                logger.LogInformation("Checking if default admin user initialization is needed...");
-
-                var usersExist = await userManagementService.AnyUsersExistAsync();
-
-                if (!usersExist)
-                {
-                    logger.LogInformation("No users found. Creating default admin user in Auth0...");
-                    var defaultAdmin = await syncService.GetOrCreateDefaultAdminAsync();
-                    logger.LogWarning(
-                        "Default admin user created: {Email} - Login via Auth0 and CHANGE PASSWORD IMMEDIATELY!",
-                        defaultAdmin.Email);
-                }
-                else
-                {
-                    logger.LogInformation("Users already exist. Skipping default admin creation.");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error during default admin user initialization");
-            }
         }
     }
 
@@ -243,7 +249,7 @@ public static class RegisterAdminExtensions
             {
                 var properties = new AuthenticationProperties
                 {
-                    RedirectUri = "/admin/login"
+                    RedirectUri = "/"
                 };
 
                 // Sign out from both cookie and Auth0

@@ -1,12 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using Viblog.Admin.Services.Authentication;
+using Viblog.Admin.Authentication;
+using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Xunit;
 
-namespace Viblog.Tests.Admin.Services.Authentication;
+namespace Viblog.Tests.Admin.Authentication;
 
 /// <summary>
 /// Unit tests for UserManagementService
@@ -15,15 +16,20 @@ namespace Viblog.Tests.Admin.Services.Authentication;
 public class UserManagementServiceTests
 {
     private readonly Mock<IAdminUserRepository> _mockRepository;
+    private readonly Mock<IIdentityProviderSyncService> _mockIdentityProviderSyncService;
     private readonly Mock<ILogger<UserManagementService>> _mockLogger;
     private readonly UserManagementService _sut;
 
     public UserManagementServiceTests()
     {
         _mockRepository = new Mock<IAdminUserRepository>();
+        _mockIdentityProviderSyncService = new Mock<IIdentityProviderSyncService>();
         _mockLogger = new Mock<ILogger<UserManagementService>>();
 
-        _sut = new UserManagementService(_mockRepository.Object, _mockLogger.Object);
+        _sut = new UserManagementService(
+            _mockRepository.Object,
+            _mockIdentityProviderSyncService.Object,
+            _mockLogger.Object);
     }
 
     [Fact]
@@ -109,9 +115,9 @@ public class UserManagementServiceTests
             .Setup(x => x.GetByExternalIdAsync(externalUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
-        _mockRepository
+        /*_mockRepository
             .Setup(x => x.UpdateAsync(It.IsAny<AdminUser>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingUser);
+            .ReturnsAsync(existingUser);*/
 
         // Act
         var result = await _sut.CreateOrUpdateFromExternalLoginAsync(
@@ -153,9 +159,9 @@ public class UserManagementServiceTests
             .Setup(x => x.GetByIdAsync("user-1", "users", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
-        _mockRepository
+        /*_mockRepository
             .Setup(x => x.UpdateAsync(It.IsAny<AdminUser>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingUser);
+            .ReturnsAsync(existingUser);*/
 
         // Act
         var result = await _sut.CreateOrUpdateFromExternalLoginAsync(

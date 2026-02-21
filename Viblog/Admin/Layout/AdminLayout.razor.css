@@ -46,10 +46,19 @@
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-section {
     margin-bottom: 2rem;
+}
+
+.nav-section-logout {
+    margin-top: auto;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-section-title {

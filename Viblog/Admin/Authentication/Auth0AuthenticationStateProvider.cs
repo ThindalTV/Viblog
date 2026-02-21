@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Server;
 using Viblog.Infrastructure.Shared.Authentication;
 using Viblog.Infrastructure.Shared.Data.Entities;
 
-namespace Viblog.Admin.Services;
+namespace Viblog.Admin.Authentication;
 
 /// <summary>
 /// Authentication state provider for Auth0 integration
@@ -83,7 +83,8 @@ public class Auth0AuthenticationStateProvider : RevalidatingServerAuthentication
         {
             if (auth0Principal?.Identity?.IsAuthenticated != true)
             {
-                return auth0Principal ?? new ClaimsPrincipal();
+                _logger.LogWarning("Received unauthenticated principal for transformation");
+                return auth0Principal ?? new ClaimsPrincipal(new ClaimsIdentity());
             }
 
             // Extract Auth0 claims
@@ -99,7 +100,9 @@ public class Auth0AuthenticationStateProvider : RevalidatingServerAuthentication
             {
                 _logger.LogError("Auth0 claims missing required values. ExternalUserId: {ExternalUserId}, Email: {Email}",
                     externalUserId, email);
-                return new ClaimsPrincipal();
+                // Return original principal to avoid sign-in failure
+                // User will be authenticated but may not have proper permissions
+                return auth0Principal;
             }
 
             // Sync user from Auth0 to local database
@@ -107,7 +110,8 @@ public class Auth0AuthenticationStateProvider : RevalidatingServerAuthentication
             if (localUser == null)
             {
                 _logger.LogError("Failed to sync user from Auth0. Email: {Email}", email);
-                return new ClaimsPrincipal();
+                // Return original principal to avoid sign-in failure
+                return auth0Principal;
             }
 
             // Build claims with local permissions
@@ -132,7 +136,9 @@ public class Auth0AuthenticationStateProvider : RevalidatingServerAuthentication
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error transforming Auth0 claims");
-            return new ClaimsPrincipal();
+            // Return original principal to avoid sign-in failure
+            // This allows the user to at least get authenticated even if transformation fails
+            return auth0Principal ?? new ClaimsPrincipal(new ClaimsIdentity());
         }
     }
 }

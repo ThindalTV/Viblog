@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <Folder Include="Admin\Components\Media\" />
+    <Folder Include="Admin\Authentication\" />
     <Folder Include="Admin\Pages\Media\" />
     <Folder Include="Services\" />
     <Folder Include="Shared\Infrastructure\" />
