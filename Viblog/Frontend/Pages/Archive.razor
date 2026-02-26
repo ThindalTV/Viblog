@@ -6,6 +6,7 @@
 
 @inject IArchiveFacade ArchiveFacade
 @inject NavigationManager Navigation
+@inject ILogger<Archive> Logger
 
 <PageTitle>Archive: @GetMonthName() @Year</PageTitle>
 
@@ -107,8 +108,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to load blog posts for this archive. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading archive for: {Year}/{Month}", Year, Month);
+            Logger.LogError(ex, "Error loading archive for: {Year}/{Month}", Year, Month);
         }
         finally
         {

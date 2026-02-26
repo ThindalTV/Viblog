@@ -6,6 +6,7 @@
 
 @inject IBlogPostDetailFacade BlogPostDetailFacade
 @inject NavigationManager Navigation
+@inject ILogger<Post> Logger
 
 @if (_isLoading)
 {
@@ -174,8 +175,7 @@ else
         catch (Exception ex)
         {
             _errorMessage = "Unable to load the blog post. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading post with slug: {Slug}", Slug);
+            Logger.LogError(ex, "Error loading post with slug: {Slug}", Slug);
         }
         finally
         {

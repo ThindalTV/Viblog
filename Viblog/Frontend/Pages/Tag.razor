@@ -5,6 +5,7 @@
 
 @inject ITagPostsFacade TagPostsFacade
 @inject NavigationManager Navigation
+@inject ILogger<Tag> Logger
 
 <PageTitle>Tag: @TagName</PageTitle>
 
@@ -146,8 +147,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to load blog posts for this tag. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading posts for tag: {TagName}", TagName);
+            Logger.LogError(ex, "Error loading posts for tag: {TagName}", TagName);
         }
         finally
         {

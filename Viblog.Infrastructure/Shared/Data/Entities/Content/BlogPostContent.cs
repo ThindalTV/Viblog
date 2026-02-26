@@ -12,7 +12,7 @@ public class BlogPostContent : BaseContent
     /// <summary>
     /// Short excerpt or summary of the blog post.
     /// </summary>
-    public string? Short { get; set; }
+    public string Short { get; set; } = string.Empty;
 
     /// <summary>
     /// Computes hash including BlogPost-specific fields.

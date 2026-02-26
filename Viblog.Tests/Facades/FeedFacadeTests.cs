@@ -187,7 +187,7 @@ public class FeedFacadeTests
 
         // Assert
         Assert.NotNull(result.Channel.Items[0].PubDate);
-        Assert.NotEmpty(result.Channel.Items[0].PubDate);
+        Assert.NotEmpty(result.Channel.Items[0].PubDate!);
     }
 
     [Fact]
@@ -207,8 +207,8 @@ public class FeedFacadeTests
         // Assert
         Assert.NotNull(result.Entries[0].Published);
         Assert.NotNull(result.Entries[0].Updated);
-        Assert.NotEmpty(result.Entries[0].Published);
-        Assert.NotEmpty(result.Entries[0].Updated);
+        Assert.NotEmpty(result.Entries[0].Published!);
+        Assert.NotEmpty(result.Entries[0].Updated!);
     }
 
     [Theory]

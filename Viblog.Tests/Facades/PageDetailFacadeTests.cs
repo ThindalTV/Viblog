@@ -34,7 +34,8 @@ public class PageDetailFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(slug, result.Slug);
-        Assert.Equal(expectedPage.Live.Title, result.Live.Title);
+        Assert.NotNull(result.Live);
+        Assert.Equal(expectedPage?.Live?.Title, result.Live.Title);
         Assert.True(result.IsPublished);
     }
 

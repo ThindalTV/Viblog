@@ -138,36 +138,3 @@ static async Task SeedDatabaseAsync(WebApplication app)
         // Don't throw - allow app to start even if seeding fails
     }
 }
-
-/// <summary>
-/// Initialize default admin user if no users exist
-/// </summary>
-static async Task InitializeDefaultAdminAsync(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var userManagementService = scope.ServiceProvider.GetRequiredService<Viblog.Infrastructure.Shared.Authentication.IUserManagementService>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
-    try
-    {
-        logger.LogInformation("Checking if default admin user initialization is needed...");
-
-        var usersExist = await userManagementService.AnyUsersExistAsync();
-
-        if (!usersExist)
-        {
-            logger.LogInformation("No users found. Creating default admin user...");
-            var defaultAdmin = await userManagementService.CreateDefaultAdminUserAsync();
-            logger.LogWarning("Default admin user created: {Email} with password 'admin123!' - CHANGE THIS PASSWORD IMMEDIATELY!", defaultAdmin.Email);
-        }
-        else
-        {
-            logger.LogInformation("Users already exist. Skipping default admin creation.");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Error during default admin user initialization");
-        throw;
-    }
-}

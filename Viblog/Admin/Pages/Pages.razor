@@ -11,6 +11,7 @@
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 @inject IPagesAdminFacade PagesAdminFacade
 @inject NavigationManager NavigationManager
+@inject ILogger<Pages> Logger
 
 <PageTitle>Pages - Viblog Admin</PageTitle>
 
@@ -193,7 +194,7 @@
         }
         catch (Exception ex)
         {
-            // Log error
+            Logger.LogError(ex, "Error loading pages");
             args.Data = Enumerable.Empty<PageEntity>();
             args.Total = 0;
         }

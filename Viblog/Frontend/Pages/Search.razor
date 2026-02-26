@@ -5,6 +5,7 @@
 
 @inject IBlogSearchFacade BlogSearchFacade
 @inject NavigationManager Navigation
+@inject ILogger<Search> Logger
 
 <PageTitle>Search Results@(!string.IsNullOrWhiteSpace(_searchQuery) ? $": {_searchQuery}" : "")</PageTitle>
 
@@ -127,8 +128,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to search blog posts. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error searching posts for: {SearchQuery}", _searchQuery);
+            Logger.LogError(ex, "Error searching posts for: {SearchQuery}", _searchQuery);
         }
         finally
         {

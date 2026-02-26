@@ -12,6 +12,7 @@
 @inject IPageDetailFacade PageDetailFacade
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<PageView> Logger
 
 @if (_isLoading)
 {
@@ -66,6 +67,8 @@ else
     }
 
     <article class="page-detail">
+        @if (CurrentContent is not null)
+        {
         @if (CurrentContent.ShowTitle)
         {
             <header class="page-header">
@@ -92,6 +95,7 @@ else
                     <span class="view-count">@_page.ViewCount views</span>
                 </div>
             </footer>
+        }
         }
     </article>
 }
@@ -189,8 +193,7 @@ private string GetPreviewUrl(bool showDraft)
         catch (Exception ex)
         {
             _errorMessage = "Unable to load the page. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading page with slug: {Slug}", Slug);
+            Logger.LogError(ex, "Error loading page with slug: {Slug}", Slug);
         }
         finally
         {

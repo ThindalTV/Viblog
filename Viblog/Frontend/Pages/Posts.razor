@@ -5,6 +5,7 @@
 
 @inject IBlogPostListFacade BlogPostListFacade
 @inject NavigationManager Navigation
+@inject ILogger<Posts> Logger
 
 <PageTitle>All Posts</PageTitle>
 
@@ -80,8 +81,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to load blog posts. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading paginated posts");
+            Logger.LogError(ex, "Error loading paginated posts");
         }
         finally
         {

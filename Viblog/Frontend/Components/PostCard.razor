@@ -1,7 +1,7 @@
 @using Viblog.Infrastructure.Shared.Data.Entities.Content
 @if (HasLongFormContent)
 {
-    <a href="/post/@(Post?.PublishedAt?.Year)/@Post.Slug" class="post-card-link">
+    <a href="/post/@(Post.PublishedAt?.Year)/@Post.Slug" class="post-card-link">
         <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
             @if (Post.IsFeatured && ShowFeaturedBadge)
             {
@@ -9,13 +9,13 @@
             }
             <h3 class="post-title">@Content?.Title</h3>
             <div class="post-meta">
-                <span class="post-date">@Post?.PublishedAt?.ToString("MMMM dd, yyyy")</span>
+                <span class="post-date">@Post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
                 @if (Post.ReadingTimeMinutes > 0)
                 {
                     <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
                 }
             </div>
-            @if (Post.CategoryNames.Any() && ShowCategories)
+            @if (Post.CategoryNames.Any() == true && ShowCategories)
             {
                 <div class="post-categories">
                     @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
@@ -85,7 +85,7 @@ else
     /// The blog post to display
     /// </summary>
     [Parameter]
-    public required BlogPost Post { get; set; } = default!;
+    public required BlogPost Post { get; set; }
 
     /// <summary>
     /// Whether to show the featured badge if the post is featured

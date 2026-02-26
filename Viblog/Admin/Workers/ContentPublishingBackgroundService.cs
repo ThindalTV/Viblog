@@ -124,7 +124,7 @@ public class ContentPublishingBackgroundService : BackgroundService
         return publishedCount;
     }
 
-    private async Task<int> ProcessScheduledPagesAsync(IPageRepository pageRepository, ContentSchedulingService schedulingService, IAuditLogService auditLogService, DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<int> ProcessScheduledPagesAsync(IPageRepository pageRepository, ContentSchedulingService schedulingService, IAuditLogService? auditLogService, DateTimeOffset now, CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
 
