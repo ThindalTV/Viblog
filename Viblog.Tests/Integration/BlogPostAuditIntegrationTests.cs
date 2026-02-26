@@ -7,6 +7,7 @@ using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Tests.Integration;
@@ -35,10 +36,13 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "blog-posts",
-            Title = "Test Post for Audit",
             Slug = $"test-post-{Guid.NewGuid()}",
-            Content = "This is a test post",
-            IsPublished = false,
+            Draft = new BlogPostContent
+            {
+                Title = "Test Post for Audit",
+                Content = "This is a test post"
+            },
+            Live = null, // Not published
             IsFeatured = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -60,8 +64,8 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         Assert.Equal(AuditAction.PostCreated, postCreatedLog.Action);
         Assert.Equal(EntityType.BlogPost, postCreatedLog.EntityType);
         Assert.Equal(post.Id, postCreatedLog.EntityId);
-        Assert.Equal(post.Title, postCreatedLog.EntityName);
-        Assert.Contains(post.Title, postCreatedLog.Description);
+        Assert.Equal(post.Draft.Title, postCreatedLog.EntityName);
+        Assert.Contains(post.Draft.Title, postCreatedLog.Description);
         Assert.Equal(ActionResult.Success, postCreatedLog.Result);
         Assert.Equal(_fixture.TestUserId, postCreatedLog.UserId);
     }
@@ -74,10 +78,13 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "blog-posts",
-            Title = "Original Title",
             Slug = $"original-{Guid.NewGuid()}",
-            Content = "Original content",
-            IsPublished = false,
+            Draft = new BlogPostContent
+            {
+                Title = "Original Title",
+                Content = "Original content"
+            },
+            Live = null, // Not published
             IsFeatured = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -87,8 +94,8 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         await Task.Delay(100);
 
         // Act - Update the post
-        post.Title = "Updated Title";
-        post.Content = "Updated content";
+        post.Draft.Title = "Updated Title";
+        post.Draft.Content = "Updated content";
         post.UpdatedAt = DateTimeOffset.UtcNow;
         await _postsAdminFacade.UpdatePostAsync(post);
 
@@ -117,10 +124,13 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "blog-posts",
-            Title = "Post to Delete",
             Slug = $"delete-{Guid.NewGuid()}",
-            Content = "This post will be deleted",
-            IsPublished = false,
+            Draft = new BlogPostContent
+            {
+                Title = "Post to Delete",
+                Content = "This post will be deleted"
+            },
+            Live = null, // Not published
             IsFeatured = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -144,7 +154,7 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         Assert.Equal(AuditAction.PostDeleted, postDeletedLog.Action);
         Assert.Equal(EntityType.BlogPost, postDeletedLog.EntityType);
         Assert.Equal(post.Id, postDeletedLog.EntityId);
-        Assert.Equal(post.Title, postDeletedLog.EntityName);
+        Assert.Equal(post.Draft.Title, postDeletedLog.EntityName);
         Assert.Contains("Deleted blog post", postDeletedLog.Description);
         Assert.Equal(ActionResult.Success, postDeletedLog.Result);
     }
@@ -157,10 +167,13 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "blog-posts",
-            Title = "First Post",
             Slug = $"first-{Guid.NewGuid()}",
-            Content = "First content",
-            IsPublished = false,
+            Draft = new BlogPostContent
+            {
+                Title = "First Post",
+                Content = "First content"
+            },
+            Live = null, // Not published
             IsFeatured = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -170,10 +183,13 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "blog-posts",
-            Title = "Second Post",
             Slug = $"second-{Guid.NewGuid()}",
-            Content = "Second content",
-            IsPublished = false,
+            Draft = new BlogPostContent
+            {
+                Title = "Second Post",
+                Content = "Second content"
+            },
+            Live = null, // Not published
             IsFeatured = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow

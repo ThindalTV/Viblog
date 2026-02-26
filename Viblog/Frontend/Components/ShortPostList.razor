@@ -5,17 +5,18 @@
         <div class="short-post-list-grid">
             @foreach (var post in Posts)
             {
+                var liveContent = post.Live;
                 <article class="short-post-card">
                     @if (post.IsFeatured)
                     {
                         <span class="featured-badge">Featured</span>
                     }
                     <h4 class="short-post-title">
-                        <a href="/post/@(post.PublishedAt.Year)/@post.Slug">@post.Title</a>
+                        <a href="/post/@(post.PublishedAt?.Year)/@post.Slug">@liveContent?.Title</a>
                     </h4>
-                    <p class="short-post-excerpt">@post.Short</p>
+                    <p class="short-post-excerpt">@liveContent?.Short</p>
                     <div class="short-post-meta">
-                        <span class="post-date">@post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                        <span class="post-date">@post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
                         @if (post.ReadingTimeMinutes > 0)
                         {
                             <span class="reading-time">@post.ReadingTimeMinutes min read</span>

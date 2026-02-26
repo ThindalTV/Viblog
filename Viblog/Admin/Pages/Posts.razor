@@ -1,4 +1,5 @@
 @page "/admin/posts"
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
 @attribute [Authorize(Policy = RequirePostWrite)]
 @layout AdminLayout
 @inject IServiceProvider ServiceProvider
@@ -11,8 +12,8 @@
         <h1>Posts</h1>
         <div class="page-actions">
             <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                         Icon="@SvgIcon.Plus"
-                         OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/admin/posts/new"))">
+                           Icon="@SvgIcon.Plus"
+                           OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/admin/posts/new"))">
                 New Post
             </TelerikButton>
         </div>
@@ -38,19 +39,19 @@
             </div>
 
             <TelerikGrid @ref="@_gridRef"
-                        TItem="BlogPost"
-                        OnRead="@ReadPostsAsync"
-                        OnRowClick="@OnRowClick"
-                        Pageable="true"
-                        PageSize="@_pageSize"
-                        Sortable="true"
-                        FilterMode="@GridFilterMode.FilterRow"
-                        Height="calc(100vh - 300px)" PageChanged="@PageChanged">
+                         TItem="BlogPost"
+                         OnRead="@ReadPostsAsync"
+                         OnRowClick="@OnRowClick"
+                         Pageable="true"
+                         PageSize="@_pageSize"
+                         Sortable="true"
+                         FilterMode="@GridFilterMode.FilterRow"
+                         Height="calc(100vh - 300px)" PageChanged="@PageChanged">
                 <GridColumns>
-                    <GridColumn Field="@nameof(BlogPost.IsFeatured)" 
-                               Title="Featured" 
-                               Width="100px"
-                               Sortable="true">
+                    <GridColumn Field="@nameof(BlogPost.IsFeatured)"
+                                Title="Featured"
+                                Width="100px"
+                                Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
@@ -62,21 +63,33 @@
                         </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(BlogPost.Title)" 
-                               Title="Title" 
-                               Sortable="true">
+                    <GridColumn Field="@nameof(BlogPostContent.Title)"
+                                Title="Title"
+                                Sortable="true">
+                        <Template>
+                            @{
+                                var post = context as BlogPost;
+
+                                if (post?.Live == null)
+                                {
+                                    <span class="missing-title">[No Title]</span>
+                                } else {
+                                    @((MarkupString)post.Live.Title)
+                                }
+                            }
+                        </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(BlogPost.Slug)" 
-                               Title="Slug" 
-                               Width="200px"
-                               Sortable="true">
+                    <GridColumn Field="@nameof(BlogPost.Slug)"
+                                Title="Slug"
+                                Width="200px"
+                                Sortable="true">
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(BlogPost.CreatedAt)" 
-                               Title="Created" 
-                               Width="180px"
-                               Sortable="true">
+                    <GridColumn Field="@nameof(BlogPost.CreatedAt)"
+                                Title="Created"
+                                Width="180px"
+                                Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
@@ -85,10 +98,10 @@
                         </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(BlogPost.PublishedAt)" 
-                               Title="Publication Status" 
-                               Width="240px"
-                               Sortable="true">
+                    <GridColumn Field="@nameof(BlogPost.PublishedAt)"
+                                Title="Publication Status"
+                                Width="240px"
+                                Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
@@ -104,14 +117,14 @@
                                     {
                                         <div class="status-cell">
                                             <span class="status-badge status-scheduled">Scheduled</span>
-                                            <span class="status-date">@post.PublishedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                            <span class="status-date">@post.PublishedAt?.ToString("MMM dd, yyyy HH:mm")</span>
                                         </div>
                                     }
                                     else
                                     {
                                         <div class="status-cell">
                                             <span class="status-badge status-published">Published</span>
-                                            <span class="status-date">@post.PublishedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                            <span class="status-date">@post.PublishedAt?.ToString("MMM dd, yyyy HH:mm")</span>
                                         </div>
                                     }
                                 }
@@ -130,8 +143,12 @@
     private bool? _publishedFilter = null;
     private int _skip = 0;
 
+    private BlogPostContent _content;
+
     private async Task ReadPostsAsync(GridReadEventArgs args)
     {
+
+
         // Determine sort field and direction from grid state
         var sortDescriptor = args.Request.Sorts.FirstOrDefault();
         var sortField = PostSortField.CreatedAt;
@@ -141,7 +158,7 @@
         {
             sortField = sortDescriptor.Member switch
             {
-                nameof(BlogPost.Title) => PostSortField.Title,
+                nameof(BlogPostContent.Title) => PostSortField.Title,
                 nameof(BlogPost.Slug) => PostSortField.Slug,
                 nameof(BlogPost.PublishedAt) => PostSortField.PublishedAt,
                 nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,

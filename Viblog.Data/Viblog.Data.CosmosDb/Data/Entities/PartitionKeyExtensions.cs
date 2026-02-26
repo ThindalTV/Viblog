@@ -22,7 +22,7 @@ internal static class PartitionKeyExtensions
         {
             if (post.IsPublished)
             {
-                post.GroupKey = post.PublishedAt.Year.ToString();
+                post.GroupKey = post.PublishedAt!.Value.Year.ToString();
             }
             else
             {

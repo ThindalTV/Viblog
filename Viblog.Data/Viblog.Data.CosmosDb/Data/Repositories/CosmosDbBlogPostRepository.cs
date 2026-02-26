@@ -21,7 +21,6 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentNullException.ThrowIfNull(entity);
 
         entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-        entity.UpdateSearchIndex();
         await base.AddAsync(entity, cancellationToken);
     }
 
@@ -34,7 +33,6 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         foreach (var entity in entityList)
         {
             entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-            entity.UpdateSearchIndex();
         }
 
         await base.AddRangeAsync(entityList, cancellationToken);
@@ -46,7 +44,6 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentNullException.ThrowIfNull(entity);
 
         entity.SetPartitionKey(); // Update partition key based on published state
-        entity.UpdateSearchIndex();
         return base.UpdateAsync(entity, cancellationToken);
     }
 

@@ -1,4 +1,9 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Facades;
 
@@ -50,7 +55,7 @@ public class BlogSearchFacadeTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Items.Count());
         Assert.All(result.Items, post => 
-            Assert.Contains(searchTerm, post.Title.ToLower() + " " + post.Content.ToLower()));
+            Assert.Contains(searchTerm, post.Live!.Title.ToLower() + " " + post.Live.Content.ToLower()));
     }
 
     [Fact]
@@ -266,17 +271,27 @@ public class BlogSearchFacadeTests
 
     private static BlogPost CreateTestPost(string title, string content)
     {
-        return new BlogPost
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "test",
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = content,
-            IsPublished = true,
             PublishedAt = DateTimeOffset.UtcNow,
             CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = content
+            },
+            Live = new BlogPostContent
+            {
+                Title = title,
+                Content = content
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 }

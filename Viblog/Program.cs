@@ -128,16 +128,20 @@ app.Run();
 static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
-    var blogPostRepository = scope.ServiceProvider.GetRequiredService<Viblog.Infrastructure.Shared.Data.Repositories.IBlogPostRepository>();
-    var filesystemOptions = scope.ServiceProvider.GetRequiredService<IOptions<Viblog.Data.Filesystem.Configuration.FilesystemStorageOptions>>();
+    var seeder = scope.ServiceProvider.GetRequiredService<Viblog.Shared.Data.Seeders.BlogPostSeeder>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation("Checking if database seeding is needed...");
-    await Viblog.Data.Filesystem.Data.Seeders.BlogPostSeeder.SeedAsync(
-        blogPostRepository, 
-        logger, 
-        filesystemOptions);
-    logger.LogInformation("Database seeding check completed.");
+    try
+    {
+        logger.LogInformation("Checking if database seeding is needed...");
+        await seeder.SeedAsync();
+        logger.LogInformation("Database seeding check completed.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error during database seeding");
+        // Don't throw - allow app to start even if seeding fails
+    }
 }
 
 /// <summary>

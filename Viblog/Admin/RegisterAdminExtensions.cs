@@ -59,6 +59,23 @@ public static class RegisterAdminExtensions
             // Register media library broadcast service (singleton for cross-user notifications)
             collection.AddSingleton<IMediaLibraryBroadcastService, InMemoryMediaLibraryBroadcastService>();
 
+            // Register content scheduling services
+            collection.AddScoped<Viblog.Shared.Services.Content.ContentSchedulingService>();
+            collection.AddScoped<Viblog.Shared.Services.Content.ContentVersionService>();
+            collection.AddScoped<Viblog.Shared.Services.Content.ContentProcessingService>();
+
+            // Register data seeders
+            collection.AddScoped<Viblog.Shared.Data.Seeders.BlogPostSeeder>();
+
+            // Register content publishing background service
+            collection.AddHostedService<Viblog.Admin.Workers.ContentPublishingBackgroundService>();
+
+            // Register content publishing options
+            collection.Configure<Viblog.Admin.Workers.ContentPublishingOptions>(
+                collection.BuildServiceProvider()
+                    .GetRequiredService<IConfiguration>()
+                    .GetSection("ContentPublishing"));
+
             // Add Telerik UI for Blazor services
             collection.AddTelerikBlazor();
 

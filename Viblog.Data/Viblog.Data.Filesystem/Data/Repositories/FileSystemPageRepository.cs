@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Viblog.Data.Filesystem.Configuration;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Data.Filesystem.Data.Repositories;
@@ -33,12 +34,6 @@ public class FileSystemPageRepository : FilesystemRepository<Page>, IPageReposit
             includeDeleted: false,
             cancellationToken);
 
-        // Promote scheduled draft if ready
-        if (page != null && page.PromoteDraftIfScheduled())
-        {
-            await SaveEntityAsync(page, cancellationToken);
-        }
-
         return page;
     }
 
@@ -60,12 +55,6 @@ public class FileSystemPageRepository : FilesystemRepository<Page>, IPageReposit
 
         var filePath = Path.Combine(_entityDirectory, entry.FileName);
         var page = await ReadEntityFromFileAsync(filePath, cancellationToken);
-
-        // Promote scheduled draft if ready
-        if (page != null && page.PromoteDraftIfScheduled())
-        {
-            await SaveEntityAsync(page, cancellationToken);
-        }
 
         return page;
     }
@@ -110,32 +99,15 @@ public class FileSystemPageRepository : FilesystemRepository<Page>, IPageReposit
         CancellationToken cancellationToken = default)
     {
         var result = await FindAsync(
-            p => p.PublishDate.HasValue && p.PublishDate.Value <= DateTimeOffset.UtcNow,
+            p => p.Schedule.Status == ContentStatus.Scheduled &&
+                 p.Schedule.ScheduledPublishDate.HasValue &&
+                 p.Schedule.ScheduledPublishDate.Value <= DateTimeOffset.UtcNow,
             new PagingParameters(1, int.MaxValue),
-            p => p.PublishDate,
+            p => p.Schedule.ScheduledPublishDate,
             ascending: true,
             includeDeleted: false,
             cancellationToken);
 
         return result.Items;
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task<int> PromoteScheduledPagesAsync(
-        CancellationToken cancellationToken = default)
-    {
-        var pagesToPromote = await GetScheduledPagesReadyToPublishAsync(cancellationToken);
-        var promotedCount = 0;
-
-        foreach (var page in pagesToPromote)
-        {
-            if (page.PromoteDraftIfScheduled())
-            {
-                await SaveEntityAsync(page, cancellationToken);
-                promotedCount++;
-            }
-        }
-
-        return promotedCount;
     }
 }

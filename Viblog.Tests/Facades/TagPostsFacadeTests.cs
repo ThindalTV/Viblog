@@ -1,4 +1,9 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -175,7 +180,7 @@ public class TagPostsFacadeTests
         var result = await _facade.GetPostsByTagAsync(tag, pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished));
+        Assert.All(result.Items, post => Assert.True(post.IsPublished()));
     }
 
     [Theory]
@@ -247,18 +252,31 @@ public class TagPostsFacadeTests
 
     private static BlogPost CreateTestPost(string title, string[] tags, bool isPublished = true)
     {
-        return new BlogPost
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "test",
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = $"Content for {title}",
-            IsPublished = isPublished,
-            PublishedAt = isPublished ? DateTimeOffset.UtcNow : DateTimeOffset.MinValue,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            Live = isPublished ? new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            } : null,
+            PublishedAt = isPublished ? DateTimeOffset.UtcNow : null,
             Tags = tags.ToList(),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+        post.Draft.ComputeHash();
+        if (post.Live != null)
+        {
+            post.Live.ComputeHash();
+        }
+        return post;
     }
 }

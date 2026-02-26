@@ -1,4 +1,9 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -54,8 +59,8 @@ public class ArchiveFacadeTests
         Assert.Equal(3, result.Items.Count());
         Assert.All(result.Items, post =>
         {
-            Assert.Equal(year, post.PublishedAt.Year);
-            Assert.Equal(month, post.PublishedAt.Month);
+            Assert.Equal(year, post.PublishedAt!.Value.Year);
+            Assert.Equal(month, post.PublishedAt.Value.Month);
         });
     }
 
@@ -197,8 +202,8 @@ public class ArchiveFacadeTests
         Assert.Single(result.Items);
         Assert.All(result.Items, post =>
         {
-            Assert.Equal(year, post.PublishedAt.Year);
-            Assert.Equal(month, post.PublishedAt.Month);
+            Assert.Equal(year, post.PublishedAt!.Value.Year);
+            Assert.Equal(month, post.PublishedAt.Value.Month);
         });
     }
 
@@ -232,7 +237,7 @@ public class ArchiveFacadeTests
         var result = await _facade.GetPostsByMonthAsync(year, month, pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished));
+        Assert.All(result.Items, post => Assert.True(post.IsPublished()));
     }
 
     [Theory]
@@ -267,7 +272,7 @@ public class ArchiveFacadeTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.All(result.Items, post => Assert.Equal(year, post.PublishedAt.Year));
+        Assert.All(result.Items, post => Assert.Equal(year, post.PublishedAt!.Value.Year));
     }
 
     [Fact]
@@ -307,8 +312,8 @@ public class ArchiveFacadeTests
         // Verify all posts are from the same month
         Assert.All(resultList, post =>
         {
-            Assert.Equal(year, post.PublishedAt.Year);
-            Assert.Equal(month, post.PublishedAt.Month);
+            Assert.Equal(year, post.PublishedAt!.Value.Year);
+            Assert.Equal(month, post.PublishedAt.Value.Month);
         });
     }
 
@@ -316,17 +321,30 @@ public class ArchiveFacadeTests
     {
         var publishedAt = new DateTimeOffset(year, month, day, 10, 0, 0, TimeSpan.Zero);
 
-        return new BlogPost
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = $"{year}-{month:D2}",
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = $"Content for {title}",
-            IsPublished = isPublished,
-            PublishedAt = isPublished ? publishedAt : DateTimeOffset.MinValue,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            Live = isPublished ? new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            } : null,
+            PublishedAt = isPublished ? publishedAt : null,
             CreatedAt = publishedAt,
             UpdatedAt = publishedAt
         };
+        post.Draft.ComputeHash();
+        if (post.Live != null)
+        {
+            post.Live.ComputeHash();
+        }
+        return post;
     }
 }

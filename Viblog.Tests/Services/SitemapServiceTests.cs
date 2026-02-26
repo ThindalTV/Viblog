@@ -1,6 +1,10 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Configuration;
+using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Services;
 
@@ -450,21 +454,33 @@ public class SitemapServiceTests
         string[]? categories = null,
         string[]? tags = null)
     {
-        return new BlogPost
+        var publishedAt = new DateTimeOffset(year, month, 15, 12, 0, 0, TimeSpan.Zero);
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             Slug = slug,
-            Title = slug,
-            Content = "Content",
-            Short = "Short",
-            IsPublished = true,
             IsFeatured = isFeatured,
-            PublishedAt = new DateTimeOffset(year, month, 15, 12, 0, 0, TimeSpan.Zero),
+            PublishedAt = publishedAt,
             UpdatedAt = DateTimeOffset.MinValue,
             AuthorName = "Author",
             CategoryNames = categories?.ToList() ?? new List<string> { "Tech" },
-            Tags = tags?.ToList() ?? new List<string>()
+            Tags = tags?.ToList() ?? new List<string>(),
+            Draft = new BlogPostContent
+            {
+                Title = slug,
+                Content = "Content",
+                Short = "Short"
+            },
+            Live = new BlogPostContent
+            {
+                Title = slug,
+                Content = "Content",
+                Short = "Short"
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 
     #endregion

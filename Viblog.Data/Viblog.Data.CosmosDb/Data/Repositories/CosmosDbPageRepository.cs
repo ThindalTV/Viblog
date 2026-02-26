@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Viblog.Data.CosmosDb.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Data.CosmosDb.Data.Repositories;
@@ -21,7 +22,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
         ArgumentNullException.ThrowIfNull(entity);
 
         entity.SetPartitionKey();
-        entity.UpdateSearchIndex();
         await base.AddAsync(entity, cancellationToken);
     }
 
@@ -34,7 +34,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
         foreach (var entity in entityList)
         {
             entity.SetPartitionKey();
-            entity.UpdateSearchIndex();
         }
 
         await base.AddRangeAsync(entityList, cancellationToken);
@@ -46,7 +45,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
         ArgumentNullException.ThrowIfNull(entity);
 
         entity.SetPartitionKey();
-        entity.UpdateSearchIndex();
         return base.UpdateAsync(entity, cancellationToken);
     }
 
@@ -68,13 +66,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
 
         var page = await query.FirstOrDefaultAsync(cancellationToken);
 
-        // Promote scheduled draft if ready
-        if (page != null && page.PromoteDraftIfScheduled())
-        {
-            _dbSet.Update(page);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
         return page;
     }
 
@@ -88,13 +79,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
         var page = await _dbSet
             .Where(p => p.Id == id && !p.IsDeleted)
             .FirstOrDefaultAsync(cancellationToken);
-
-        // Promote scheduled draft if ready
-        if (page != null && page.PromoteDraftIfScheduled())
-        {
-            _dbSet.Update(page);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
 
         return page;
     }
@@ -149,36 +133,11 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
     public virtual async Task<IEnumerable<Page>> GetScheduledPagesReadyToPublishAsync(
         CancellationToken cancellationToken = default)
     {
-        var pages = await _dbSet
-            .Where(p => !p.IsDeleted && 
-                       p.PublishDate.HasValue && 
-                       p.PublishDate.Value <= DateTimeOffset.UtcNow)
+        return await _dbSet
+            .Where(p => !p.IsDeleted &&
+                        p.Schedule.Status == ContentStatus.Scheduled &&
+                        p.Schedule.ScheduledPublishDate.HasValue &&
+                        p.Schedule.ScheduledPublishDate.Value <= DateTimeOffset.UtcNow)
             .ToListAsync(cancellationToken);
-
-        return pages;
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task<int> PromoteScheduledPagesAsync(
-        CancellationToken cancellationToken = default)
-    {
-        var pagesToPromote = await GetScheduledPagesReadyToPublishAsync(cancellationToken);
-        var promotedCount = 0;
-
-        foreach (var page in pagesToPromote)
-        {
-            if (page.PromoteDraftIfScheduled())
-            {
-                _dbSet.Update(page);
-                promotedCount++;
-            }
-        }
-
-        if (promotedCount > 0)
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        return promotedCount;
     }
 }

@@ -50,7 +50,7 @@ else
                    class="preview-toggle @(_showDraft ? "active" : "")">
                     📝 Draft
                 </a>
-                @if (!_page.IsPublished)
+                @if (!_page.IsPublished())
                 {
                     <span class="preview-status status-unpublished">Unpublished</span>
                 }
@@ -107,7 +107,7 @@ public string Slug { get; set; } = string.Empty;
 /// <summary>
 /// Gets the current content to display based on admin preview mode
 /// </summary>
-private PageContent CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
+private Viblog.Infrastructure.Shared.Data.Entities.Content.PageContent? CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
 
 protected override async Task OnInitializedAsync()
 {

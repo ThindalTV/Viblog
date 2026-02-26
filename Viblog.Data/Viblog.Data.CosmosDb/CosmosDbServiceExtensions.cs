@@ -82,6 +82,10 @@ public static class CosmosDbServiceExtensions
         services.AddScoped<IMediaMetadataRepository, CosmosDbMediaMetadataRepository>();
         services.AddScoped<IPageRepository, CosmosDbPageRepository>();
 
+        // Register version history repositories
+        services.AddScoped<IBlogPostVersionRepository, BlogPostVersionRepository>();
+        services.AddScoped<IPageVersionRepository, PageVersionRepository>();
+
         return services;
     }
 

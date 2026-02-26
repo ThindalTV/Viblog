@@ -2,6 +2,7 @@
 @layout Viblog.Frontend.Layout.BlogLayout
 @using Viblog.Frontend.Components
 @using Viblog.Frontend.Components.Metadata
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
 
 @inject IBlogPostDetailFacade BlogPostDetailFacade
 @inject NavigationManager Navigation
@@ -41,11 +42,11 @@ else
         }
 
         <header class="post-header">
-            <h1 class="post-detail-title">@_post.Title</h1>
+            <h1 class="post-detail-title">@Content?.Title</h1>
             
             <div class="post-detail-meta">
                 <span class="post-author">By @_post.AuthorName</span>
-                <span class="post-date">@_post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                <span class="post-date">@_post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
                 @if (_post.ReadingTimeMinutes > 0)
                 {
                     <span class="reading-time">@_post.ReadingTimeMinutes min read</span>
@@ -67,19 +68,19 @@ else
             }
         </header>
 
-        @if (!string.IsNullOrWhiteSpace(_post.FeaturedImageUrl))
+        @if (!string.IsNullOrWhiteSpace(Content?.FeaturedImageUrl))
         {
             <div class="post-featured-image">
-                <img src="@_post.FeaturedImageUrl" 
-                     alt="@(_post.FeaturedImageAlt ?? _post.Title)" />
+                <img src="@Content?.FeaturedImageUrl"
+                     alt="@(Content?.FeaturedImageAlt ?? Content?.Title)" />
             </div>
         }
 
         <div class="post-content">
-            @((MarkupString)_post.Content)
+            @((MarkupString)(Content?.Content ?? ""))
         </div>
 
-        <SocialShare Title="@_post.Title" Url="@GetCanonicalUrl()" />
+        <SocialShare Title="@Content?.Title" Url="@GetCanonicalUrl()" />
 
         <ShortPostList Posts="_relatedPosts" Title="Related Posts" />
 
@@ -117,6 +118,8 @@ else
     [Parameter]
     public int Year { get; set; }
 
+    private BlogPostContent? Content;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadPostAsync();
@@ -136,8 +139,10 @@ else
         {
             _isLoading = true;
             _errorMessage = null;
-            
+
             _post = await BlogPostDetailFacade.GetPostBySlugAsync(Slug);
+
+            Content = _post.Live; // TODO: Change to draft for preview mode
 
             if (_post == null)
             {

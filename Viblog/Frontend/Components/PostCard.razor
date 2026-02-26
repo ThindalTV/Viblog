@@ -1,14 +1,15 @@
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
 @if (HasLongFormContent)
 {
-    <a href="/post/@(Post.PublishedAt.Year)/@Post.Slug" class="post-card-link">
+    <a href="/post/@(Post?.PublishedAt?.Year)/@Post.Slug" class="post-card-link">
         <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
             @if (Post.IsFeatured && ShowFeaturedBadge)
             {
                 <span class="featured-badge">Featured</span>
             }
-            <h3 class="post-title">@Post.Title</h3>
+            <h3 class="post-title">@Content?.Title</h3>
             <div class="post-meta">
-                <span class="post-date">@Post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+                <span class="post-date">@Post?.PublishedAt?.ToString("MMMM dd, yyyy")</span>
                 @if (Post.ReadingTimeMinutes > 0)
                 {
                     <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
@@ -23,7 +24,7 @@
                     }
                 </div>
             }
-            <p class="post-excerpt">@Post.Short</p>
+            <p class="post-excerpt">@BlogContent?.Short</p>
             @if (Post.Tags.Any() && ShowTags && !IsGridCard)
             {
                 <div class="post-tags">
@@ -49,9 +50,9 @@ else
         {
             <span class="featured-badge">Featured</span>
         }
-        <h3 class="post-title">@Post.Title</h3>
+        <h3 class="post-title">@Content?.Title</h3>
         <div class="post-meta">
-            <span class="post-date">@Post.PublishedAt.ToString("MMMM dd, yyyy")</span>
+            <span class="post-date">@Post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
             @if (Post.ReadingTimeMinutes > 0)
             {
                 <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
@@ -66,7 +67,7 @@ else
                 }
             </div>
         }
-        <p class="post-excerpt">@Post.Short</p>
+        <p class="post-excerpt">@BlogContent?.Short</p>
         @if (Post.Tags.Any() && ShowTags)
         {
             <div class="post-tags">
@@ -83,8 +84,8 @@ else
     /// <summary>
     /// The blog post to display
     /// </summary>
-    [Parameter, EditorRequired]
-    public BlogPost Post { get; set; } = default!;
+    [Parameter]
+    public required BlogPost Post { get; set; } = default!;
 
     /// <summary>
     /// Whether to show the featured badge if the post is featured
@@ -128,10 +129,16 @@ else
     [Parameter]
     public bool IsGridCard { get; set; } = false;
 
+    private BaseContent? Content => Post?.Live;
+
+    private BlogPostContent? BlogContent => Content as BlogPostContent;
+
     /// <summary>
     /// Determines if the post has long-form content (Content or Markdown)
     /// </summary>
     private bool HasLongFormContent => 
-        !string.IsNullOrWhiteSpace(Post.Content) || 
-        !string.IsNullOrWhiteSpace(Post.Markdown);
+        !string.IsNullOrWhiteSpace(Content?.Content) ||
+        !string.IsNullOrWhiteSpace(Content?.Markdown);
+
+
 }

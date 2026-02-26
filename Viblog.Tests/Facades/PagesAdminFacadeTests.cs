@@ -3,7 +3,9 @@ using Viblog.Admin.Facades;
 using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -90,7 +92,7 @@ public class PagesAdminFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.Items);
-        Assert.True(result.Items.First().IsPublished);
+        Assert.True(result.Items.First().IsPublished());
     }
 
     [Fact]
@@ -121,7 +123,7 @@ public class PagesAdminFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.Items);
-        Assert.False(result.Items.First().IsPublished);
+        Assert.False(result.Items.First().IsPublished());
     }
 
     [Theory]
@@ -397,8 +399,8 @@ public class PagesAdminFacadeTests
         await _facade.PublishPageNowAsync(pageId);
 
         // Assert
-        Assert.True(page.IsPublished);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.IsPublished), default), Times.Once);
+        Assert.True(page.IsPublished());
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.IsPublished()), default), Times.Once);
         _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
     }
 
@@ -436,8 +438,8 @@ public class PagesAdminFacadeTests
         await _facade.SchedulePagePublishingAsync(pageId, publishDate);
 
         // Assert
-        Assert.Equal(publishDate, page.PublishDate);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.PublishDate == publishDate), default), Times.Once);
+        Assert.Equal(publishDate, page.Schedule.ScheduledPublishDate);
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.Schedule.ScheduledPublishDate == publishDate), default), Times.Once);
         _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
     }
 
@@ -463,7 +465,7 @@ public class PagesAdminFacadeTests
         var pageId = "page-123";
         var page = CreateTestPage("published-page", isPublished: true);
         page.Id = pageId;
-        page.PublishDate = DateTimeOffset.UtcNow;
+        page.Schedule.ScheduledPublishDate = DateTimeOffset.UtcNow;
 
         _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
             .ReturnsAsync(page);
@@ -476,9 +478,9 @@ public class PagesAdminFacadeTests
         await _facade.UnpublishPageAsync(pageId);
 
         // Assert
-        Assert.False(page.IsPublished);
-        Assert.Null(page.PublishDate);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => !p.IsPublished && p.PublishDate == null), default), Times.Once);
+        Assert.False(page.IsPublished());
+        Assert.Null(page.Schedule.ScheduledPublishDate);
+        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => !p.IsPublished() && p.Schedule.ScheduledPublishDate == null), default), Times.Once);
         _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
     }
 
@@ -505,20 +507,19 @@ public class PagesAdminFacadeTests
 
     private static Page CreateTestPage(string slug, bool isPublished = true)
     {
-        return new Page
+        var page = new Page
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "pages",
             Slug = slug,
-            IsPublished = isPublished,
-            Live = new PageContent
+            Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",
                 Markdown = "# Live Content",
                 Content = "<h1>Live Content</h1>",
                 MetaDescription = "Live meta description",
                 ShowTitle = true
-            },
+            } : null,
             Draft = new PageContent
             {
                 Title = $"Draft Title for {slug}",
@@ -533,5 +534,11 @@ public class PagesAdminFacadeTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+        page.Draft.ComputeHash();
+        if (page.Live != null)
+        {
+            page.Live.ComputeHash();
+        }
+        return page;
     }
 }

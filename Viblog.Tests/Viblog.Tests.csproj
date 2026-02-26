@@ -35,6 +35,7 @@
   <ItemGroup>
     <Folder Include="Authentication\" />
     <Folder Include="Data\Repositories\" />
+    <Folder Include="Workers\" />
   </ItemGroup>
 
 </Project>

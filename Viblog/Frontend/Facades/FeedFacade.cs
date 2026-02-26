@@ -51,7 +51,11 @@ public class FeedFacade : IFeedFacade
 
         foreach (var post in posts)
         {
-            feed.Channel.Items.Add(CreateRssItem(post));
+            var rssItem = CreateRssItem(post);
+            if (rssItem != null)
+            {
+                feed.Channel.Items.Add(rssItem);
+            }
         }
 
         return feed;
@@ -67,7 +71,7 @@ public class FeedFacade : IFeedFacade
             Title = _siteMetadata.SiteName,
             Subtitle = _siteMetadata.DefaultDescription,
             Id = _siteMetadata.BaseUrl,
-            Updated = posts.FirstOrDefault()?.PublishedAt.ToString("yyyy-MM-ddTHH:mm:ssZ") 
+            Updated = posts.FirstOrDefault()?.PublishedAt?.ToString("yyyy-MM-ddTHH:mm:ssZ")
                 ?? DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
             Links =
             [
@@ -78,7 +82,11 @@ public class FeedFacade : IFeedFacade
 
         foreach (var post in posts)
         {
-            feed.Entries.Add(CreateAtomEntry(post));
+            var atomEntry = CreateAtomEntry(post);
+            if (atomEntry != null)
+            {
+                feed.Entries.Add(atomEntry);
+            }
         }
 
         return feed;
@@ -91,47 +99,61 @@ public class FeedFacade : IFeedFacade
         return result.Items;
     }
 
-    private RssItem CreateRssItem(BlogPost post)
+    private RssItem? CreateRssItem(BlogPost post)
     {
+        var liveContent = post.Live;
+
+        if (liveContent is null)
+        {
+            return null;
+        }
+
         var item = new RssItem
         {
-            Title = post.Title,
+            Title = liveContent.Title,
             Link = $"{_siteMetadata.BaseUrl}/post/{post.Slug}",
             Guid = $"{_siteMetadata.BaseUrl}/post/{post.Slug}",
-            Description = post.Short,
+            Description = liveContent.Short ?? liveContent.Content,
             Author = post.AuthorName,
             Categories = [.. post.CategoryNames]
         };
 
-        item.PubDate = post.PublishedAt.ToString("R");
+        item.PubDate = post.PublishedAt?.ToString("R");
 
-        if (!string.IsNullOrWhiteSpace(post.Content))
+        if (!string.IsNullOrWhiteSpace(liveContent.Content))
         {
             var doc = new XmlDocument();
-            item.Content = doc.CreateCDataSection(post.Content);
+            item.Content = doc.CreateCDataSection(liveContent.Content);
         }
 
         return item;
     }
 
-    private AtomEntry CreateAtomEntry(BlogPost post)
+    private AtomEntry? CreateAtomEntry(BlogPost post)
     {
+        var liveContent = post.Live;
+
+        if (liveContent is null)
+        {
+            return null;
+        }
+
         var entry = new AtomEntry
         {
-            Title = post.Title,
+            Title = liveContent.Title,
             Id = $"{_siteMetadata.BaseUrl}/post/{post.Slug}",
-            Summary = post.Short,
+            Summary = liveContent.Short ?? liveContent.Content,
             Links = [new AtomLink { Href = $"{_siteMetadata.BaseUrl}/post/{post.Slug}" }],
             Author = new AtomPerson { Name = post.AuthorName }
         };
 
-        entry.Published = post.PublishedAt.ToString("yyyy-MM-ddTHH:mm:ssZ");
-        entry.Updated = post.PublishedAt.ToString("yyyy-MM-ddTHH:mm:ssZ");
+        entry.Published = post.PublishedAt?.ToString("yyyy-MM-ddTHH:mm:ssZ");
+        entry.Updated = post.PublishedAt?.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
-        if (!string.IsNullOrWhiteSpace(post.Content))
+        if (!string.IsNullOrWhiteSpace(liveContent.Content))
         {
             var doc = new XmlDocument();
-            var cdata = doc.CreateCDataSection(post.Content);
+            var cdata = doc.CreateCDataSection(liveContent.Content);
             entry.Content = new AtomContent
             {
                 Type = "html",

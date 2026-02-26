@@ -7,6 +7,7 @@ using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Tests.Integration;
@@ -37,8 +38,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"test-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "Test Page", Markdown = "This is a test page" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published yet
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -75,8 +75,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"original-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "Original", Markdown = "Original content" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -116,8 +115,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"delete-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "To Delete", Markdown = "This page will be deleted" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -155,8 +153,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"publish-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "Publish Test", Markdown = "This page will be published" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -193,8 +190,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"unpublish-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "Unpublish Test", Markdown = "This page will be unpublished" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -232,8 +228,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
             GroupKey = "pages",
             Slug = $"lifecycle-page-{Guid.NewGuid()}",
             Draft = new PageContent { Title = "Lifecycle", Markdown = "Original content" },
-            Live = new PageContent(),
-            IsPublished = false,
+            Live = null, // Not published
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };

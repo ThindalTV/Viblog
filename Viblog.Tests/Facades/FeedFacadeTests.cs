@@ -1,5 +1,8 @@
 using Microsoft.Extensions.Options;
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Configuration;
 
 namespace Viblog.Tests.Facades;
@@ -306,21 +309,33 @@ public class FeedFacadeTests
         string content,
         DateTimeOffset? publishedAt = null)
     {
-        return new BlogPost
+        var pubDate = publishedAt ?? DateTimeOffset.UtcNow;
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "test",
-            Title = title,
             Slug = slug,
-            Content = content,
-            Short = content.Length > 100 ? content[..100] : content,
-            IsPublished = true,
-            PublishedAt = publishedAt ?? DateTimeOffset.UtcNow,
+            PublishedAt = pubDate,
             AuthorName = "Test Author",
             Tags = new List<string> { "test", "sample" },
             CategoryNames = new List<string> { "Test Category" },
-            CreatedAt = publishedAt ?? DateTimeOffset.UtcNow,
-            UpdatedAt = publishedAt ?? DateTimeOffset.UtcNow
+            CreatedAt = pubDate,
+            UpdatedAt = pubDate,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = content,
+                Short = content.Length > 100 ? content[..100] : content
+            },
+            Live = new BlogPostContent
+            {
+                Title = title,
+                Content = content,
+                Short = content.Length > 100 ? content[..100] : content
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 }
