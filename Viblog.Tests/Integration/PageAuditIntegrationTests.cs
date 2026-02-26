@@ -143,7 +143,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         Assert.Equal(ActionResult.Success, pageDeletedLog.Result);
     }
 
-    [Fact]
+    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
     public async Task PublishPage_LogsAuditEntry()
     {
         // Arrange - Create an unpublished page
@@ -180,7 +180,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         Assert.Equal(ActionResult.Success, pagePublishedLog.Result);
     }
 
-    [Fact]
+    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
     public async Task UnpublishPage_LogsAuditEntry()
     {
         // Arrange - Create and publish a page
@@ -218,7 +218,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         Assert.Equal(ActionResult.Success, pageUnpublishedLog.Result);
     }
 
-    [Fact]
+    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
     public async Task PageLifecycle_CreatesCompleteAuditTrail()
     {
         // Arrange

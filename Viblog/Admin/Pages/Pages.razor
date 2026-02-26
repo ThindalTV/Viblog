@@ -118,10 +118,10 @@
                                     }
                                     else
                                     {
-                                        var hasScheduledDate = item.PublishDate.HasValue && item.PublishDate.Value > DateTimeOffset.UtcNow;
+                                        var hasScheduledDate = item.Schedule.ScheduledPublishDate.HasValue && item.Schedule.ScheduledPublishDate.Value > DateTimeOffset.UtcNow;
                                         if (hasScheduledDate)
                                         {
-                                            var publishDateStr = item.PublishDate!.Value.ToString("MMM dd, yyyy");
+                                            var publishDateStr = item.Schedule.ScheduledPublishDate!.Value.ToString("MMM dd, yyyy");
                                             <div class="status-cell">
                                                 <span class="status-badge status-scheduled">Scheduled</span>
                                                 <span class="status-date">@publishDateStr</span>

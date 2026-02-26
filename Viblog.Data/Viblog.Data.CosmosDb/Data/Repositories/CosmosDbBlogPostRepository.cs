@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Viblog.Data.CosmosDb.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Data.CosmosDb.Data.Repositories;
@@ -55,7 +56,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
         var query = _dbSet
-            .Where(p => !p.IsDeleted && p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            .Where(p => !p.IsDeleted && p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
 
         return await ApplyPagingAndSortingAsync(
             query,
@@ -80,7 +81,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -106,7 +107,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -130,7 +131,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -154,7 +155,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await query.FirstOrDefaultAsync(cancellationToken);
@@ -187,7 +188,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -232,7 +233,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         var endDate = startDate.AddMonths(1);
 
         return await FindAsync(
-            p => (!publishedOnly || p.IsPublished) &&
+            p => (!publishedOnly || p.Live != null) &&
                  p.PublishedAt >= startDate &&
                  p.PublishedAt < endDate,
             pagingParameters,
@@ -255,7 +256,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         // Find posts that share at least one tag, excluding the current post
         var relatedPosts = await FindAsync(
-            p => p.IsPublished && 
+            p => p.Live != null && 
                  p.Id != post.Id &&
                  p.Tags.Any(tag => post.Tags.Contains(tag)),
             new PagingParameters(1, maxPosts),
@@ -316,5 +317,18 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         await _context.SaveChangesAsync(cancellationToken);
 
         return post;
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IEnumerable<BlogPost>> GetScheduledPostsReadyToPublishAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        return await _dbSet
+            .Where(p => !p.IsDeleted &&
+                        p.Schedule.Status == ContentStatus.Scheduled &&
+                        p.Schedule.ScheduledPublishDate <= now)
+            .ToListAsync(cancellationToken);
     }
 }

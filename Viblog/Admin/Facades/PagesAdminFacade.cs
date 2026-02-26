@@ -80,6 +80,13 @@ public class PagesAdminFacade : IPagesAdminFacade
     {
         ArgumentNullException.ThrowIfNull(page);
 
+        if (_httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            var user = _httpContextAccessor.HttpContext.User;
+            page.AuthorId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            page.AuthorName = user.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+        }
+
         // Check if slug already exists
         await ValidateUniqueSlugAsync(page.Slug, null, cancellationToken);
 
@@ -166,75 +173,31 @@ public class PagesAdminFacade : IPagesAdminFacade
     }
 
     /// <inheritdoc/>
-    public virtual async Task PublishPageNowAsync(
+    public virtual Task PublishPageNowAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-
-        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken);
-        if (page == null)
-        {
-            throw new InvalidOperationException($"Page with ID '{id}' not found.");
-        }
-
-        page.PublishDraftNow();
-        await _pageRepository.UpdateAsync(page, cancellationToken);
-        await _pageRepository.SaveChangesAsync(cancellationToken);
-
-        // Log page publishing
-        await LogAuditAsync(
-            AuditAction.PagePublished,
-            page.Id,
-            page.Slug,
-            $"Published page '{page.Slug}'",
-            cancellationToken);
+        // TODO: rewire to ContentSchedulingService in Phase 3
+        throw new NotImplementedException("Pending rewrite — Phase 3");
     }
 
     /// <inheritdoc/>
-    public virtual async Task SchedulePagePublishingAsync(
+    public virtual Task SchedulePagePublishingAsync(
         string id,
         DateTimeOffset publishDate,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-
-        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken);
-        if (page == null)
-        {
-            throw new InvalidOperationException($"Page with ID '{id}' not found.");
-        }
-
-        page.PublishDate = publishDate;
-        await _pageRepository.UpdateAsync(page, cancellationToken);
-        await _pageRepository.SaveChangesAsync(cancellationToken);
+        // TODO: rewire to ContentSchedulingService in Phase 3
+        throw new NotImplementedException("Pending rewrite — Phase 3");
     }
 
     /// <inheritdoc/>
-    public virtual async Task UnpublishPageAsync(
+    public virtual Task UnpublishPageAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-
-        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken);
-        if (page == null)
-        {
-            throw new InvalidOperationException($"Page with ID '{id}' not found.");
-        }
-
-        page.IsPublished = false;
-        page.PublishDate = null;
-        await _pageRepository.UpdateAsync(page, cancellationToken);
-        await _pageRepository.SaveChangesAsync(cancellationToken);
-
-        // Log page unpublishing
-        await LogAuditAsync(
-            AuditAction.PageUnpublished,
-            page.Id,
-            page.Slug,
-            $"Unpublished page '{page.Slug}'",
-            cancellationToken);
+        // TODO: rewire to ContentSchedulingService in Phase 3
+        throw new NotImplementedException("Pending rewrite — Phase 3");
     }
 
     /// <summary>

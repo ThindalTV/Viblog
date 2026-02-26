@@ -40,8 +40,8 @@ public class PostsAdminFacade : IPostsAdminFacade
         // Build the predicate based on the filter
         Expression<Func<BlogPost, bool>> predicate = publishedOnly switch
         {
-            true => p => p.IsPublished,
-            false => p => !p.IsPublished,
+            true => p => p.Live != null,
+            false => p => p.Live == null,
             null => p => true // All posts
         };
 
@@ -49,20 +49,20 @@ public class PostsAdminFacade : IPostsAdminFacade
         return sortField switch
         {
             PostSortField.Title => await _blogPostRepository.FindAsync(
-                predicate, pagingParameters, p => p.Title, ascending, false, cancellationToken),
-            
+                predicate, pagingParameters, p => p.Draft.Title, ascending, false, cancellationToken),
+
             PostSortField.Slug => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.Slug, ascending, false, cancellationToken),
-            
+
             PostSortField.PublishedAt => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.PublishedAt, ascending, false, cancellationToken),
-            
+
             PostSortField.IsFeatured => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.IsFeatured, ascending, false, cancellationToken),
-            
+
             PostSortField.IsPublished => await _blogPostRepository.FindAsync(
-                predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
-            
+                predicate, pagingParameters, p => p.Live != null, ascending, false, cancellationToken),
+
             PostSortField.CreatedAt or _ => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.CreatedAt, ascending, false, cancellationToken)
         };
@@ -85,6 +85,13 @@ public class PostsAdminFacade : IPostsAdminFacade
     {
         ArgumentNullException.ThrowIfNull(post);
 
+        if (_httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            var user = _httpContextAccessor.HttpContext.User;
+            post.AuthorId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            post.AuthorName = user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? string.Empty;
+        }
+
         await _blogPostRepository.AddAsync(post, cancellationToken);
         await _blogPostRepository.SaveChangesAsync(cancellationToken);
 
@@ -92,8 +99,8 @@ public class PostsAdminFacade : IPostsAdminFacade
         await LogAuditAsync(
             AuditAction.PostCreated,
             post.Id,
-            post.Title,
-            $"Created blog post '{post.Title}'",
+            post.Draft.Title,
+            $"Created blog post '{post.Draft.Title}'",
             cancellationToken);
     }
 
@@ -111,8 +118,8 @@ public class PostsAdminFacade : IPostsAdminFacade
         await LogAuditAsync(
             AuditAction.PostUpdated,
             post.Id,
-            post.Title,
-            $"Updated blog post '{post.Title}'",
+            post.Draft.Title,
+            $"Updated blog post '{post.Draft.Title}'",
             cancellationToken);
     }
 
@@ -137,8 +144,8 @@ public class PostsAdminFacade : IPostsAdminFacade
             await LogAuditAsync(
                 AuditAction.PostDeleted,
                 post.Id,
-                post.Title,
-                $"Deleted blog post '{post.Title}'",
+                post.Draft.Title,
+                $"Deleted blog post '{post.Draft.Title}'",
                 cancellationToken);
         }
     }

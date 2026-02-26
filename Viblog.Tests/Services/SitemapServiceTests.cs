@@ -146,14 +146,12 @@ public class SitemapServiceTests
         {
             Id = "1",
             Slug = "updated-post",
-            Title = "Updated Post",
-            Content = "Content",
-            Short = "Short",
-            IsPublished = true,
             PublishedAt = publishedDate,
             UpdatedAt = updatedDate,
             AuthorName = "Author",
-            CategoryNames = ["Tech"]
+            CategoryNames = ["Tech"],
+            Draft = new BlogPostContent { Title = "Updated Post", Content = "Content", Short = "Short" },
+            Live = new BlogPostContent { Title = "Updated Post", Content = "Content", Short = "Short" }
         };
 
         var pagedPosts = new PagedResult<BlogPost>([post], 1, 1, 10);
@@ -403,13 +401,11 @@ public class SitemapServiceTests
             {
                 Id = "3",
                 Slug = "old-post",
-                Title = "Very Old Post",
-                Content = "Content",
-                Short = "Short",
-                IsPublished = true,
                 PublishedAt = DateTimeOffset.MinValue,
                 AuthorName = "Author",
-                CategoryNames = ["Tech"]
+                CategoryNames = ["Tech"],
+                Draft = new BlogPostContent { Title = "Very Old Post", Content = "Content", Short = "Short" },
+                Live = new BlogPostContent { Title = "Very Old Post", Content = "Content", Short = "Short" }
             }
         };
         var pagedPosts = new PagedResult<BlogPost>(posts, posts.Count, 1, 10);

@@ -113,9 +113,8 @@ else
                 </div>
 
                 <div class="form-column">
-                    <DateTimeInput @bind-Value="_model.PublishedAt"
-                                   Label="Published At"
-                                   ValidationFor="@(() => _model.PublishedAt)" />
+                    @* TODO Phase 4: PublishedAt is set by ContentSchedulingService, not the editor. Remove when publish actions are wired up. *@
+                    @* <DateTimeInput @bind-Value="_model.PublishedAt" Label="Published At" ValidationFor="@(() => _model.PublishedAt)" /> *@
 
                     <CheckboxInput @bind-Value="_model.IsFeatured"
                                  Label="Featured Post" />
@@ -346,7 +345,8 @@ else
             }
 
             // Update only the publication state
-            post.IsPublished = _model.IsPublished;
+            // TODO: replace with ContentSchedulingService calls in Phase 3
+            // post.IsPublished = _model.IsPublished; -- IsPublished is now a read-only computed property
             post.PublishedAt = _model.PublishedAt;
             post.UpdatedAt = DateTimeOffset.UtcNow;
 

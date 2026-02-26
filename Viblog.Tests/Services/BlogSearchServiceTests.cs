@@ -37,7 +37,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -62,7 +62,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -144,7 +144,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -174,7 +174,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -231,7 +231,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -261,7 +261,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -323,7 +323,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -347,7 +347,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))

@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Services.Content;
 
@@ -75,60 +74,16 @@ public class ContentPublishingBackgroundService : BackgroundService
 
     private async Task<int> ProcessScheduledBlogPostsAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var readyToPublish = await _blogPostRepository.GetWhereAsync(
-            x => x.Schedule.Status == ContentStatus.Scheduled && 
-                 x.Schedule.ScheduledPublishDate <= now &&
-                 !x.IsDeleted,
-            cancellationToken);
-
-        var count = 0;
-        foreach (var content in readyToPublish)
-        {
-            try
-            {
-                await _schedulingService.PublishNowAsync(content, "system", "Scheduled publish", cancellationToken);
-                await _blogPostRepository.UpdateAsync(content, cancellationToken);
-                await _blogPostRepository.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Published scheduled BlogPost {ContentId}", content.Id);
-                count++;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error publishing scheduled BlogPost {ContentId}", content.Id);
-            }
-        }
-
-        return count;
+        // TODO: rewire to IBlogPostRepository.GetScheduledPostsReadyToPublishAsync in Phase 3
+        await Task.CompletedTask;
+        return 0;
     }
 
     private async Task<int> ProcessScheduledPagesAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var readyToPublish = await _pageRepository.GetWhereAsync(
-            x => x.Schedule.Status == ContentStatus.Scheduled && 
-                 x.Schedule.ScheduledPublishDate <= now &&
-                 !x.IsDeleted,
-            cancellationToken);
-
-        var count = 0;
-        foreach (var content in readyToPublish)
-        {
-            try
-            {
-                await _schedulingService.PublishNowAsync(content, "system", "Scheduled publish", cancellationToken);
-                await _pageRepository.UpdateAsync(content, cancellationToken);
-                await _pageRepository.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Published scheduled Page {ContentId}", content.Id);
-                count++;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error publishing scheduled Page {ContentId}", content.Id);
-            }
-        }
-
-        return count;
+        // TODO: rewire to IPageRepository.GetScheduledPagesReadyToPublishAsync in Phase 3
+        await Task.CompletedTask;
+        return 0;
     }
 }
 

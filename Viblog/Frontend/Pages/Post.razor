@@ -142,14 +142,14 @@ else
 
             _post = await BlogPostDetailFacade.GetPostBySlugAsync(Slug);
 
-            Content = _post.Live; // TODO: Change to draft for preview mode
-
             if (_post == null)
             {
                 // Redirect to 404 page when post not found
                 Navigation.NavigateTo("/not-found");
                 return;
             }
+
+            Content = _post.Live; // TODO: Change to draft for preview mode
 
             BuildBreadcrumbs();
 
@@ -188,7 +188,7 @@ else
         _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
         {
             new() { Label = "Posts", Url = "/posts" },
-            new() { Label = _post!.Title, Url = $"/post/{Slug}" }
+            new() { Label = _post!.Live?.Title ?? _post!.Draft.Title, Url = $"/post/{Slug}" }
         };
     }
 

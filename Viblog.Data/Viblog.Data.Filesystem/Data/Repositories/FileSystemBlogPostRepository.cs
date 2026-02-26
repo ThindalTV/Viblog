@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Viblog.Data.Filesystem.Configuration;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Data.Filesystem.Data.Repositories;
@@ -256,5 +257,23 @@ public class FileSystemBlogPostRepository : FilesystemRepository<BlogPost>, IBlo
         }
 
         return post;
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IEnumerable<BlogPost>> GetScheduledPostsReadyToPublishAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var result = await FindAsync(
+            p => p.Schedule.Status == ContentStatus.Scheduled &&
+                 p.Schedule.ScheduledPublishDate <= now,
+            new PagingParameters { PageSize = 1000 },
+            p => p.Schedule.ScheduledPublishDate,
+            ascending: true,
+            includeDeleted: false,
+            cancellationToken);
+
+        return result.Items;
     }
 }
