@@ -8,6 +8,7 @@
 @using Viblog.Admin.Services
 @using Viblog.Frontend.Infrastructure
 @using Viblog.Infrastructure.Admin.Facades
+@using Viblog.Infrastructure.Shared.Data.Entities
 @using Viblog.Shared.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -152,6 +153,13 @@ else
                           Placeholder="Write your post content in markdown..."
                           Rows="20" />
         </FormSection>
+
+        @if (_isEditMode && !string.IsNullOrWhiteSpace(Id))
+        {
+            <FormSection Title="Activity History">
+                <AuditLogPanel EntityType="EntityType.BlogPost" EntityId="@Id" PageSize="20" />
+            </FormSection>
+        }
     </EditForm>
 }
 

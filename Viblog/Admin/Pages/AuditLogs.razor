@@ -174,11 +174,15 @@
             AuditAction.UserActivated => "User Activated",
             AuditAction.UserDeactivated => "User Deactivated",
             AuditAction.UserClaimsModified => "Claims Modified",
-            AuditAction.PostCreated => "Post Created",
-            AuditAction.PostUpdated => "Post Updated",
-            AuditAction.PostDeleted => "Post Deleted",
-            AuditAction.PostPublished => "Post Published",
-            AuditAction.PostScheduled => "Post Scheduled",
+            AuditAction.ContentCreated => "Created",
+            AuditAction.ContentUpdated => "Updated",
+            AuditAction.ContentDeleted => "Deleted",
+            AuditAction.ContentPublished => "Published",
+            AuditAction.ContentUnpublished => "Unpublished",
+            AuditAction.ContentScheduled => "Scheduled",
+            AuditAction.ContentScheduleUpdated => "Schedule Updated",
+            AuditAction.ContentScheduleCancelled => "Schedule Cancelled",
+            AuditAction.ContentOwnershipTransferred => "Ownership Transferred",
             _ => action.ToString()
         };
     }

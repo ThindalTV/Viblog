@@ -914,21 +914,21 @@ each item gets its tests written alongside the implementation.
 
 Write tests alongside each item as it is implemented.
 
-- [ ] `AuditLog.cs` — consolidate `Post*`/`Page*` content actions into `Content*` enum values; add `ContentOwnershipTransferred`; assign explicit integer values to all enum members
-- [ ] `AuditLogService.cs` — update `GetDefaultDescription` switch to `Content*` arms
-- [ ] `PostsAdminFacade.cs` — update 3 existing audit call sites to `Content*`
-- [ ] `PagesAdminFacade.cs` — update 3+ existing audit call sites to `Content*`
-- [ ] `BlogPostAuditIntegrationTests.cs` — update 3 assertions to `Content*`
-- [ ] `PageAuditIntegrationTests.cs` — update 3 assertions to `Content*`
-- [ ] `PostsAdminFacade.cs` — add `PublishPostNowAsync`, `SchedulePostAsync`, `CancelPostScheduleAsync`, `UnpublishPostAsync`, `AdoptPostAsync` each calling the appropriate service and logging audit; **write tests alongside**
-- [ ] `IPostsAdminFacade.cs` — add the four new publish/schedule methods and `AdoptPostAsync` to the interface
-- [ ] `PagesAdminFacade.cs` — **replace Phase 1A stubs** with proper `ContentSchedulingService` calls; add `CancelPageScheduleAsync` and `AdoptPageAsync`; verify all publish methods log audit; **write tests alongside**
-- [ ] `IPagesAdminFacade.cs` — add `CancelPageScheduleAsync` and `AdoptPageAsync` to the interface
-- [ ] `ContentPublishingBackgroundService.cs` — **replace Phase 1A stub** with proper domain method calls; log `ContentPublished` for each auto-published item; **write tests alongside**
-- [ ] `ContentVersionService.cs` — update `PromoteDraftToLiveAsync` signature to accept `publishedByName` as a parameter; remove the TODO comment
-- [ ] Create `AuditLogPanel.razor` — lazy-loading entity history timeline backed by `GetEntityHistoryAsync`
-- [ ] `PostEdit.razor` — embed `<AuditLogPanel>` component
-- [ ] `PageEdit.razor` — embed `<AuditLogPanel>` component
+- [x] `AuditLog.cs` — consolidate `Post*`/`Page*` content actions into `Content*` enum values; add `ContentOwnershipTransferred`; assign explicit integer values to all enum members
+- [x] `AuditLogService.cs` — update `GetDefaultDescription` switch to `Content*` arms
+- [x] `PostsAdminFacade.cs` — update 3 existing audit call sites to `Content*`
+- [x] `PagesAdminFacade.cs` — update 3+ existing audit call sites to `Content*`
+- [x] `BlogPostAuditIntegrationTests.cs` — update 3 assertions to `Content*`
+- [x] `PageAuditIntegrationTests.cs` — update 3 assertions to `Content*`
+- [x] `PostsAdminFacade.cs` — add `PublishPostNowAsync`, `SchedulePostAsync`, `CancelPostScheduleAsync`, `UnpublishPostAsync`, `AdoptPostAsync` each calling the appropriate service and logging audit; **write tests alongside**
+- [x] `IPostsAdminFacade.cs` — add the four new publish/schedule methods and `AdoptPostAsync` to the interface
+- [x] `PagesAdminFacade.cs` — **replace Phase 1A stubs** with proper `ContentSchedulingService` calls; add `CancelPageScheduleAsync` and `AdoptPageAsync`; verify all publish methods log audit; **write tests alongside**
+- [x] `IPagesAdminFacade.cs` — add `CancelPageScheduleAsync` and `AdoptPageAsync` to the interface
+- [x] `ContentPublishingBackgroundService.cs` — **replace Phase 1A stub** with proper domain method calls; log `ContentPublished` for each auto-published item; **write tests alongside**
+- [x] `ContentVersionService.cs` — update `PromoteDraftToLiveAsync` signature to accept `publishedByName` as a parameter; remove the TODO comment
+- [x] Create `AuditLogPanel.razor` — lazy-loading entity history timeline backed by `GetEntityHistoryAsync`
+- [x] `PostEdit.razor` — embed `<AuditLogPanel>` component
+- [x] `PageEdit.razor` — embed `<AuditLogPanel>` component
 
 ### Phase 4 — Admin view redesign
 

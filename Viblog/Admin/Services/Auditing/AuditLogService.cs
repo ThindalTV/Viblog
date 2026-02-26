@@ -165,22 +165,16 @@ public class AuditLogService : IAuditLogService
             AuditAction.UserDeactivated => $"Deactivated user {entityName}",
             AuditAction.UserClaimsModified => $"Modified claims for user {entityName}",
 
-            // Blog Posts
-            AuditAction.PostCreated => $"Created blog post {entityName}",
-            AuditAction.PostUpdated => $"Updated blog post {entityName}",
-            AuditAction.PostDeleted => $"Deleted blog post {entityName}",
-            AuditAction.PostPublished => $"Published blog post {entityName}",
-            AuditAction.PostUnpublished => $"Unpublished blog post {entityName}",
-            AuditAction.PostScheduled => $"Scheduled blog post {entityName}",
-            AuditAction.PostScheduleUpdated => $"Updated schedule for blog post {entityName}",
-            AuditAction.PostScheduleCancelled => $"Cancelled schedule for blog post {entityName}",
-
-            // Pages
-            AuditAction.PageCreated => $"Created page {entityName}",
-            AuditAction.PageUpdated => $"Updated page {entityName}",
-            AuditAction.PageDeleted => $"Deleted page {entityName}",
-            AuditAction.PagePublished => $"Published page {entityName}",
-            AuditAction.PageUnpublished => $"Unpublished page {entityName}",
+            // Content (BlogPost, Page — EntityType distinguishes which)
+            AuditAction.ContentCreated => $"Created {entity}",
+            AuditAction.ContentUpdated => $"Updated {entity}",
+            AuditAction.ContentDeleted => $"Deleted {entity}",
+            AuditAction.ContentPublished => $"Published {entity}",
+            AuditAction.ContentUnpublished => $"Unpublished {entity}",
+            AuditAction.ContentScheduled => $"Scheduled {entity}",
+            AuditAction.ContentScheduleUpdated => $"Updated schedule for {entity}",
+            AuditAction.ContentScheduleCancelled => $"Cancelled schedule for {entity}",
+            AuditAction.ContentOwnershipTransferred => $"Ownership of {entity} transferred",
 
             // Media
             AuditAction.MediaUploaded => $"Uploaded media {entityName}",

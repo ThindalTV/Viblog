@@ -4,7 +4,9 @@ using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Services.Content;
 
 namespace Viblog.Admin.Facades;
 
@@ -14,15 +16,18 @@ namespace Viblog.Admin.Facades;
 public class PostsAdminFacade : IPostsAdminFacade
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly ContentSchedulingService? _schedulingService;
     private readonly IAuditLogService? _auditLogService;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public PostsAdminFacade(
         IBlogPostRepository blogPostRepository,
+        ContentSchedulingService? schedulingService = null,
         IAuditLogService? auditLogService = null,
         IHttpContextAccessor? httpContextAccessor = null)
     {
         _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
+        _schedulingService = schedulingService; // Optional
         _auditLogService = auditLogService; // Optional
         _httpContextAccessor = httpContextAccessor; // Optional
     }
@@ -97,7 +102,7 @@ public class PostsAdminFacade : IPostsAdminFacade
 
         // Log post creation
         await LogAuditAsync(
-            AuditAction.PostCreated,
+            AuditAction.ContentCreated,
             post.Id,
             post.Draft.Title,
             $"Created blog post '{post.Draft.Title}'",
@@ -116,7 +121,7 @@ public class PostsAdminFacade : IPostsAdminFacade
 
         // Log post update
         await LogAuditAsync(
-            AuditAction.PostUpdated,
+            AuditAction.ContentUpdated,
             post.Id,
             post.Draft.Title,
             $"Updated blog post '{post.Draft.Title}'",
@@ -142,12 +147,153 @@ public class PostsAdminFacade : IPostsAdminFacade
         if (post != null)
         {
             await LogAuditAsync(
-                AuditAction.PostDeleted,
+                AuditAction.ContentDeleted,
                 post.Id,
                 post.Draft.Title,
                 $"Deleted blog post '{post.Draft.Title}'",
                 cancellationToken);
         }
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task PublishPostNowAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+
+        var (userId, userName, _) = GetCurrentUser();
+
+        await _schedulingService.PublishNowAsync(post, userId, userName, cancellationToken: cancellationToken);
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentPublished,
+            post.Id,
+            post.Draft.Title,
+            $"Published BlogPost '{post.Draft.Title}'",
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task SchedulePostAsync(
+        string id,
+        DateTimeOffset publishDate,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+
+        var alreadyScheduled = post.Schedule.Status == ContentStatus.Scheduled;
+
+        _schedulingService.ScheduleForPublish(post, publishDate);
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        var auditAction = alreadyScheduled ? AuditAction.ContentScheduleUpdated : AuditAction.ContentScheduled;
+        var description = alreadyScheduled
+            ? $"Updated schedule for BlogPost '{post.Draft.Title}' to {publishDate:u}"
+            : $"Scheduled BlogPost '{post.Draft.Title}' for {publishDate:u}";
+
+        await LogAuditAsync(auditAction, post.Id, post.Draft.Title, description, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task CancelPostScheduleAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+
+        post.Schedule.Status = ContentStatus.Draft;
+        post.Schedule.ScheduledPublishDate = null;
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentScheduleCancelled,
+            post.Id,
+            post.Draft.Title,
+            $"Cancelled schedule for BlogPost '{post.Draft.Title}'",
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task UnpublishPostAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+
+        _schedulingService.Unpublish(post);
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentUnpublished,
+            post.Id,
+            post.Draft.Title,
+            $"Unpublished BlogPost '{post.Draft.Title}'",
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task AdoptPostAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+
+        var (userId, userName, _) = GetCurrentUser();
+
+        var previousAuthorName = post.AuthorName;
+        post.AuthorId = userId;
+        post.AuthorName = userName;
+
+        await _blogPostRepository.UpdateAsync(post, cancellationToken);
+        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentOwnershipTransferred,
+            post.Id,
+            post.Draft.Title,
+            $"Ownership of BlogPost '{post.Draft.Title}' transferred from {previousAuthorName} to {userName}.",
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads the current user's identity from the HTTP context.
+    /// </summary>
+    private (string userId, string userName, string userEmail) GetCurrentUser()
+    {
+        var user = _httpContextAccessor?.HttpContext?.User;
+        return (
+            user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown",
+            user?.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User",
+            user?.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com"
+        );
     }
 
     /// <summary>
@@ -171,9 +317,7 @@ public class PostsAdminFacade : IPostsAdminFacade
             return;
         }
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
-        var userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
-        var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com";
+        var (userId, userName, userEmail) = GetCurrentUser();
 
         await _auditLogService.LogActionAsync(
             userId: userId,

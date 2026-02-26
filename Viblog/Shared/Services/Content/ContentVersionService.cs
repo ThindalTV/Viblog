@@ -30,7 +30,7 @@ public class ContentVersionService
     /// Promotes Draft to Live and creates version snapshot.
     /// This is the core publishing operation.
     /// </summary>
-    public virtual async Task PromoteDraftToLiveAsync(ISchedulableContent content, string publishedBy, string? changeNote = null, CancellationToken cancellationToken = default)
+    public virtual async Task PromoteDraftToLiveAsync(ISchedulableContent content, string publishedBy, string? publishedByName = null, string? changeNote = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Promoting Draft to Live for content {ContentId}", content.Id);
 
@@ -46,7 +46,7 @@ public class ContentVersionService
         content.SetLiveContent(clonedContent);
 
         // Create version snapshot (saves to repository)
-        await CreatePublishedSnapshotAsync(content, publishedBy, changeNote, cancellationToken);
+        await CreatePublishedSnapshotAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
 
         // Apply retention policy
         await ApplyRetentionPolicyAsync(content, cancellationToken);
@@ -58,7 +58,7 @@ public class ContentVersionService
     /// Creates immutable snapshot of Live content and saves to repository.
     /// Uses pattern matching to create type-specific version entities.
     /// </summary>
-    public virtual async Task CreatePublishedSnapshotAsync(ISchedulableContent content, string publishedBy, string? changeNote = null, CancellationToken cancellationToken = default)
+    public virtual async Task CreatePublishedSnapshotAsync(ISchedulableContent content, string publishedBy, string? publishedByName = null, string? changeNote = null, CancellationToken cancellationToken = default)
     {
         if (content is BlogPost blogPost)
         {
@@ -76,7 +76,7 @@ public class ContentVersionService
                 Content = CloneContent(blogPost.Live) as BlogPostContent ?? throw new InvalidOperationException("Failed to clone BlogPostContent"),
                 PublishedAt = DateTimeOffset.UtcNow,
                 PublishedBy = publishedBy,
-                PublishedByName = publishedBy, // TODO: Get display name from user service
+                PublishedByName = publishedByName ?? publishedBy,
                 ChangeNote = changeNote,
                 VersionNumber = versionNumber
             };
@@ -102,7 +102,7 @@ public class ContentVersionService
                 Content = CloneContent(page.Live) as PageContent ?? throw new InvalidOperationException("Failed to clone PageContent"),
                 PublishedAt = DateTimeOffset.UtcNow,
                 PublishedBy = publishedBy,
-                PublishedByName = publishedBy, // TODO: Get display name from user service
+                PublishedByName = publishedByName ?? publishedBy,
                 ChangeNote = changeNote,
                 VersionNumber = versionNumber
             };

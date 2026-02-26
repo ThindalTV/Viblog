@@ -89,7 +89,7 @@ public class ContentSchedulingServiceTests
     {
         var post = CreateBlogPost();
         _mockVersionService
-            .Setup(v => v.PromoteDraftToLiveAsync(post, "user1", null, default))
+            .Setup(v => v.PromoteDraftToLiveAsync(post, "user1", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Cannot publish content without Draft"));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>

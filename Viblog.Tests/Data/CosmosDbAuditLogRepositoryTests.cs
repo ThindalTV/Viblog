@@ -24,9 +24,9 @@ public class AuditLogRepositoryTests
         var userId = "test-user-123";
         var userLogs = new List<AuditLog>
         {
-            CreateAuditLog(userId, AuditAction.PostCreated, "post-1"),
-            CreateAuditLog(userId, AuditAction.PostUpdated, "post-1"),
-            CreateAuditLog(userId, AuditAction.PostDeleted, "post-2")
+            CreateAuditLog(userId, AuditAction.ContentCreated, "post-1"),
+            CreateAuditLog(userId, AuditAction.ContentUpdated, "post-1"),
+            CreateAuditLog(userId, AuditAction.ContentDeleted, "post-2")
         };
 
         var expectedResult = new PagedResult<AuditLog>
@@ -74,8 +74,8 @@ public class AuditLogRepositoryTests
         var entityId = "post-123";
         var logs = new List<AuditLog>
         {
-            CreateAuditLog("user-1", AuditAction.PostCreated, entityId, EntityType.BlogPost),
-            CreateAuditLog("user-2", AuditAction.PostUpdated, entityId, EntityType.BlogPost)
+            CreateAuditLog("user-1", AuditAction.ContentCreated, entityId, EntityType.BlogPost),
+            CreateAuditLog("user-2", AuditAction.ContentUpdated, entityId, EntityType.BlogPost)
         };
 
         var expectedResult = new PagedResult<AuditLog>
@@ -107,8 +107,8 @@ public class AuditLogRepositoryTests
         // Arrange
         var logs = new List<AuditLog>
         {
-            CreateAuditLog("user-1", AuditAction.PostCreated, "post-1"),
-            CreateAuditLog("user-2", AuditAction.PostCreated, "post-2")
+            CreateAuditLog("user-1", AuditAction.ContentCreated, "post-1"),
+            CreateAuditLog("user-2", AuditAction.ContentCreated, "post-2")
         };
 
         var expectedResult = new PagedResult<AuditLog>
@@ -122,15 +122,15 @@ public class AuditLogRepositoryTests
         var pagingParams = new PagingParameters { PageNumber = 1, PageSize = 10 };
 
         _mockRepository
-            .Setup(x => x.GetByActionAsync(AuditAction.PostCreated, pagingParams, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByActionAsync(AuditAction.ContentCreated, pagingParams, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _mockRepository.Object.GetByActionAsync(AuditAction.PostCreated, pagingParams);
+        var result = await _mockRepository.Object.GetByActionAsync(AuditAction.ContentCreated, pagingParams);
 
         // Assert
         Assert.Equal(2, result.TotalCount);
-        Assert.All(result.Items, log => Assert.Equal(AuditAction.PostCreated, log.Action));
+        Assert.All(result.Items, log => Assert.Equal(AuditAction.ContentCreated, log.Action));
     }
 
     [Fact]
@@ -140,8 +140,8 @@ public class AuditLogRepositoryTests
         var now = DateTimeOffset.UtcNow;
         var logs = new List<AuditLog>
         {
-            CreateAuditLog("user-2", AuditAction.PostCreated, "post-2", timestamp: now.AddDays(-3)),
-            CreateAuditLog("user-3", AuditAction.PostCreated, "post-3", timestamp: now.AddDays(-1))
+            CreateAuditLog("user-2", AuditAction.ContentCreated, "post-2", timestamp: now.AddDays(-3)),
+            CreateAuditLog("user-3", AuditAction.ContentCreated, "post-3", timestamp: now.AddDays(-1))
         };
 
         var expectedResult = new PagedResult<AuditLog>
@@ -173,7 +173,7 @@ public class AuditLogRepositoryTests
     {
         // Arrange
         var logs = Enumerable.Range(0, 100)
-            .Select(i => CreateAuditLog($"user-{i}", AuditAction.PostCreated, $"post-{i}",
+            .Select(i => CreateAuditLog($"user-{i}", AuditAction.ContentCreated, $"post-{i}",
                 timestamp: DateTimeOffset.UtcNow.AddMinutes(-i)))
             .ToList();
 
@@ -197,8 +197,8 @@ public class AuditLogRepositoryTests
         var now = DateTimeOffset.UtcNow;
         var logs = new List<AuditLog>
         {
-            CreateAuditLog("user-2", AuditAction.PostCreated, "post-2", result: ActionResult.Failed, timestamp: now.AddDays(-2)),
-            CreateAuditLog("user-3", AuditAction.PostUpdated, "post-3", result: ActionResult.Failed, timestamp: now.AddDays(-1))
+            CreateAuditLog("user-2", AuditAction.ContentCreated, "post-2", result: ActionResult.Failed, timestamp: now.AddDays(-2)),
+            CreateAuditLog("user-3", AuditAction.ContentUpdated, "post-3", result: ActionResult.Failed, timestamp: now.AddDays(-1))
         };
 
         var expectedResult = new PagedResult<AuditLog>
@@ -234,9 +234,9 @@ public class AuditLogRepositoryTests
         var now = DateTimeOffset.UtcNow;
         var stats = new Dictionary<AuditAction, int>
         {
-            { AuditAction.PostCreated, 3 },
-            { AuditAction.PostUpdated, 2 },
-            { AuditAction.PostDeleted, 1 }
+            { AuditAction.ContentCreated, 3 },
+            { AuditAction.ContentUpdated, 2 },
+            { AuditAction.ContentDeleted, 1 }
         };
 
         var startDate = now.AddDays(-2);
@@ -250,9 +250,9 @@ public class AuditLogRepositoryTests
         var result = await _mockRepository.Object.GetUserStatisticsAsync(userId, startDate, endDate);
 
         // Assert
-        Assert.Equal(3, result[AuditAction.PostCreated]);
-        Assert.Equal(2, result[AuditAction.PostUpdated]);
-        Assert.Equal(1, result[AuditAction.PostDeleted]);
+        Assert.Equal(3, result[AuditAction.ContentCreated]);
+        Assert.Equal(2, result[AuditAction.ContentUpdated]);
+        Assert.Equal(1, result[AuditAction.ContentDeleted]);
     }
 
     [Fact]

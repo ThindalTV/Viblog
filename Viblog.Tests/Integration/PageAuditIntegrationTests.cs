@@ -52,11 +52,11 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         // Get recent audit logs
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var pageCreatedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PageCreated && 
+            log.Action == AuditAction.ContentCreated && 
             log.EntityId == page.Id);
 
         Assert.NotNull(pageCreatedLog);
-        Assert.Equal(AuditAction.PageCreated, pageCreatedLog.Action);
+        Assert.Equal(AuditAction.ContentCreated, pageCreatedLog.Action);
         Assert.Equal(EntityType.Page, pageCreatedLog.EntityType);
         Assert.Equal(page.Id, pageCreatedLog.EntityId);
         Assert.Equal(page.Slug, pageCreatedLog.EntityName);
@@ -93,11 +93,11 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var pageUpdatedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PageUpdated && 
+            log.Action == AuditAction.ContentUpdated && 
             log.EntityId == page.Id);
 
         Assert.NotNull(pageUpdatedLog);
-        Assert.Equal(AuditAction.PageUpdated, pageUpdatedLog.Action);
+        Assert.Equal(AuditAction.ContentUpdated, pageUpdatedLog.Action);
         Assert.Equal(EntityType.Page, pageUpdatedLog.EntityType);
         Assert.Equal(page.Id, pageUpdatedLog.EntityId);
         Assert.Equal(page.Slug, pageUpdatedLog.EntityName);
@@ -131,11 +131,11 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var pageDeletedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PageDeleted && 
+            log.Action == AuditAction.ContentDeleted && 
             log.EntityId == page.Id);
 
         Assert.NotNull(pageDeletedLog);
-        Assert.Equal(AuditAction.PageDeleted, pageDeletedLog.Action);
+        Assert.Equal(AuditAction.ContentDeleted, pageDeletedLog.Action);
         Assert.Equal(EntityType.Page, pageDeletedLog.EntityType);
         Assert.Equal(page.Id, pageDeletedLog.EntityId);
         Assert.Equal(page.Slug, pageDeletedLog.EntityName);
@@ -143,7 +143,7 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         Assert.Equal(ActionResult.Success, pageDeletedLog.Result);
     }
 
-    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
+    [Fact]
     public async Task PublishPage_LogsAuditEntry()
     {
         // Arrange - Create an unpublished page
@@ -169,18 +169,18 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var pagePublishedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PagePublished && 
+            log.Action == AuditAction.ContentPublished && 
             log.EntityId == page.Id);
 
         Assert.NotNull(pagePublishedLog);
-        Assert.Equal(AuditAction.PagePublished, pagePublishedLog.Action);
+        Assert.Equal(AuditAction.ContentPublished, pagePublishedLog.Action);
         Assert.Equal(EntityType.Page, pagePublishedLog.EntityType);
         Assert.Equal(page.Id, pagePublishedLog.EntityId);
-        Assert.Contains("Published page", pagePublishedLog.Description);
+        Assert.Contains("Published", pagePublishedLog.Description);
         Assert.Equal(ActionResult.Success, pagePublishedLog.Result);
     }
 
-    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
+    [Fact]
     public async Task UnpublishPage_LogsAuditEntry()
     {
         // Arrange - Create and publish a page
@@ -207,18 +207,18 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var pageUnpublishedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PageUnpublished && 
+            log.Action == AuditAction.ContentUnpublished && 
             log.EntityId == page.Id);
 
         Assert.NotNull(pageUnpublishedLog);
-        Assert.Equal(AuditAction.PageUnpublished, pageUnpublishedLog.Action);
+        Assert.Equal(AuditAction.ContentUnpublished, pageUnpublishedLog.Action);
         Assert.Equal(EntityType.Page, pageUnpublishedLog.EntityType);
         Assert.Equal(page.Id, pageUnpublishedLog.EntityId);
-        Assert.Contains("Unpublished page", pageUnpublishedLog.Description);
+        Assert.Contains("Unpublished", pageUnpublishedLog.Description);
         Assert.Equal(ActionResult.Success, pageUnpublishedLog.Result);
     }
 
-    [Fact(Skip = "Pending rewrite — Phase 3. See Docs/LIVE-DRAFT-REFACTORING-STATUS.md")]
+    [Fact]
     public async Task PageLifecycle_CreatesCompleteAuditTrail()
     {
         // Arrange
@@ -258,11 +258,11 @@ public class PageAuditIntegrationTests : IClassFixture<PageTestFixture>
         // Should have 5 audit entries for this page
         Assert.True(pageLogs.Count >= 5, $"Expected at least 5 audit logs, found {pageLogs.Count}");
         
-        Assert.Contains(pageLogs, log => log.Action == AuditAction.PageCreated);
-        Assert.Contains(pageLogs, log => log.Action == AuditAction.PageUpdated);
-        Assert.Contains(pageLogs, log => log.Action == AuditAction.PagePublished);
-        Assert.Contains(pageLogs, log => log.Action == AuditAction.PageUnpublished);
-        Assert.Contains(pageLogs, log => log.Action == AuditAction.PageDeleted);
+        Assert.Contains(pageLogs, log => log.Action == AuditAction.ContentCreated);
+        Assert.Contains(pageLogs, log => log.Action == AuditAction.ContentUpdated);
+        Assert.Contains(pageLogs, log => log.Action == AuditAction.ContentPublished);
+        Assert.Contains(pageLogs, log => log.Action == AuditAction.ContentUnpublished);
+        Assert.Contains(pageLogs, log => log.Action == AuditAction.ContentDeleted);
     }
 }
 
@@ -295,6 +295,8 @@ public class PageTestFixture : IDisposable
         var pageRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var versionServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var schedulingServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
         // Create options
         var storageOptions = Microsoft.Extensions.Options.Options.Create(
@@ -320,9 +322,20 @@ public class PageTestFixture : IDisposable
         // Create mock HttpContextAccessor with test user
         var httpContextAccessor = CreateMockHttpContextAccessor();
 
+        // Initialize version and scheduling services (version repos mocked — not under test here)
+        var versionService = new Viblog.Shared.Services.Content.ContentVersionService(
+            Mock.Of<IBlogPostVersionRepository>(),
+            Mock.Of<IPageVersionRepository>(),
+            versionServiceLoggerFactory.CreateLogger<Viblog.Shared.Services.Content.ContentVersionService>());
+
+        var schedulingService = new Viblog.Shared.Services.Content.ContentSchedulingService(
+            versionService,
+            schedulingServiceLoggerFactory.CreateLogger<Viblog.Shared.Services.Content.ContentSchedulingService>());
+
         // Initialize facade
         PagesAdminFacade = new PagesAdminFacade(
             PageRepository,
+            schedulingService,
             AuditLogService,
             httpContextAccessor);
     }

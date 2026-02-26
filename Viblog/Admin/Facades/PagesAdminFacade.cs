@@ -5,7 +5,9 @@ using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Services.Content;
 
 namespace Viblog.Admin.Facades;
 
@@ -15,15 +17,18 @@ namespace Viblog.Admin.Facades;
 public class PagesAdminFacade : IPagesAdminFacade
 {
     private readonly IPageRepository _pageRepository;
+    private readonly ContentSchedulingService? _schedulingService;
     private readonly IAuditLogService? _auditLogService;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public PagesAdminFacade(
         IPageRepository pageRepository,
+        ContentSchedulingService? schedulingService = null,
         IAuditLogService? auditLogService = null,
         IHttpContextAccessor? httpContextAccessor = null)
     {
         _pageRepository = pageRepository ?? throw new ArgumentNullException(nameof(pageRepository));
+        _schedulingService = schedulingService; // Optional
         _auditLogService = auditLogService; // Optional
         _httpContextAccessor = httpContextAccessor; // Optional
     }
@@ -41,8 +46,8 @@ public class PagesAdminFacade : IPagesAdminFacade
         // Build the predicate based on the filter
         Expression<Func<Page, bool>> predicate = publishedOnly switch
         {
-            true => p => p.IsPublished,
-            false => p => !p.IsPublished,
+            true => p => p.Live != null,
+            false => p => p.Live == null,
             null => p => true // All pages
         };
 
@@ -51,13 +56,13 @@ public class PagesAdminFacade : IPagesAdminFacade
         {
             PageSortField.CreatedAt => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.CreatedAt, ascending, false, cancellationToken),
-            
+
             PageSortField.UpdatedAt => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.UpdatedAt, ascending, false, cancellationToken),
-            
+
             PageSortField.IsPublished => await _pageRepository.FindAsync(
-                predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
-            
+                predicate, pagingParameters, p => p.Live != null, ascending, false, cancellationToken),
+
             PageSortField.Slug or _ => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.Slug, ascending, false, cancellationToken)
         };
@@ -95,7 +100,7 @@ public class PagesAdminFacade : IPagesAdminFacade
 
         // Log page creation
         await LogAuditAsync(
-            AuditAction.PageCreated,
+            AuditAction.ContentCreated,
             page.Id,
             page.Slug,
             $"Created page '{page.Slug}'",
@@ -117,7 +122,7 @@ public class PagesAdminFacade : IPagesAdminFacade
 
         // Log page update
         await LogAuditAsync(
-            AuditAction.PageUpdated,
+            AuditAction.ContentUpdated,
             page.Id,
             page.Slug,
             $"Updated page '{page.Slug}'",
@@ -164,7 +169,7 @@ public class PagesAdminFacade : IPagesAdminFacade
         if (page != null)
         {
             await LogAuditAsync(
-                AuditAction.PageDeleted,
+                AuditAction.ContentDeleted,
                 page.Id,
                 page.Slug,
                 $"Deleted page '{page.Slug}'",
@@ -173,31 +178,144 @@ public class PagesAdminFacade : IPagesAdminFacade
     }
 
     /// <inheritdoc/>
-    public virtual Task PublishPageNowAsync(
+    public virtual async Task PublishPageNowAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        // TODO: rewire to ContentSchedulingService in Phase 3
-        throw new NotImplementedException("Pending rewrite — Phase 3");
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Page '{id}' not found.");
+
+        var (userId, userName, _) = GetCurrentUser();
+
+        await _schedulingService.PublishNowAsync(page, userId, userName, cancellationToken: cancellationToken);
+
+        await _pageRepository.UpdateAsync(page, cancellationToken);
+        await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentPublished,
+            page.Id,
+            page.Slug,
+            $"Published Page '{page.Slug}'",
+            cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SchedulePagePublishingAsync(
+    public virtual async Task SchedulePagePublishingAsync(
         string id,
         DateTimeOffset publishDate,
         CancellationToken cancellationToken = default)
     {
-        // TODO: rewire to ContentSchedulingService in Phase 3
-        throw new NotImplementedException("Pending rewrite — Phase 3");
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Page '{id}' not found.");
+
+        var alreadyScheduled = page.Schedule.Status == ContentStatus.Scheduled;
+
+        _schedulingService.ScheduleForPublish(page, publishDate);
+
+        await _pageRepository.UpdateAsync(page, cancellationToken);
+        await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        var auditAction = alreadyScheduled ? AuditAction.ContentScheduleUpdated : AuditAction.ContentScheduled;
+        var description = alreadyScheduled
+            ? $"Updated schedule for Page '{page.Slug}' to {publishDate:u}"
+            : $"Scheduled Page '{page.Slug}' for {publishDate:u}";
+
+        await LogAuditAsync(auditAction, page.Id, page.Slug, description, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task UnpublishPageAsync(
+    public virtual async Task UnpublishPageAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        // TODO: rewire to ContentSchedulingService in Phase 3
-        throw new NotImplementedException("Pending rewrite — Phase 3");
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
+
+        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Page '{id}' not found.");
+
+        _schedulingService.Unpublish(page);
+
+        await _pageRepository.UpdateAsync(page, cancellationToken);
+        await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentUnpublished,
+            page.Id,
+            page.Slug,
+            $"Unpublished Page '{page.Slug}'",
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task CancelPageScheduleAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Page '{id}' not found.");
+
+        page.Schedule.Status = ContentStatus.Draft;
+        page.Schedule.ScheduledPublishDate = null;
+
+        await _pageRepository.UpdateAsync(page, cancellationToken);
+        await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentScheduleCancelled,
+            page.Id,
+            page.Slug,
+            $"Cancelled schedule for Page '{page.Slug}'",
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task AdoptPageAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        var page = await _pageRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Page '{id}' not found.");
+
+        var (userId, userName, _) = GetCurrentUser();
+
+        var previousAuthorName = page.AuthorName;
+        page.AuthorId = userId;
+        page.AuthorName = userName;
+
+        await _pageRepository.UpdateAsync(page, cancellationToken);
+        await _pageRepository.SaveChangesAsync(cancellationToken);
+
+        await LogAuditAsync(
+            AuditAction.ContentOwnershipTransferred,
+            page.Id,
+            page.Slug,
+            $"Ownership of Page '{page.Slug}' transferred from {previousAuthorName} to {userName}.",
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads the current user's identity from the HTTP context.
+    /// </summary>
+    private (string userId, string userName, string userEmail) GetCurrentUser()
+    {
+        var user = _httpContextAccessor?.HttpContext?.User;
+        return (
+            user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown",
+            user?.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User",
+            user?.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com"
+        );
     }
 
     /// <summary>
@@ -221,9 +339,7 @@ public class PagesAdminFacade : IPagesAdminFacade
             return;
         }
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
-        var userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
-        var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com";
+        var (userId, userName, userEmail) = GetCurrentUser();
 
         await _auditLogService.LogActionAsync(
             userId: userId,

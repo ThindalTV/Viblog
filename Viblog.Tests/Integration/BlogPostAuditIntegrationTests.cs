@@ -57,11 +57,11 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         // Get recent audit logs
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var postCreatedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostCreated && 
+            log.Action == AuditAction.ContentCreated && 
             log.EntityId == post.Id);
 
         Assert.NotNull(postCreatedLog);
-        Assert.Equal(AuditAction.PostCreated, postCreatedLog.Action);
+        Assert.Equal(AuditAction.ContentCreated, postCreatedLog.Action);
         Assert.Equal(EntityType.BlogPost, postCreatedLog.EntityType);
         Assert.Equal(post.Id, postCreatedLog.EntityId);
         Assert.Equal(post.Draft.Title, postCreatedLog.EntityName);
@@ -104,11 +104,11 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var postUpdatedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostUpdated && 
+            log.Action == AuditAction.ContentUpdated && 
             log.EntityId == post.Id);
 
         Assert.NotNull(postUpdatedLog);
-        Assert.Equal(AuditAction.PostUpdated, postUpdatedLog.Action);
+        Assert.Equal(AuditAction.ContentUpdated, postUpdatedLog.Action);
         Assert.Equal(EntityType.BlogPost, postUpdatedLog.EntityType);
         Assert.Equal(post.Id, postUpdatedLog.EntityId);
         Assert.Equal("Updated Title", postUpdatedLog.EntityName);
@@ -147,11 +147,11 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
 
         var auditLogs = await _auditLogService.GetRecentActivityAsync(100);
         var postDeletedLog = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostDeleted && 
+            log.Action == AuditAction.ContentDeleted && 
             log.EntityId == post.Id);
 
         Assert.NotNull(postDeletedLog);
-        Assert.Equal(AuditAction.PostDeleted, postDeletedLog.Action);
+        Assert.Equal(AuditAction.ContentDeleted, postDeletedLog.Action);
         Assert.Equal(EntityType.BlogPost, postDeletedLog.EntityType);
         Assert.Equal(post.Id, postDeletedLog.EntityId);
         Assert.Equal(post.Draft.Title, postDeletedLog.EntityName);
@@ -207,11 +207,11 @@ public class BlogPostAuditIntegrationTests : IClassFixture<BlogTestFixture>
         
         // Should have 2 creates and 1 update
         var post1Created = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostCreated && log.EntityId == post1.Id);
+            log.Action == AuditAction.ContentCreated && log.EntityId == post1.Id);
         var post2Created = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostCreated && log.EntityId == post2.Id);
+            log.Action == AuditAction.ContentCreated && log.EntityId == post2.Id);
         var post1Updated = auditLogs.FirstOrDefault(log => 
-            log.Action == AuditAction.PostUpdated && log.EntityId == post1.Id);
+            log.Action == AuditAction.ContentUpdated && log.EntityId == post1.Id);
 
         Assert.NotNull(post1Created);
         Assert.NotNull(post2Created);
@@ -248,6 +248,8 @@ public class BlogTestFixture : IDisposable
         var blogRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var versionServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        var schedulingServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
         // Create options
         var storageOptions = Microsoft.Extensions.Options.Options.Create(
@@ -273,9 +275,20 @@ public class BlogTestFixture : IDisposable
         // Create mock HttpContextAccessor with test user
         var httpContextAccessor = CreateMockHttpContextAccessor();
 
+        // Initialize version and scheduling services (version repos mocked — not under test here)
+        var versionService = new Viblog.Shared.Services.Content.ContentVersionService(
+            Mock.Of<IBlogPostVersionRepository>(),
+            Mock.Of<IPageVersionRepository>(),
+            versionServiceLoggerFactory.CreateLogger<Viblog.Shared.Services.Content.ContentVersionService>());
+
+        var schedulingService = new Viblog.Shared.Services.Content.ContentSchedulingService(
+            versionService,
+            schedulingServiceLoggerFactory.CreateLogger<Viblog.Shared.Services.Content.ContentSchedulingService>());
+
         // Initialize facade
         PostsAdminFacade = new PostsAdminFacade(
             BlogPostRepository,
+            schedulingService,
             AuditLogService,
             httpContextAccessor);
     }

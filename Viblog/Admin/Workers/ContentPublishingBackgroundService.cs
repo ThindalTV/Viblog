@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Auditing;
+using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Services.Content;
 
@@ -16,6 +18,7 @@ public class ContentPublishingBackgroundService : BackgroundService
     private readonly IBlogPostRepository _blogPostRepository;
     private readonly IPageRepository _pageRepository;
     private readonly ContentSchedulingService _schedulingService;
+    private readonly IAuditLogService? _auditLogService;
     private readonly ILogger<ContentPublishingBackgroundService> _logger;
     private readonly ContentPublishingOptions _options;
 
@@ -24,11 +27,13 @@ public class ContentPublishingBackgroundService : BackgroundService
         IPageRepository pageRepository,
         ContentSchedulingService schedulingService,
         ILogger<ContentPublishingBackgroundService> logger,
-        IOptions<ContentPublishingOptions> options)
+        IOptions<ContentPublishingOptions> options,
+        IAuditLogService? auditLogService = null)
     {
         _blogPostRepository = blogPostRepository;
         _pageRepository = pageRepository;
         _schedulingService = schedulingService;
+        _auditLogService = auditLogService;
         _logger = logger;
         _options = options.Value;
     }
@@ -74,16 +79,92 @@ public class ContentPublishingBackgroundService : BackgroundService
 
     private async Task<int> ProcessScheduledBlogPostsAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        // TODO: rewire to IBlogPostRepository.GetScheduledPostsReadyToPublishAsync in Phase 3
-        await Task.CompletedTask;
-        return 0;
+        var readyToPublish = await _blogPostRepository.GetScheduledPostsReadyToPublishAsync(cancellationToken);
+        var publishedCount = 0;
+
+        foreach (var post in readyToPublish)
+        {
+            try
+            {
+                var published = await _schedulingService.PromoteIfReadyAsync(post, "system", "System", cancellationToken);
+                if (!published)
+                {
+                    continue;
+                }
+
+                await _blogPostRepository.UpdateAsync(post, cancellationToken);
+                await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+                if (_auditLogService != null)
+                {
+                    await _auditLogService.LogActionAsync(
+                        userId: "system",
+                        userName: "System",
+                        userEmail: "system@viblog.internal",
+                        action: AuditAction.ContentPublished,
+                        entityType: EntityType.BlogPost,
+                        entityId: post.Id,
+                        entityName: post.Draft.Title,
+                        description: $"Scheduled publish: BlogPost '{post.Draft.Title}'",
+                        result: ActionResult.Success,
+                        cancellationToken: cancellationToken);
+                }
+
+                publishedCount++;
+                _logger.LogInformation("Auto-published BlogPost {PostId} ({Title})", post.Id, post.Draft.Title);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to auto-publish BlogPost {PostId}", post.Id);
+            }
+        }
+
+        return publishedCount;
     }
 
     private async Task<int> ProcessScheduledPagesAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        // TODO: rewire to IPageRepository.GetScheduledPagesReadyToPublishAsync in Phase 3
-        await Task.CompletedTask;
-        return 0;
+        var readyToPublish = await _pageRepository.GetScheduledPagesReadyToPublishAsync(cancellationToken);
+        var publishedCount = 0;
+
+        foreach (var page in readyToPublish)
+        {
+            try
+            {
+                var published = await _schedulingService.PromoteIfReadyAsync(page, "system", "System", cancellationToken);
+                if (!published)
+                {
+                    continue;
+                }
+
+                await _pageRepository.UpdateAsync(page, cancellationToken);
+                await _pageRepository.SaveChangesAsync(cancellationToken);
+
+                if (_auditLogService != null)
+                {
+                    await _auditLogService.LogActionAsync(
+                        userId: "system",
+                        userName: "System",
+                        userEmail: "system@viblog.internal",
+                        action: AuditAction.ContentPublished,
+                        entityType: EntityType.Page,
+                        entityId: page.Id,
+                        entityName: page.Slug,
+                        description: $"Scheduled publish: Page '{page.Slug}'",
+                        result: ActionResult.Success,
+                        cancellationToken: cancellationToken);
+                }
+
+                publishedCount++;
+                _logger.LogInformation("Auto-published Page {PageId} ({Slug})", page.Id, page.Slug);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to auto-publish Page {PageId}", page.Id);
+            }
+        }
+
+        return publishedCount;
     }
 }
 

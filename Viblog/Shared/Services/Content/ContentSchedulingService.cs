@@ -26,7 +26,7 @@ public class ContentSchedulingService
     /// Publishes content immediately by promoting Draft to Live.
     /// Works for both new content and updates to published content.
     /// </summary>
-    public virtual async Task PublishNowAsync(ISchedulableContent content, string publishedBy, string? changeNote = null, CancellationToken cancellationToken = default)
+    public virtual async Task PublishNowAsync(ISchedulableContent content, string publishedBy, string? publishedByName = null, string? changeNote = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Publishing content {ContentId} by {User}", content.Id, publishedBy);
 
@@ -34,7 +34,7 @@ public class ContentSchedulingService
         SetFirstPublishedDateIfNeeded(content);
 
         // Promote Draft to Live (creates version snapshot internally)
-        await _versionService.PromoteDraftToLiveAsync(content, publishedBy, changeNote, cancellationToken);
+        await _versionService.PromoteDraftToLiveAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
 
         // Update scheduling metadata
         content.Schedule.Status = ContentStatus.Draft;  // Back to default
@@ -114,14 +114,14 @@ public class ContentSchedulingService
     /// Publishes content if it's ready (scheduled date has passed).
     /// Returns true if content was published.
     /// </summary>
-    public virtual async Task<bool> PromoteIfReadyAsync(ISchedulableContent content, string publishedBy, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> PromoteIfReadyAsync(ISchedulableContent content, string publishedBy, string? publishedByName = null, CancellationToken cancellationToken = default)
     {
         if (!IsReadyToPublish(content))
         {
             return false;
         }
 
-        await PublishNowAsync(content, publishedBy, "Scheduled publish", cancellationToken);
+        await PublishNowAsync(content, publishedBy, publishedByName, changeNote: "Scheduled publish", cancellationToken: cancellationToken);
         return true;
     }
 

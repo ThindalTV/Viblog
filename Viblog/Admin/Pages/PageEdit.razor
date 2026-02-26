@@ -8,6 +8,7 @@
 @using Viblog.Admin.Models
 @using Viblog.Admin.Services
 @using Viblog.Infrastructure.Admin.Facades
+@using Viblog.Infrastructure.Shared.Data.Entities
 @using Viblog.Shared.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -184,7 +185,7 @@ else
             <FormSection Title="Currently Published Version (Read-Only)">
                 <div class="published-info">
                     <p class="info-note">This is what visitors currently see. Your draft changes above will replace this when published.</p>
-                    
+
                     <div class="live-preview">
                         <h3>@_model.Live.Title</h3>
                         @if (!string.IsNullOrWhiteSpace(_model.Live.Content))
@@ -195,6 +196,13 @@ else
                         }
                     </div>
                 </div>
+            </FormSection>
+        }
+
+        @if (_isEditMode && !string.IsNullOrWhiteSpace(Id))
+        {
+            <FormSection Title="Activity History">
+                <AuditLogPanel EntityType="EntityType.Page" EntityId="@Id" PageSize="20" />
             </FormSection>
         }
     </EditForm>

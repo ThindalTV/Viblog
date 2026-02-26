@@ -81,56 +81,50 @@ public class AuditLog : BaseEntity
 /// </summary>
 public enum AuditAction
 {
-    // Authentication
-    Login,
-    Logout,
-    LoginFailed,
-    PasswordChanged,
-    PasswordReset,
+    // Authentication (0–9)
+    Login = 0,
+    Logout = 1,
+    LoginFailed = 2,
+    PasswordChanged = 3,
+    PasswordReset = 4,
 
-    // User Management
-    UserCreated,
-    UserUpdated,
-    UserDeleted,
-    UserDeactivated,
-    UserActivated,
-    UserClaimsModified,
+    // User Management (10–19)
+    UserCreated = 10,
+    UserUpdated = 11,
+    UserDeleted = 12,
+    UserDeactivated = 13,
+    UserActivated = 14,
+    UserClaimsModified = 15,
 
-    // Blog Posts
-    PostCreated,
-    PostUpdated,
-    PostDeleted,
-    PostPublished,
-    PostUnpublished,
-    PostScheduled,
-    PostScheduleUpdated,
-    PostScheduleCancelled,
+    // Content — BlogPost, Page (EntityType distinguishes which) (20–29)
+    ContentCreated = 20,
+    ContentUpdated = 21,
+    ContentDeleted = 22,
+    ContentPublished = 23,
+    ContentUnpublished = 24,
+    ContentScheduled = 25,
+    ContentScheduleUpdated = 26,
+    ContentScheduleCancelled = 27,
+    ContentOwnershipTransferred = 28,
 
-    // Pages
-    PageCreated,
-    PageUpdated,
-    PageDeleted,
-    PagePublished,
-    PageUnpublished,
+    // Media (30–39)
+    MediaUploaded = 30,
+    MediaDeleted = 31,
+    MediaRenamed = 32,
 
-    // Media
-    MediaUploaded,
-    MediaDeleted,
-    MediaRenamed,
+    // Categories/Tags (40–49)
+    CategoryCreated = 40,
+    CategoryUpdated = 41,
+    CategoryDeleted = 42,
+    TagCreated = 43,
+    TagUpdated = 44,
+    TagDeleted = 45,
 
-    // Categories/Tags
-    CategoryCreated,
-    CategoryUpdated,
-    CategoryDeleted,
-    TagCreated,
-    TagUpdated,
-    TagDeleted,
-
-    // System
-    SystemConfigurationChanged,
-    BackupCreated,
-    DataImported,
-    DataExported
+    // System (50–59)
+    SystemConfigurationChanged = 50,
+    BackupCreated = 51,
+    DataImported = 52,
+    DataExported = 53
 }
 
 /// <summary>
