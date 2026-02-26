@@ -6,7 +6,6 @@ namespace Viblog.Tests.Facades;
 
 /// <summary>
 /// Unit tests for UserProfileFacade
-/// NOTE: Password change tests marked as Skip - will be updated for Auth0 in Step 15
 /// </summary>
 public class UserProfileFacadeTests
 {
@@ -118,11 +117,62 @@ public class UserProfileFacadeTests
         Assert.Contains(validationResult.Errors, e => e.Contains("not found"));
     }
 
-    [Fact(Skip = "Password change removed - will be replaced with Auth0 in Step 14")]
-    public async Task ChangePasswordAsync_WillBeReplacedWithAuth0()
+    [Fact]
+    public async Task ChangePasswordAsync_DelegatesToResetPasswordAsync()
     {
-        // This test will be rewritten when Auth0 password reset is implemented
-        await Task.CompletedTask;
+        // Arrange
+        var userId = "user-1";
+        var expectedResult = UserValidationResult.Valid();
+
+        _mockUserManagementService
+            .Setup(s => s.ResetPasswordAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _facade.ChangePasswordAsync(userId, "current-password", "new-password");
+
+        // Assert
+        Assert.True(result.IsValid);
+        _mockUserManagementService.Verify(
+            s => s.ResetPasswordAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ChangePasswordAsync_WhenResetFails_ReturnsInvalidResult()
+    {
+        // Arrange
+        var userId = "user-1";
+        var expectedResult = UserValidationResult.Invalid("Auth0 error");
+
+        _mockUserManagementService
+            .Setup(s => s.ResetPasswordAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _facade.ChangePasswordAsync(userId, "current-password", "new-password");
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("Auth0 error"));
+    }
+
+    [Fact]
+    public async Task ChangePasswordAsync_WithNullUserId_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _facade.ChangePasswordAsync(null!, "current", "new"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ChangePasswordAsync_WithInvalidUserId_ThrowsArgumentException(string invalidId)
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () => await _facade.ChangePasswordAsync(invalidId, "current", "new"));
     }
 }
 

@@ -6,7 +6,6 @@ namespace Viblog.Admin.Facades;
 
 /// <summary>
 /// Facade implementation for user profile self-service operations
-/// TODO: Password change will be handled by Auth0 in Step 14
 /// </summary>
 public class UserProfileFacade : IUserProfileFacade
 {
@@ -61,12 +60,8 @@ public class UserProfileFacade : IUserProfileFacade
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(currentPassword);
-        ArgumentException.ThrowIfNullOrWhiteSpace(newPassword);
 
-        // TODO: This will be replaced with Auth0 password reset in Step 14
-        // For now, stub it to return validation error
-        await Task.CompletedTask;
-        return UserValidationResult.Invalid("Password change functionality temporarily disabled during Auth0 migration.");
+        // Auth0 handles password verification; trigger a password reset ticket for the user
+        return await _userManagementService.ResetPasswordAsync(userId, newPassword, cancellationToken);
     }
 }
