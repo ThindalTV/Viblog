@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Viblog.Infrastructure.Shared.Data.Entities;
+﻿using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Data.CosmosDb.Data.Entities;
 

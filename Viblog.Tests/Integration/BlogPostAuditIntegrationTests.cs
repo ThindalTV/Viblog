@@ -3,12 +3,8 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services.Auditing;
-using Viblog.Data.Filesystem.Data.Repositories;
 using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 
 namespace Viblog.Tests.Integration;
 
@@ -251,21 +247,8 @@ public class BlogTestFixture : IDisposable
         var versionServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var schedulingServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-        // Create options
-        var storageOptions = Microsoft.Extensions.Options.Options.Create(
-            new Viblog.Data.Filesystem.Configuration.FilesystemStorageOptions
-            {
-                RootPath = _testDataPath
-            });
-
-        // Initialize repositories
-        BlogPostRepository = new FileSystemBlogPostRepository(
-            storageOptions,
-            blogRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<BlogPost>>());
-
-        var auditLogRepository = new FileSystemAuditLogRepository(
-            storageOptions,
-            auditRepoLoggerFactory.CreateLogger<Viblog.Data.Filesystem.Data.Repositories.FilesystemRepository<AuditLog>>());
+        var auditLogRepository = Mock.Of<IAuditLogRepository>();
+         // Initialize blog post repository with file-based implementation
 
         // Initialize audit service
         AuditLogService = new AuditLogService(

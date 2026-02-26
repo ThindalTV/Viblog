@@ -4,6 +4,7 @@ using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -180,7 +181,7 @@ public class TagPostsFacadeTests
         var result = await _facade.GetPostsByTagAsync(tag, pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished()));
+        Assert.All(result.Items, post => Assert.NotNull(post.Live));
     }
 
     [Theory]

@@ -24,4 +24,10 @@ public interface ISchedulableContent
     /// Soft delete flag.
     /// </summary>
     bool IsDeleted { get; set; }
+
+    /// <summary>
+    /// Stored flag indicating Live content exists. Set by <see cref="Viblog.Infrastructure.Shared.Extensions.SchedulableContentExtensions.SetLiveContent"/>.
+    /// Used directly in EF Core queries — do not compute from <c>Live != null</c>.
+    /// </summary>
+    bool IsPublished { get; set; }
 }

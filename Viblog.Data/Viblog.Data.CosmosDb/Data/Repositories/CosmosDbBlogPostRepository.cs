@@ -56,7 +56,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
         var query = _dbSet
-            .Where(p => !p.IsDeleted && p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            .Where(p => !p.IsDeleted && p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
 
         return await ApplyPagingAndSortingAsync(
             query,
@@ -81,7 +81,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -107,7 +107,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -131,7 +131,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -155,7 +155,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await query.FirstOrDefaultAsync(cancellationToken);

@@ -5,6 +5,9 @@
 @using Viblog.Infrastructure.Admin.Facades
 @using Viblog.Infrastructure.Shared.Data.Common
 @using Microsoft.AspNetCore.Authorization
+@using Viblog.Shared.Extensions
+@using Viblog.Infrastructure.Shared.Extensions
+
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 @inject IPagesAdminFacade PagesAdminFacade
 @inject NavigationManager NavigationManager
@@ -167,7 +170,7 @@
                 nameof(PageEntity.Slug) => PageSortField.Slug,
                 nameof(PageEntity.CreatedAt) => PageSortField.CreatedAt,
                 nameof(PageEntity.UpdatedAt) => PageSortField.UpdatedAt,
-                nameof(PageEntity.IsPublished) => PageSortField.IsPublished,
+                "IsPublished" => PageSortField.IsPublished, // Since IsPublished is a method, we can't use nameof
                 _ => PageSortField.Slug
             };
             sortAscending = sortDescriptor.SortDirection == Telerik.DataSource.ListSortDirection.Ascending;

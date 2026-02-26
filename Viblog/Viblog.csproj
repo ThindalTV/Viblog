@@ -10,9 +10,13 @@
 
   <ItemGroup>
     <Compile Remove="Admin\Infrastructure\**" />
+    <Compile Remove="Shared\Infrastructure\**" />
     <Content Remove="Admin\Infrastructure\**" />
+    <Content Remove="Shared\Infrastructure\**" />
     <EmbeddedResource Remove="Admin\Infrastructure\**" />
+    <EmbeddedResource Remove="Shared\Infrastructure\**" />
     <None Remove="Admin\Infrastructure\**" />
+    <None Remove="Shared\Infrastructure\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,7 +39,6 @@
     <ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Viblog.Data\Viblog.Data.AzureStorage\Viblog.Data.AzureStorage.csproj" />
     <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
-    <ProjectReference Include="..\Viblog.Data\Viblog.Data.Filesystem\Viblog.Data.Filesystem.csproj" />
     <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
   </ItemGroup>
 
@@ -44,7 +47,6 @@
     <Folder Include="Admin\Authentication\" />
     <Folder Include="Admin\Pages\Media\" />
     <Folder Include="Services\" />
-    <Folder Include="Shared\Infrastructure\" />
   </ItemGroup>
 
 </Project>

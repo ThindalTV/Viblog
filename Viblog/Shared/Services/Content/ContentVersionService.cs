@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Extensions;
 using Viblog.Shared.Extensions;
 
 namespace Viblog.Shared.Services.Content;
@@ -307,7 +307,7 @@ public class ContentVersionService
     /// </summary>
     public virtual bool IsPublished(ISchedulableContent content)
     {
-        return content.IsPublished();
+        return content.IsPublished;
     }
 
     /// <summary>

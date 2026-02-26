@@ -4,6 +4,7 @@ using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -153,7 +154,7 @@ public class FrontPageFacadeTests
 
         // Assert
         Assert.Equal(3, resultList.Count);
-        Assert.All(resultList, post => Assert.True(post.IsPublished()));
+        Assert.All(resultList, post => Assert.NotNull(post.Live));
     }
 
     [Fact]

@@ -1,6 +1,9 @@
 @page "/admin/posts"
 @using Viblog.Admin.Components
 @using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using Viblog.Admin.Extensions;
+@using Viblog.Infrastructure.Shared.Extensions
+
 @attribute [Authorize(Policy = RequirePostWrite)]
 @layout AdminLayout
 @inject IServiceProvider ServiceProvider
@@ -149,7 +152,7 @@
                 nameof(BlogPost.Slug) => PostSortField.Slug,
                 nameof(BlogPost.PublishedAt) => PostSortField.PublishedAt,
                 nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,
-                nameof(BlogPost.IsPublished) => PostSortField.IsPublished,
+                "IsPublished" => PostSortField.IsPublished, // Since IsPublished is a method, we can't use nameof
                 nameof(BlogPost.CreatedAt) => PostSortField.CreatedAt,
                 _ => PostSortField.CreatedAt
             };

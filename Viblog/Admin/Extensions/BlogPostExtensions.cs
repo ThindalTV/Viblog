@@ -47,7 +47,7 @@ public static class BlogPostExtensions
     /// <param name="model">The blog post view model</param>
     /// <returns>Blog post entity</returns>
     extension(BlogPostModel model)
-    {
+    { 
         public BlogPost ToEntity()
         {
             ArgumentNullException.ThrowIfNull(model);

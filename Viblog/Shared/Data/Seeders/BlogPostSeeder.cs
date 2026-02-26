@@ -221,6 +221,7 @@ public class BlogPostSeeder
 
         var post = new BlogPost
         {
+            IsPublished = true,
             Id = Guid.NewGuid().ToString(),
             Slug = slug,
             AuthorId = "system",

@@ -46,8 +46,8 @@ public class PagesAdminFacade : IPagesAdminFacade
         // Build the predicate based on the filter
         Expression<Func<Page, bool>> predicate = publishedOnly switch
         {
-            true => p => p.Live != null,
-            false => p => p.Live == null,
+            true => p => p.IsPublished,
+            false => p => true, // Not restricting to published only — include all
             null => p => true // All pages
         };
 
@@ -61,7 +61,7 @@ public class PagesAdminFacade : IPagesAdminFacade
                 predicate, pagingParameters, p => p.UpdatedAt, ascending, false, cancellationToken),
 
             PageSortField.IsPublished => await _pageRepository.FindAsync(
-                predicate, pagingParameters, p => p.Live != null, ascending, false, cancellationToken),
+                predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
 
             PageSortField.Slug or _ => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.Slug, ascending, false, cancellationToken)

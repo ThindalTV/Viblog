@@ -78,6 +78,7 @@ public class ApplicationDbContext : DbContext
             b.Property(p => p.CategoryIds);
             b.Property(p => p.CategoryNames);
             b.Property(p => p.MediaUrls);
+            b.Property(p => p.IsPublished);
         });
 
         builder.Entity<Page>(b =>
@@ -113,6 +114,8 @@ public class ApplicationDbContext : DbContext
                 live.Property(d => d.MetaKeywords);
                 live.Property(d => d.ContentHash);
             });
+
+            b.Property(p => p.IsPublished);
         });
 
         builder.Entity<BlogPostVersion>(b =>

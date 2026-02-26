@@ -45,8 +45,8 @@ public class PostsAdminFacade : IPostsAdminFacade
         // Build the predicate based on the filter
         Expression<Func<BlogPost, bool>> predicate = publishedOnly switch
         {
-            true => p => p.Live != null,
-            false => p => p.Live == null,
+            true => p => p.IsPublished,
+            false => p => true, // Not restricting to published only — include all
             null => p => true // All posts
         };
 
@@ -66,7 +66,7 @@ public class PostsAdminFacade : IPostsAdminFacade
                 predicate, pagingParameters, p => p.IsFeatured, ascending, false, cancellationToken),
 
             PostSortField.IsPublished => await _blogPostRepository.FindAsync(
-                predicate, pagingParameters, p => p.Live != null, ascending, false, cancellationToken),
+                predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
 
             PostSortField.CreatedAt or _ => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.CreatedAt, ascending, false, cancellationToken)

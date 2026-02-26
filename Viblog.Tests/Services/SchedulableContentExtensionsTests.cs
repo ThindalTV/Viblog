@@ -1,5 +1,7 @@
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Extensions;
+using Viblog.Admin.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Services;
 
@@ -15,15 +17,16 @@ public class SchedulableContentExtensionsTests
     {
         var post = new BlogPost { Live = null };
 
-        Assert.False(post.IsPublished());
+        Assert.False(post.IsPublished);
     }
 
     [Fact]
     public void IsPublished_BlogPost_WhenLiveIsSet_ReturnsTrue()
     {
-        var post = new BlogPost { Live = new BlogPostContent { Title = "Live" } };
+        var post = new BlogPost();
+        post.SetLiveContent(new BlogPostContent { Title = "Live" });
 
-        Assert.True(post.IsPublished());
+        Assert.True(post.IsPublished);
     }
 
     [Fact]
@@ -31,15 +34,16 @@ public class SchedulableContentExtensionsTests
     {
         var page = new Page { Live = null };
 
-        Assert.False(page.IsPublished());
+        Assert.False(page.IsPublished);
     }
 
     [Fact]
     public void IsPublished_Page_WhenLiveIsSet_ReturnsTrue()
     {
-        var page = new Page { Live = new PageContent { Title = "Live" } };
+        var page = new Page();
+        page.SetLiveContent(new PageContent { Title = "Live" });
 
-        Assert.True(page.IsPublished());
+        Assert.True(page.IsPublished);
     }
 
     #endregion

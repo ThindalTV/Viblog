@@ -15,25 +15,16 @@ namespace Viblog.Admin.Workers;
 /// </summary>
 public class ContentPublishingBackgroundService : BackgroundService
 {
-    private readonly IBlogPostRepository _blogPostRepository;
-    private readonly IPageRepository _pageRepository;
-    private readonly ContentSchedulingService _schedulingService;
-    private readonly IAuditLogService? _auditLogService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ContentPublishingBackgroundService> _logger;
     private readonly ContentPublishingOptions _options;
 
     public ContentPublishingBackgroundService(
-        IBlogPostRepository blogPostRepository,
-        IPageRepository pageRepository,
-        ContentSchedulingService schedulingService,
+        IServiceScopeFactory scopeFactory,
         ILogger<ContentPublishingBackgroundService> logger,
-        IOptions<ContentPublishingOptions> options,
-        IAuditLogService? auditLogService = null)
+        IOptions<ContentPublishingOptions> options)
     {
-        _blogPostRepository = blogPostRepository;
-        _pageRepository = pageRepository;
-        _schedulingService = schedulingService;
-        _auditLogService = auditLogService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _options = options.Value;
     }
@@ -62,14 +53,20 @@ public class ContentPublishingBackgroundService : BackgroundService
 
     private async Task ProcessScheduledContentAsync(CancellationToken cancellationToken)
     {
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var blogPostRepository = scope.ServiceProvider.GetRequiredService<IBlogPostRepository>();
+        var pageRepository = scope.ServiceProvider.GetRequiredService<IPageRepository>();
+        var schedulingService = scope.ServiceProvider.GetRequiredService<ContentSchedulingService>();
+        var auditLogService = scope.ServiceProvider.GetService<IAuditLogService>();
+
         var now = DateTimeOffset.UtcNow;
         var publishedCount = 0;
 
         // Process scheduled BlogPosts
-        publishedCount += await ProcessScheduledBlogPostsAsync(now, cancellationToken);
+        publishedCount += await ProcessScheduledBlogPostsAsync(blogPostRepository, schedulingService, auditLogService, now, cancellationToken);
 
         // Process scheduled Pages
-        publishedCount += await ProcessScheduledPagesAsync(now, cancellationToken);
+        publishedCount += await ProcessScheduledPagesAsync(pageRepository, schedulingService, auditLogService, now, cancellationToken);
 
         if (publishedCount > 0)
         {
@@ -77,27 +74,32 @@ public class ContentPublishingBackgroundService : BackgroundService
         }
     }
 
-    private async Task<int> ProcessScheduledBlogPostsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<int> ProcessScheduledBlogPostsAsync(
+        IBlogPostRepository blogPostRepository,
+        ContentSchedulingService schedulingService,
+        IAuditLogService? auditLogService,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
     {
-        var readyToPublish = await _blogPostRepository.GetScheduledPostsReadyToPublishAsync(cancellationToken);
+        var readyToPublish = await blogPostRepository.GetScheduledPostsReadyToPublishAsync(cancellationToken);
         var publishedCount = 0;
 
         foreach (var post in readyToPublish)
         {
             try
             {
-                var published = await _schedulingService.PromoteIfReadyAsync(post, "system", "System", cancellationToken);
+                var published = await schedulingService.PromoteIfReadyAsync(post, "system", "System", cancellationToken);
                 if (!published)
                 {
                     continue;
                 }
 
-                await _blogPostRepository.UpdateAsync(post, cancellationToken);
-                await _blogPostRepository.SaveChangesAsync(cancellationToken);
+                await blogPostRepository.UpdateAsync(post, cancellationToken);
+                await blogPostRepository.SaveChangesAsync(cancellationToken);
 
-                if (_auditLogService != null)
+                if (auditLogService != null)
                 {
-                    await _auditLogService.LogActionAsync(
+                    await auditLogService.LogActionAsync(
                         userId: "system",
                         userName: "System",
                         userEmail: "system@viblog.internal",
@@ -122,27 +124,29 @@ public class ContentPublishingBackgroundService : BackgroundService
         return publishedCount;
     }
 
-    private async Task<int> ProcessScheduledPagesAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<int> ProcessScheduledPagesAsync(IPageRepository pageRepository, ContentSchedulingService schedulingService, IAuditLogService auditLogService, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var readyToPublish = await _pageRepository.GetScheduledPagesReadyToPublishAsync(cancellationToken);
+        await using var scope = _scopeFactory.CreateAsyncScope();
+
+        var readyToPublish = await pageRepository.GetScheduledPagesReadyToPublishAsync(cancellationToken);
         var publishedCount = 0;
 
         foreach (var page in readyToPublish)
         {
             try
             {
-                var published = await _schedulingService.PromoteIfReadyAsync(page, "system", "System", cancellationToken);
+                var published = await schedulingService.PromoteIfReadyAsync(page, "system", "System", cancellationToken);
                 if (!published)
                 {
                     continue;
                 }
 
-                await _pageRepository.UpdateAsync(page, cancellationToken);
-                await _pageRepository.SaveChangesAsync(cancellationToken);
+                await pageRepository.UpdateAsync(page, cancellationToken);
+                await pageRepository.SaveChangesAsync(cancellationToken);
 
-                if (_auditLogService != null)
+                if (auditLogService != null)
                 {
-                    await _auditLogService.LogActionAsync(
+                    await auditLogService.LogActionAsync(
                         userId: "system",
                         userName: "System",
                         userEmail: "system@viblog.internal",

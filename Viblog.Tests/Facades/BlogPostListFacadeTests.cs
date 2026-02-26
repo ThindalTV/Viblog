@@ -4,6 +4,7 @@ using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -175,7 +176,7 @@ public class BlogPostListFacadeTests
         var result = await _facade.GetPaginatedPostsAsync(pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished()));
+        Assert.All(result.Items, post => Assert.NotNull(post.Live));
     }
 
     private static BlogPost CreateTestPost(string title, int id, bool isPublished = true)

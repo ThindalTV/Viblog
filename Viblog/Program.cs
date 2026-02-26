@@ -1,17 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Viblog.Components;
-using Viblog.Data.Filesystem;
 using Viblog.Frontend;
 using Viblog.Api;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
-using Viblog.Shared.Extensions;
-using Microsoft.Extensions.Options;
 using Viblog.Data.CosmosDb;
 using Viblog.Data.AzureStorage;
 using Viblog.Data.CosmosDb.Data;
-using Viblog.Infrastructure.Shared.Data.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 

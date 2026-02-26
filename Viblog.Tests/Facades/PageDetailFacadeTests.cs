@@ -1,7 +1,5 @@
 using Viblog.Frontend.Facades;
-using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
@@ -37,7 +35,7 @@ public class PageDetailFacadeTests
         Assert.NotNull(result);
         Assert.Equal(slug, result.Slug);
         Assert.Equal(expectedPage.Live.Title, result.Live.Title);
-        Assert.True(result.IsPublished());
+        Assert.True(result.IsPublished);
     }
 
     [Fact]

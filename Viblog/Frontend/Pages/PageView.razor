@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.WebUtilities
 @using Viblog.Shared.Extensions
+@using Viblog.Infrastructure.Shared.Extensions
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 
 @inject IPageDetailFacade PageDetailFacade
@@ -51,7 +52,7 @@ else
                    class="preview-toggle @(_showDraft ? "active" : "")">
                     📝 Draft
                 </a>
-                @if (!_page.IsPublished())
+                @if (!_page.IsPublished)
                 {
                     <span class="preview-status status-unpublished">Unpublished</span>
                 }

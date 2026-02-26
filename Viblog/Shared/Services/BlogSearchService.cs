@@ -1,7 +1,9 @@
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Extensions;
 using Viblog.Infrastructure.Shared.Services;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Shared.Services;
 
@@ -155,7 +157,7 @@ public class BlogSearchService : IBlogSearchService
         // Find posts with matching tags or categories
         var relatedPosts = await _repository.FindAsync(
             p => p.Id != postId &&
-                 p.IsPublished &&
+                 p.Live != null &&
                  p.PublishedAt <= DateTimeOffset.UtcNow &&
                  (p.Tags.Any(t => sourcePost.Tags.Contains(t)) ||
                   p.CategoryIds.Any(c => sourcePost.CategoryIds.Contains(c))),

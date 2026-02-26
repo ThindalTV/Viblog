@@ -9,6 +9,8 @@ namespace Viblog.Admin.Extensions;
 /// </summary>
 public static class PageExtensions
 {
+
+
     /// <summary>
     /// Convert Page entity to PageModel
     /// </summary>
@@ -25,7 +27,7 @@ public static class PageExtensions
                 Id = page.Id,
                 PartitionKey = page.GroupKey,
                 Slug = page.Slug,
-                IsPublished = page.IsPublished,       // Computed: Live != null
+                IsPublished = page.IsPublished,
                 PublishDate = page.Schedule.ScheduledPublishDate,
 
                 // Draft version

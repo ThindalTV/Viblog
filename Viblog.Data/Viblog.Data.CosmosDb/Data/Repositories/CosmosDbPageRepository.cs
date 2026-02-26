@@ -61,7 +61,7 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished);
+            query = query.Where(p => p.Live != null);
         }
 
         var page = await query.FirstOrDefaultAsync(cancellationToken);
@@ -96,7 +96,7 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.IsPublished);
+            query = query.Where(p => p.Live != null);
         }
 
         return await ApplyPagingAndSortingAsync(

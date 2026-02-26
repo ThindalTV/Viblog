@@ -18,12 +18,9 @@ public class Page : BaseEntity, ISchedulableContent
     public PageContent Draft { get; set; } = new();
     public PageContent? Live { get; set; }
 
-    // Computed state properties (not stored - derived from Live/Schedule)
-    /// <summary>True when Live content exists and is visible to the public.</summary>
-    public bool IsPublished => Live != null;
 
-    /// <summary>True when published Live content exists but Draft has a scheduled update pending.</summary>
-    public bool HasPendingUpdate => IsPublished && Schedule.Status == ContentStatus.Scheduled;
+    // Stored publish state — set via SetLiveContent, used directly in EF queries
+    public bool IsPublished { get; set; }
 
     // Page-specific metadata
     public string AuthorId { get; set; } = string.Empty;

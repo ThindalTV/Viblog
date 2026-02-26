@@ -5,6 +5,7 @@ using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Extensions;
 using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
@@ -92,18 +93,22 @@ public class PagesAdminFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.Items);
-        Assert.True(result.Items.First().IsPublished());
+        Assert.NotNull(result.Items.First().Live);
     }
 
     [Fact]
-    public async Task GetPagesAsync_WithPublishedOnlyFalse_ReturnsDraftPages()
+    public async Task GetPagesAsync_WithPublishedOnlyFalse_ReturnsAllPages()
     {
         // Arrange
         var pagingParams = new PagingParameters(1, 10);
         var expectedPages = new PagedResult<Page>
         {
-            Items = new List<Page> { CreateTestPage("draft-page", isPublished: false) },
-            TotalCount = 1,
+            Items = new List<Page>
+            {
+                CreateTestPage("published-page", isPublished: true),
+                CreateTestPage("draft-page", isPublished: false)
+            },
+            TotalCount = 2,
             PageNumber = 1,
             PageSize = 10
         };
@@ -122,8 +127,9 @@ public class PagesAdminFacadeTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result.Items);
-        Assert.False(result.Items.First().IsPublished());
+        Assert.Equal(2, result.Items.Count());
+        Assert.Contains(result.Items, p => p.IsPublished);
+        Assert.Contains(result.Items, p => !p.IsPublished);
     }
 
     [Theory]
@@ -395,6 +401,7 @@ public class PagesAdminFacadeTests
             Id = Guid.NewGuid().ToString(),
             GroupKey = "pages",
             Slug = slug,
+            IsPublished = isPublished,
             Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",
