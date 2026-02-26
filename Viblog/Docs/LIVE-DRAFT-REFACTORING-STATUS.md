@@ -2,7 +2,7 @@
 
 **Date:** July 2025
 **Branch:** `stream/060208`
-**Build Status:** ✅ Green — 532 passed, 0 failed, 10 skipped (9 Phase 3 stubs + 1 pre-existing Auth0)
+**Build Status:** ✅ Green — 586 passed, 0 failed, 10 skipped (9 Phase 3 stubs + 1 pre-existing Auth0)
 
 ---
 
@@ -905,10 +905,10 @@ These services have no compile errors and are fully implemented. Write their tes
 immediately after the build is green — not as a deferred batch. From Phase 3 onwards,
 each item gets its tests written alongside the implementation.
 
-- [ ] Create `ContentSchedulingServiceTests.cs` — first publish, re-publish, schedule validation, unpublish
-- [ ] Create `ContentVersionServiceTests.cs` — promote copies fields, clone independence, snapshot creation, version increment
-- [ ] Create `ContentProcessingServiceTests.cs` — search index content and normalisation, reading time, markdown render
-- [ ] Create `SchedulableContentExtensionsTests.cs` — `IsPublished()` and `GetLiveContent()`; `HasPendingUpdate` tests belong here as entity-property tests (see observation)
+- [x] Create `ContentSchedulingServiceTests.cs` — first publish, re-publish, schedule validation, unpublish *(11 tests — all passing)*
+- [x] Create `ContentVersionServiceTests.cs` — promote copies fields, clone independence, snapshot creation, version increment *(10 tests — all passing)*
+- [x] Create `ContentProcessingServiceTests.cs` — search index content and normalisation, reading time, markdown render *(12 tests — all passing)*
+- [x] Create `SchedulableContentExtensionsTests.cs` — `IsPublished()` and `GetLiveContent()`; `HasPendingUpdate` tests belong here as entity-property tests (see observation) *(21 tests — all passing)*
 
 ### Phase 3 — Audit logging and new facade methods
 
