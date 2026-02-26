@@ -169,6 +169,7 @@ public class PageDetailFacadeTests
             Id = Guid.NewGuid().ToString(),
             GroupKey = "pages",
             Slug = slug,
+            IsPublished = isPublished,
             Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",

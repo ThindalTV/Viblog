@@ -241,18 +241,51 @@ public class BlogTestFixture : IDisposable
         Directory.CreateDirectory(_testDataPath);
 
         // Create logger factories
-        var blogRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var auditRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var versionServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var schedulingServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-        var auditLogRepository = Mock.Of<IAuditLogRepository>();
-         // Initialize blog post repository with file-based implementation
+        // Initialize blog post repository with in-memory store
+        var blogPostStore = new Dictionary<string, BlogPost>();
+        var blogPostRepositoryMock = new Mock<IBlogPostRepository>();
+        blogPostRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<BlogPost>(), It.IsAny<CancellationToken>()))
+            .Callback<BlogPost, CancellationToken>((post, _) => blogPostStore[post.Id] = post)
+            .Returns(Task.CompletedTask);
+        blogPostRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<BlogPost>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        blogPostRepositoryMock
+            .Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        blogPostRepositoryMock
+            .Setup(r => r.GetByIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns<string, string, CancellationToken>((id, _, __) => Task.FromResult<BlogPost?>(blogPostStore.GetValueOrDefault(id)));
+        blogPostRepositoryMock
+            .Setup(r => r.GetByIdWithoutPartitionKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns<string, CancellationToken>((id, _) => Task.FromResult<BlogPost?>(blogPostStore.GetValueOrDefault(id)));
+        blogPostRepositoryMock
+            .Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        BlogPostRepository = blogPostRepositoryMock.Object;
+
+        // Initialize audit log repository with in-memory store
+        var auditLogStore = new List<AuditLog>();
+        var auditLogRepositoryMock = new Mock<IAuditLogRepository>();
+        auditLogRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditLog, CancellationToken>((log, _) => auditLogStore.Add(log))
+            .Returns(Task.CompletedTask);
+        auditLogRepositoryMock
+            .Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        auditLogRepositoryMock
+            .Setup(r => r.GetRecentAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns<int, CancellationToken>((_, __) => Task.FromResult<IEnumerable<AuditLog>>(auditLogStore));
 
         // Initialize audit service
         AuditLogService = new AuditLogService(
-            auditLogRepository,
+            auditLogRepositoryMock.Object,
             auditServiceLoggerFactory.CreateLogger<AuditLogService>());
 
         // Create mock HttpContextAccessor with test user

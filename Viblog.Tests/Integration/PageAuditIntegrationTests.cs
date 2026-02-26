@@ -288,17 +288,54 @@ public class PageTestFixture : IDisposable
         Directory.CreateDirectory(_testDataPath);
 
         // Create logger factories
-        var pageRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var auditRepoLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var auditServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var versionServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var schedulingServiceLoggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-        var auditLogRepository = Mock.Of<IAuditLogRepository>();
+        // Initialize page repository with in-memory store
+        var pageStore = new Dictionary<string, Page>();
+        var pageRepositoryMock = new Mock<IPageRepository>();
+        pageRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Page>(), It.IsAny<CancellationToken>()))
+            .Callback<Page, CancellationToken>((page, _) => pageStore[page.Id] = page)
+            .Returns(Task.CompletedTask);
+        pageRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Page>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        pageRepositoryMock
+            .Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        pageRepositoryMock
+            .Setup(r => r.GetByIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns<string, string, CancellationToken>((id, _, __) => Task.FromResult<Page?>(pageStore.GetValueOrDefault(id)));
+        pageRepositoryMock
+            .Setup(r => r.GetByIdWithoutPartitionKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns<string, CancellationToken>((id, _) => Task.FromResult<Page?>(pageStore.GetValueOrDefault(id)));
+        pageRepositoryMock
+            .Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Page?)null);
+        pageRepositoryMock
+            .Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        PageRepository = pageRepositoryMock.Object;
+
+        // Initialize audit log repository with in-memory store
+        var auditLogStore = new List<AuditLog>();
+        var auditLogRepositoryMock = new Mock<IAuditLogRepository>();
+        auditLogRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()))
+            .Callback<AuditLog, CancellationToken>((log, _) => auditLogStore.Add(log))
+            .Returns(Task.CompletedTask);
+        auditLogRepositoryMock
+            .Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        auditLogRepositoryMock
+            .Setup(r => r.GetRecentAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns<int, CancellationToken>((_, __) => Task.FromResult<IEnumerable<AuditLog>>(auditLogStore));
 
         // Initialize audit service
         AuditLogService = new AuditLogService(
-            auditLogRepository,
+            auditLogRepositoryMock.Object,
             auditServiceLoggerFactory.CreateLogger<AuditLogService>());
 
         // Create mock HttpContextAccessor with test user
