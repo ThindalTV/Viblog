@@ -66,19 +66,19 @@
                             }
                         </Template>
                     </GridColumn>
-                    
-                    <GridColumn Field="@nameof(BlogPostContent.Title)"
+                     
+                    <GridColumn Field="Draft.Title"
                                 Title="Title"
                                 Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
 
-                                if (post?.Live == null)
+                                if (post?.Draft == null)
                                 {
                                     <span class="missing-title">[No Title]</span>
                                 } else {
-                                    @((MarkupString)post.Live.Title)
+                                    @((MarkupString)post.Draft.Title)
                                 }
                             }
                         </Template>
@@ -109,7 +109,7 @@
                         <Template>
                             @{
                                 var post = context as BlogPost;
-                                if (post != null)
+                                if (post is not null)
                                 {
                                     <div class="status-cell">
                                         <ContentStatusBadge IsPublished="@post.IsPublished"
@@ -137,8 +137,6 @@
 
     private async Task ReadPostsAsync(GridReadEventArgs args)
     {
-
-
         // Determine sort field and direction from grid state
         var sortDescriptor = args.Request.Sorts.FirstOrDefault();
         var sortField = PostSortField.CreatedAt;
@@ -152,7 +150,7 @@
                 nameof(BlogPost.Slug) => PostSortField.Slug,
                 nameof(BlogPost.PublishedAt) => PostSortField.PublishedAt,
                 nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,
-                "IsPublished" => PostSortField.IsPublished, // Since IsPublished is a method, we can't use nameof
+                nameof(BlogPost.IsPublished) => PostSortField.IsPublished,
                 nameof(BlogPost.CreatedAt) => PostSortField.CreatedAt,
                 _ => PostSortField.CreatedAt
             };
