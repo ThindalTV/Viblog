@@ -9,6 +9,7 @@
 @using Viblog.Frontend.Infrastructure
 @using Viblog.Infrastructure.Admin.Facades
 @using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
 @using Viblog.Shared.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -21,62 +22,110 @@
 
 <div class="page-header">
     <h1>@(_isEditMode ? "Edit Post" : "Create New Post")</h1>
-    
+
     @if (!_isLoading)
     {
         <div class="page-actions">
-            @if (!string.IsNullOrWhiteSpace(Id))
+            @if (_isEditMode && _post != null)
             {
-                <div class="publication-status">
-                    @if (!_model.IsPublished)
+                <ContentStatusBadge IsPublished="@_post.IsPublished"
+                                    HasPendingUpdate="@_post.HasPendingUpdate"
+                                    ScheduleStatus="@_post.Schedule.Status"
+                                    ScheduledDate="@_post.Schedule.ScheduledPublishDate"
+                                    PublishedAt="@_post.PublishedAt"
+                                    IsDeleted="@_post.IsDeleted" />
+            }
+
+            @if (_post?.IsDeleted != true)
+            {
+                @if (_isEditMode && _post != null)
+                {
+                    var isScheduled = _post.Schedule.Status == ContentStatus.Scheduled;
+
+                    @if (_post.Live == null)
                     {
-                        <span class="status-badge status-draft">Draft</span>
-                    }
-                    else if (_model.PublishedAt > DateTimeOffset.UtcNow)
-                    {
-                        <span class="status-badge status-scheduled">Scheduled</span>
+                        <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@_isSaving">
+                            @(_confirmPublishNow ? "Click to confirm" : "Publish Now")
+                        </button>
+                        @if (!isScheduled)
+                        {
+                            <button type="button" class="btn-action btn-schedule" @onclick="ShowScheduleDialogAsync" disabled="@_isSaving">
+                                Schedule
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-action btn-schedule" @onclick="ShowChangeTimeDialogAsync" disabled="@_isSaving">
+                                Change Time
+                            </button>
+                            <button type="button" class="btn-action btn-cancel-schedule" @onclick="CancelScheduleAsync" disabled="@_isSaving">
+                                Cancel Schedule
+                            </button>
+                        }
                     }
                     else
                     {
-                        <span class="status-badge status-published">Published</span>
+                        <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@_isSaving">
+                            @(_confirmPublishNow ? "Click to confirm" : "Publish Update Now")
+                        </button>
+                        @if (!isScheduled)
+                        {
+                            <button type="button" class="btn-action btn-schedule" @onclick="ShowScheduleDialogAsync" disabled="@_isSaving">
+                                Schedule Update
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-action btn-schedule" @onclick="ShowChangeTimeDialogAsync" disabled="@_isSaving">
+                                Change Time
+                            </button>
+                            <button type="button" class="btn-action btn-cancel-schedule" @onclick="CancelScheduleAsync" disabled="@_isSaving">
+                                Cancel Schedule
+                            </button>
+                        }
+                        <button type="button" class="btn-action btn-unpublish" @onclick="ShowUnpublishDialogAsync" disabled="@_isSaving">
+                            Unpublish
+                        </button>
                     }
-                </div>
-            }
-            
-            @if (!_model.IsPublished || _model.PublishedAt > DateTimeOffset.UtcNow)
-            {
-                <button type="button" class="btn-action btn-publish-now" @onclick="ShowPublishNowDialog" disabled="@_isSaving">
-                    Publish Now
-                </button>
-                <button type="button" class="btn-action btn-publish-later" @onclick="ShowPublishLaterDialog" disabled="@_isSaving">
-                    Schedule
-                </button>
-            }
-            
-            @if (_model.IsPublished)
-            {
-                <button type="button" class="btn-action btn-unpublish" @onclick="ShowUnpublishDialog" disabled="@_isSaving">
-                    Unpublish
-                </button>
-            }
-            
-            <button type="submit" form="edit-post-form" class="btn-primary" disabled="@_isSaving">
-                @if (_isSaving)
-                {
-                    <span>Saving...</span>
+
+                    @if (!string.IsNullOrWhiteSpace(_currentUserId) && _post.AuthorId != _currentUserId)
+                    {
+                        <button type="button" class="btn-action btn-adopt" @onclick="AdoptAsync" disabled="@_isSaving">
+                            Adopt
+                        </button>
+                    }
                 }
-                else
-                {
-                    <span>@(_isEditMode ? "Update Post" : "Create Post")</span>
-                }
-            </button>
-            
-            <button type="button" class="btn-secondary" @onclick="Cancel" disabled="@_isSaving">
-                Cancel
-            </button>
+
+                <button type="submit" form="edit-post-form" class="btn-primary" disabled="@_isSaving">
+                    @if (_isSaving)
+                    {
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <span>@(_isEditMode ? "Update Post" : "Create Post")</span>
+                    }
+                </button>
+
+                <button type="button" class="btn-secondary" @onclick="Cancel" disabled="@_isSaving">
+                    Cancel
+                </button>
+            }
         </div>
     }
 </div>
+
+@if (_post?.IsDeleted == true)
+{
+    <div class="deleted-banner">
+        <p>This post has been deleted and is read-only.</p>
+    </div>
+}
+
+<ScheduleTimePicker @bind-Visible="_scheduleDialogVisible"
+                    Title="@(_post?.Schedule.Status == ContentStatus.Scheduled ? "Change Scheduled Time" : "Schedule Publication")"
+                    InitialDate="@_scheduleInitialDate"
+                    OnConfirm="OnScheduleConfirmedAsync" />
 
 @if (_isLoading)
 {
@@ -114,9 +163,6 @@ else
                 </div>
 
                 <div class="form-column">
-                    @* TODO Phase 4: PublishedAt is set by ContentSchedulingService, not the editor. Remove when publish actions are wired up. *@
-                    @* <DateTimeInput @bind-Value="_model.PublishedAt" Label="Published At" ValidationFor="@(() => _model.PublishedAt)" /> *@
-
                     <CheckboxInput @bind-Value="_model.IsFeatured"
                                  Label="Featured Post" />
 
@@ -165,9 +211,14 @@ else
 
 @code {
     private BlogPostModel _model = new();
+    private BlogPost? _post;
     private bool _isLoading = true;
     private bool _isSaving;
     private bool _isEditMode;
+    private bool _scheduleDialogVisible;
+    private DateTimeOffset? _scheduleInitialDate;
+    private bool _confirmPublishNow;
+    private string _currentUserId = string.Empty;
 
     [Parameter]
     public string? Id { get; set; }
@@ -175,23 +226,18 @@ else
     protected override async Task OnInitializedAsync()
     {
         _isEditMode = !string.IsNullOrWhiteSpace(Id);
-        
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
         if (_isEditMode)
         {
             await LoadPostAsync();
         }
         else
         {
-            // Get current user for new posts
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var userName = authState.User.Identity?.Name ?? "Anonymous";
-
-            // Initialize with defaults for new post
-            _model = new BlogPostModel
-            {
-                PublishedAt = DateTimeOffset.Now,
-                AuthorName = userName
-            };
+            _model = new BlogPostModel { AuthorName = userName };
             _isLoading = false;
         }
     }
@@ -202,8 +248,8 @@ else
         {
             _isLoading = true;
             MessageService.Clear();
+            _confirmPublishNow = false;
 
-            // Get post by ID (admin scenario)
             var post = await PostsAdminFacade.GetPostByIdAsync(Id!);
 
             if (post == null)
@@ -212,6 +258,7 @@ else
                 return;
             }
 
+            _post = post;
             _model = post.ToModel();
         }
         catch (Exception ex)
@@ -226,7 +273,6 @@ else
 
     private void HandleTitleBlur(FocusEventArgs e)
     {
-        // Auto-generate slug if it's empty when title loses focus
         if (string.IsNullOrWhiteSpace(_model.Slug))
         {
             _model.Slug = TextUtilities.Slugify(_model.Title) ?? string.Empty;
@@ -235,28 +281,41 @@ else
 
     private async Task HandleValidSubmit()
     {
+        if (_post?.IsDeleted == true) return;
+
         try
         {
             _isSaving = true;
+            _confirmPublishNow = false;
             MessageService.Clear();
 
-            var post = _model.ToEntity();
-
-            if (_isEditMode)
+            if (_isEditMode && _post != null)
             {
-                post.UpdatedAt = DateTimeOffset.UtcNow;
-                await PostsAdminFacade.UpdatePostAsync(post);
-                MessageService.SetSuccess("Post updated successfully!");
+                // Update only the draft fields; leave Live, Schedule, PublishedAt etc. intact
+                _post.Draft.Title = _model.Title;
+                _post.Draft.Short = _model.Short;
+                _post.Draft.Markdown = _model.Markdown;
+                _post.Draft.Content = _model.Content ?? string.Empty;
+                _post.Draft.FeaturedImageUrl = _model.FeaturedImageUrl;
+                _post.Draft.FeaturedImageAlt = _model.FeaturedImageAlt;
+                _post.Slug = _model.Slug;
+                _post.IsFeatured = _model.IsFeatured;
+                _post.Tags = _model.Tags;
+                _post.CategoryIds = _model.CategoryIds;
+                _post.UpdatedAt = DateTimeOffset.UtcNow;
+
+                await PostsAdminFacade.UpdatePostAsync(_post);
+                MessageService.SetSuccess("Post saved successfully!");
+                await LoadPostAsync();
             }
             else
             {
+                var post = _model.ToEntity();
                 await PostsAdminFacade.CreatePostAsync(post);
                 MessageService.SetSuccess("Post created successfully!");
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/admin/posts");
             }
-
-            // Navigate back to posts list after a short delay to show success message
-            await Task.Delay(1500);
-            Navigation.NavigateTo("/admin/posts");
         }
         catch (Exception ex)
         {
@@ -268,111 +327,34 @@ else
         }
     }
 
-    private void Cancel()
-    {
-        Navigation.NavigateTo("/admin/posts");
-    }
+    private void Cancel() => Navigation.NavigateTo("/admin/posts");
 
-    private void ShowPublishNowDialog()
+    // Publish Now — two-step inline confirmation
+    private async Task HandlePublishNowClickAsync()
     {
-        DialogService.ShowConfirmationAsync(
-            "Publish Now",
-            "This will publish the post immediately. Are you sure?",
-            ConfirmPublishNow,
-            "Publish",
-            "Cancel");
-    }
-
-    private void ShowPublishLaterDialog()
-    {
-        DialogService.ShowConfirmationAsync(
-            "Schedule Publication",
-            "This will schedule the post for publication at the selected date and time. Are you sure?",
-            ConfirmPublishLater,
-            "Schedule",
-            "Cancel");
-    }
-
-    private void ShowUnpublishDialog()
-    {
-        DialogService.ShowConfirmationAsync(
-            "Unpublish Post",
-            "This will remove the post from public view. Are you sure?",
-            ConfirmUnpublish,
-            "Unpublish",
-            "Cancel");
-    }
-
-    private async Task ConfirmPublishNow()
-    {
-        _model.PublishedAt = DateTimeOffset.Now;
-        _model.IsPublished = true;
-        await SavePublicationStateAsync();
-    }
-
-    private async Task ConfirmPublishLater()
-    {
-        // Set to tomorrow at noon if current date is in the past or too close to now
-        var now = DateTimeOffset.Now;
-        if (_model.PublishedAt <= now.AddMinutes(5))
+        if (!_confirmPublishNow)
         {
-            _model.PublishedAt = now.Date.AddDays(1).AddHours(12);
-        }
-        _model.IsPublished = true;
-        await SavePublicationStateAsync();
-    }
-
-    private async Task ConfirmUnpublish()
-    {
-        _model.IsPublished = false;
-        await SavePublicationStateAsync();
-    }
-
-    private async Task SavePublicationStateAsync()
-    {
-        if (!_isEditMode || string.IsNullOrWhiteSpace(Id))
-        {
-            // For new posts, just update the model - will be saved when user clicks Create Post
-            StateHasChanged();
+            _confirmPublishNow = true;
             return;
         }
 
+        _confirmPublishNow = false;
+        await ExecutePublishNowAsync();
+    }
+
+    private async Task ExecutePublishNowAsync()
+    {
         try
         {
             _isSaving = true;
             StateHasChanged();
-            MessageService.Clear();
-
-            // Load the current post to get all data
-            var post = await PostsAdminFacade.GetPostByIdAsync(Id!);
-            
-            if (post == null)
-            {
-                MessageService.SetFail("Post not found.");
-                return;
-            }
-
-            // Update only the publication state
-            // TODO: replace with ContentSchedulingService calls in Phase 3
-            // post.IsPublished = _model.IsPublished; -- IsPublished is now a read-only computed property
-            post.PublishedAt = _model.PublishedAt;
-            post.UpdatedAt = DateTimeOffset.UtcNow;
-
-            await PostsAdminFacade.UpdatePostAsync(post, CancellationToken.None);
-            
-            MessageService.SetSuccess(
-                _model.IsPublished 
-                    ? (_model.PublishedAt > DateTimeOffset.UtcNow ? "Post scheduled successfully!" : "Post published successfully!")
-                    : "Post unpublished successfully!");
-            
-            StateHasChanged();
+            await PostsAdminFacade.PublishPostNowAsync(Id!);
+            MessageService.SetSuccess(_post?.Live == null ? "Post published successfully!" : "Draft update published successfully!");
+            await LoadPostAsync();
         }
         catch (Exception ex)
         {
-            MessageService.SetError(ex, "Failed to update publication state. Please try again.");
-            
-            // Reload the post to revert local changes
-            await LoadPostAsync();
+            MessageService.SetError(ex, "Failed to publish post. Please try again.");
         }
         finally
         {
@@ -380,4 +362,120 @@ else
             StateHasChanged();
         }
     }
+
+    // Schedule / Change Time
+    private Task ShowScheduleDialogAsync()
+    {
+        _confirmPublishNow = false;
+        _scheduleInitialDate = null;
+        _scheduleDialogVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private Task ShowChangeTimeDialogAsync()
+    {
+        _confirmPublishNow = false;
+        _scheduleInitialDate = _post?.Schedule.ScheduledPublishDate;
+        _scheduleDialogVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnScheduleConfirmedAsync(DateTimeOffset date)
+    {
+        try
+        {
+            _isSaving = true;
+            await PostsAdminFacade.SchedulePostAsync(Id!, date);
+            MessageService.SetSuccess($"Post scheduled for {date:MMM d, yyyy 'at' HH:mm} UTC.");
+            await LoadPostAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to schedule post. Please try again.");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // Cancel Schedule
+    private async Task CancelScheduleAsync()
+    {
+        _confirmPublishNow = false;
+        try
+        {
+            _isSaving = true;
+            await PostsAdminFacade.CancelPostScheduleAsync(Id!);
+            MessageService.SetSuccess("Schedule cancelled.");
+            await LoadPostAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to cancel schedule. Please try again.");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // Unpublish — modal confirmation
+    private void ShowUnpublishDialogAsync()
+    {
+        _confirmPublishNow = false;
+        DialogService.ShowConfirmationAsync(
+            "Unpublish Post",
+            "This will remove the post from public view. Your draft will be preserved. Are you sure?",
+            ConfirmUnpublishAsync,
+            "Unpublish",
+            "Cancel");
+    }
+
+    private async Task ConfirmUnpublishAsync()
+    {
+        try
+        {
+            _isSaving = true;
+            await InvokeAsync(StateHasChanged);
+            await PostsAdminFacade.UnpublishPostAsync(Id!);
+            MessageService.SetSuccess("Post unpublished successfully.");
+            await LoadPostAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to unpublish post. Please try again.");
+        }
+        finally
+        {
+            _isSaving = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // Adopt
+    private async Task AdoptAsync()
+    {
+        _confirmPublishNow = false;
+        try
+        {
+            _isSaving = true;
+            await PostsAdminFacade.AdoptPostAsync(Id!);
+            MessageService.SetSuccess("Post ownership transferred to you.");
+            await LoadPostAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to adopt post. Please try again.");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string GetPublishNowCssClass() =>
+        _confirmPublishNow ? "btn-action btn-publish-now btn-confirm-active" : "btn-action btn-publish-now";
 }
+

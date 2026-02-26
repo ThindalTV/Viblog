@@ -1,0 +1,79 @@
+@using Telerik.Blazor.Components
+
+<TelerikDialog @bind-Visible="Visible"
+               Title="@Title"
+               Width="380px"
+               ShowCloseButton="true">
+    <DialogContent>
+        <div class="schedule-picker-content">
+            <TelerikDateTimePicker @bind-Value="_selectedDate"
+                                   Min="@_minDate"
+                                   Format="MMM dd, yyyy HH:mm"
+                                   Width="100%" />
+            <p class="schedule-picker-note">All times are UTC.</p>
+            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
+            {
+                <p class="schedule-picker-warning">The selected time must be in the future.</p>
+            }
+        </div>
+    </DialogContent>
+    <DialogButtons>
+        <TelerikButton OnClick="OnCancelClick">Cancel</TelerikButton>
+        <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                       OnClick="OnConfirmClick"
+                       Enabled="@IsConfirmEnabled">
+            Confirm
+        </TelerikButton>
+    </DialogButtons>
+</TelerikDialog>
+
+@code {
+    /// <summary>Controls dialog visibility; supports two-way binding.</summary>
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>Dialog title — defaults to "Schedule Publication".</summary>
+    [Parameter] public string Title { get; set; } = "Schedule Publication";
+
+    /// <summary>
+    /// Pre-populate the picker with an existing date (Change Time flow).
+    /// When null, defaults to tomorrow at 09:00 UTC.
+    /// </summary>
+    [Parameter] public DateTimeOffset? InitialDate { get; set; }
+
+    /// <summary>Raised with the chosen date when the user confirms.</summary>
+    [Parameter] public EventCallback<DateTimeOffset> OnConfirm { get; set; }
+
+    /// <summary>Raised when the user cancels without confirming.</summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private DateTime? _selectedDate;
+    private readonly DateTime _minDate = DateTime.UtcNow.AddMinutes(1);
+
+    protected override void OnParametersSet()
+    {
+        if (Visible)
+        {
+            _selectedDate = InitialDate.HasValue
+                ? InitialDate.Value.UtcDateTime
+                : DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+        }
+    }
+
+    private bool IsConfirmEnabled =>
+        _selectedDate.HasValue && _selectedDate.Value > DateTime.UtcNow;
+
+    private async Task OnConfirmClick()
+    {
+        if (!IsConfirmEnabled || !_selectedDate.HasValue) return;
+
+        await VisibleChanged.InvokeAsync(false);
+        await OnConfirm.InvokeAsync(new DateTimeOffset(_selectedDate.Value, TimeSpan.Zero));
+    }
+
+    private async Task OnCancelClick()
+    {
+        await VisibleChanged.InvokeAsync(false);
+        await OnCancel.InvokeAsync();
+    }
+}

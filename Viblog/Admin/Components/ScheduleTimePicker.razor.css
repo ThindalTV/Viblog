@@ -1,0 +1,18 @@
+.schedule-picker-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.schedule-picker-note {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary, #5f6368);
+    margin: 0;
+}
+
+.schedule-picker-warning {
+    font-size: 0.8125rem;
+    color: var(--color-error, #d93025);
+    margin: 0;
+}

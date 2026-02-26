@@ -313,13 +313,15 @@ h1 {
     border-color: var(--success-dark, #0d5f23);
 }
 
-.btn-publish-later {
+.btn-publish-later,
+.btn-schedule {
     background-color: var(--info-light, #e8f0fe);
     color: var(--info, #1a73e8);
     border-color: var(--info, #1a73e8);
 }
 
-.btn-publish-later:hover:not(:disabled) {
+.btn-publish-later:hover:not(:disabled),
+.btn-schedule:hover:not(:disabled) {
     background-color: var(--info-hover, #d2e3fc);
     border-color: var(--info-dark, #1557b0);
 }
@@ -341,4 +343,43 @@ h1 {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+.btn-cancel-schedule {
+    background-color: var(--color-secondary-light, #f1f3f4);
+    color: var(--color-text-secondary, #5f6368);
+    border-color: var(--color-text-secondary, #5f6368);
+}
+
+.btn-cancel-schedule:hover:not(:disabled) {
+    background-color: var(--color-hover, #e2e5e9);
+}
+
+.btn-adopt {
+    background-color: var(--color-purple-light, #f3e8fd);
+    color: var(--color-purple, #7b1fa2);
+    border-color: var(--color-purple, #7b1fa2);
+}
+
+.btn-adopt:hover:not(:disabled) {
+    background-color: var(--color-purple-hover, #e1bee7);
+}
+
+.btn-confirm-active {
+    animation: pulse-confirm 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-confirm {
+    from { opacity: 1; }
+    to { opacity: 0.75; }
+}
+
+.deleted-banner {
+    padding: 0.875rem 1.25rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--color-error-light, #fce8e6);
+    color: var(--color-error, #d93025);
+    border: 1px solid var(--color-error, #d93025);
+    border-radius: 4px;
+    font-weight: 500;
 }

@@ -1,4 +1,5 @@
 @page "/admin/posts"
+@using Viblog.Admin.Components
 @using Viblog.Infrastructure.Shared.Data.Entities.Content
 @attribute [Authorize(Policy = RequirePostWrite)]
 @layout AdminLayout
@@ -98,35 +99,23 @@
                         </Template>
                     </GridColumn>
                     
-                    <GridColumn Field="@nameof(BlogPost.PublishedAt)"
+                    <GridColumn Field="@nameof(BlogPost.Schedule)"
                                 Title="Publication Status"
-                                Width="240px"
-                                Sortable="true">
+                                Width="260px"
+                                Sortable="false">
                         <Template>
                             @{
                                 var post = context as BlogPost;
                                 if (post != null)
                                 {
-                                    if (!post.IsPublished)
-                                    {
-                                        <div class="status-cell">
-                                            <span class="status-badge status-draft">Draft</span>
-                                        </div>
-                                    }
-                                    else if (post.PublishedAt > DateTimeOffset.UtcNow)
-                                    {
-                                        <div class="status-cell">
-                                            <span class="status-badge status-scheduled">Scheduled</span>
-                                            <span class="status-date">@post.PublishedAt?.ToString("MMM dd, yyyy HH:mm")</span>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="status-cell">
-                                            <span class="status-badge status-published">Published</span>
-                                            <span class="status-date">@post.PublishedAt?.ToString("MMM dd, yyyy HH:mm")</span>
-                                        </div>
-                                    }
+                                    <div class="status-cell">
+                                        <ContentStatusBadge IsPublished="@post.IsPublished"
+                                                            HasPendingUpdate="@post.HasPendingUpdate"
+                                                            ScheduleStatus="@post.Schedule.Status"
+                                                            ScheduledDate="@post.Schedule.ScheduledPublishDate"
+                                                            PublishedAt="@post.PublishedAt"
+                                                            IsDeleted="@post.IsDeleted" />
+                                    </div>
                                 }
                             }
                         </Template>
@@ -142,8 +131,6 @@
     private int _pageSize = 20;
     private bool? _publishedFilter = null;
     private int _skip = 0;
-
-    private BlogPostContent _content;
 
     private async Task ReadPostsAsync(GridReadEventArgs args)
     {

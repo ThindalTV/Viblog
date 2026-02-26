@@ -932,13 +932,13 @@ Write tests alongside each item as it is implemented.
 
 ### Phase 4 — Admin view redesign
 
-- [ ] `Posts.razor` — remove stray unused `_content` field
-- [ ] Create `ContentStatusBadge.razor` — derives state from `Live != null` + `Schedule.Status` + `IsDeleted`; used in all four views
-- [ ] Create `ScheduleTimePicker.razor` — shared Telerik dialog for both Schedule and Change Time actions; pre-populates existing date when editing
-- [ ] `BlogPostModel` — remove `bool IsPublished` and `DateTimeOffset? PublishedAt` form fields
-- [ ] `PostEdit.razor` — replace status badge with `<ContentStatusBadge>`; wire action buttons to new facade methods; add Change Time and Adopt buttons; handle deleted-post read-only state
-- [ ] `Posts.razor` — status column: replace `PublishedAt > UtcNow` heuristic with `Schedule.Status`; add `HasPendingUpdate` display; use `<ContentStatusBadge>`
-- [ ] `Pages.razor` — status column: use `<ContentStatusBadge>` (Phase 1 fixes compile errors; this adds full scheduling-aware display)
-- [ ] `PageEdit.razor` — add publish action buttons, Adopt button, `<ContentStatusBadge>`, and `<ScheduleTimePicker>` mirroring `PostEdit.razor`
-- [ ] Verify `IBlogPostVersionRepository` and `IPageVersionRepository` are registered in DI
+- [x] `Posts.razor` — remove stray unused `_content` field
+- [x] Create `ContentStatusBadge.razor` — derives state from `Live != null` + `Schedule.Status` + `IsDeleted`; used in all four views
+- [x] Create `ScheduleTimePicker.razor` — shared Telerik dialog for both Schedule and Change Time actions; pre-populates existing date when editing
+- [x] `BlogPostModel` — remove `bool IsPublished` and `DateTimeOffset? PublishedAt` form fields
+- [x] `PostEdit.razor` — replace status badge with `<ContentStatusBadge>`; wire action buttons to new facade methods; add Change Time and Adopt buttons; handle deleted-post read-only state
+- [x] `Posts.razor` — status column: replace `PublishedAt > UtcNow` heuristic with `Schedule.Status`; add `HasPendingUpdate` display; use `<ContentStatusBadge>`
+- [x] `Pages.razor` — status column: use `<ContentStatusBadge>` (Phase 1 fixes compile errors; this adds full scheduling-aware display)
+- [x] `PageEdit.razor` — add publish action buttons, Adopt button, `<ContentStatusBadge>`, and `<ScheduleTimePicker>` mirroring `PostEdit.razor`
+- [x] Verify `IBlogPostVersionRepository` and `IPageVersionRepository` are registered in DI
 

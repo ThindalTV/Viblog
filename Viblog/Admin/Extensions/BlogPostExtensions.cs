@@ -34,8 +34,6 @@ public static class BlogPostExtensions
                 FeaturedImageAlt = post.Draft.FeaturedImageAlt,
                 AuthorName = post.AuthorName,
                 AuthorId = post.AuthorId,
-                PublishedAt = post.PublishedAt,
-                IsPublished = post.IsPublished,  // Computed: Live != null
                 IsFeatured = post.IsFeatured,
                 Tags = [.. post.Tags],
                 CategoryIds = [.. post.CategoryIds]
@@ -59,9 +57,9 @@ public static class BlogPostExtensions
                 Slug = model.Slug,
                 AuthorName = model.AuthorName,
                 AuthorId = model.AuthorId,
-                PublishedAt = model.PublishedAt,
                 // IsPublished is NOT set here — it is computed from Live != null.
                 // Live content is managed exclusively by ContentSchedulingService.
+                // PublishedAt is set by ContentSchedulingService, not by the editor.
                 IsFeatured = model.IsFeatured,
                 Tags = model.Tags,
                 CategoryIds = model.CategoryIds,
