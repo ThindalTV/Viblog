@@ -95,12 +95,19 @@ public class StructuredDataHelper
     /// </summary>
     public string GenerateBlogPostingSchema(BlogPost post, string postUrl)
     {
-        var imageObject = !string.IsNullOrWhiteSpace(post.FeaturedImageUrl) 
+        var liveContent = post.Live;
+
+        if (liveContent is null) {
+            // If no live content, we can't generate meaningful structured data
+            return string.Empty;
+        }
+
+        var imageObject = !string.IsNullOrWhiteSpace(liveContent.FeaturedImageUrl) 
             ? new
             {
                 type = "ImageObject",
-                url = post.FeaturedImageUrl,
-                caption = post.FeaturedImageAlt
+                url = liveContent.FeaturedImageUrl,
+                caption = liveContent.FeaturedImageAlt
             }
             : (!string.IsNullOrWhiteSpace(_siteMetadata.DefaultImageUrl) 
                 ? new
@@ -115,11 +122,11 @@ public class StructuredDataHelper
         {
             context = "https://schema.org",
             type = "BlogPosting",
-            headline = post.Title,
-            description = post.MetaDescription ?? post.Short,
+            headline = liveContent.Title,
+            description = liveContent.MetaDescription ?? liveContent.Short,
             url = postUrl,
-            datePublished = post.PublishedAt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            dateModified = (post.UpdatedAt.UtcDateTime != default ? post.UpdatedAt.UtcDateTime : post.PublishedAt.UtcDateTime).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            datePublished = post.PublishedAt?.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            dateModified = (post.UpdatedAt.UtcDateTime != default ? post.UpdatedAt.UtcDateTime : post.PublishedAt?.UtcDateTime)?.ToString("yyyy-MM-ddTHH:mm:ssZ"),
             author = new
             {
                 type = "Person",
@@ -137,8 +144,8 @@ public class StructuredDataHelper
             },
             image = imageObject,
             keywords = post.Tags != null && post.Tags.Any() ? string.Join(", ", post.Tags) : null,
-            wordCount = CalculateWordCount(post.Content),
-            articleBody = StripHtml(post.Content),
+            wordCount = CalculateWordCount(liveContent.Content),
+            articleBody = StripHtml(liveContent.Content),
             mainEntityOfPage = new
             {
                 type = "WebPage",

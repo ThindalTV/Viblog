@@ -1,4 +1,10 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -148,7 +154,7 @@ public class FrontPageFacadeTests
 
         // Assert
         Assert.Equal(3, resultList.Count);
-        Assert.All(resultList, post => Assert.True(post.IsPublished));
+        Assert.All(resultList, post => Assert.NotNull(post.Live));
     }
 
     [Fact]
@@ -227,18 +233,29 @@ public class FrontPageFacadeTests
         bool isFeatured = false,
         int publishedDaysAgo = 1)
     {
-        return new BlogPost
+        var publishDate = DateTimeOffset.UtcNow.AddDays(-publishedDaysAgo);
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "test",
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = $"Content for {title}",
-            IsPublished = true,
             IsFeatured = isFeatured,
-            PublishedAt = DateTimeOffset.UtcNow.AddDays(-publishedDaysAgo),
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-publishedDaysAgo),
-            UpdatedAt = DateTimeOffset.UtcNow.AddDays(-publishedDaysAgo)
+            PublishedAt = publishDate,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            Live = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            CreatedAt = publishDate,
+            UpdatedAt = publishDate
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 }

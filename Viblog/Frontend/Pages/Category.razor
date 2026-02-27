@@ -5,6 +5,7 @@
 @using Viblog.Frontend.Components.Metadata
 
 @inject ICategoryPostsFacade CategoryPostsFacade
+@inject ILogger<Category> Logger
 
 <CollectionSeoHead 
     Title="@($"Category: {CategoryId}")" 
@@ -106,8 +107,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to load blog posts for this category. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading posts for category: {CategoryId}", CategoryId);
+            Logger.LogError(ex, "Error loading posts for category: {CategoryId}", CategoryId);
         }
         finally
         {

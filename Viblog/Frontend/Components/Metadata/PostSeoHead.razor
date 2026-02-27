@@ -1,29 +1,29 @@
 @using Viblog.Frontend.Components.Metadata
 @using Viblog.Frontend.Models
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
 @using static Viblog.Frontend.Components.Metadata.StructuredData
 
-<SeoHead 
-    Title="@Post.Title"
-    Description="@(Post.MetaDescription ?? Post.Short)"
-    CanonicalUrl="@CanonicalUrl"
-    Keywords="@Post.MetaKeywords"
-    Author="@Post.AuthorName"
-    ImageUrl="@Post.FeaturedImageUrl"
-    ImageAlt="@Post.FeaturedImageAlt"
-    OgType="article"
-    PublishedTime="@Post.PublishedAt"
-    ModifiedTime="@Post.UpdatedAt"
-    ArticleAuthor="@Post.AuthorName"
-    ArticleTags="@Post.Tags"
-    TwitterCardType="@(string.IsNullOrWhiteSpace(Post.FeaturedImageUrl) ? "summary" : "summary_large_image")"
-    TwitterMetadataItems="@GetTwitterMetadata()">
+<SeoHead Title="@Content.Title"
+         Description="@(Content.MetaDescription ?? Content.Short)"
+         CanonicalUrl="@CanonicalUrl"
+         Keywords="@Content.MetaKeywords"
+         Author="@Post.AuthorName"
+         ImageUrl="@Content.FeaturedImageUrl"
+         ImageAlt="@Content.FeaturedImageAlt"
+         OgType="article"
+         PublishedTime="@Post.PublishedAt"
+         ModifiedTime="@Post.UpdatedAt"
+         ArticleAuthor="@Post.AuthorName"
+         ArticleTags="@Post.Tags"
+         TwitterCardType="@(string.IsNullOrWhiteSpace(Content.FeaturedImageUrl) ? "summary" : "summary_large_image")"
+         TwitterMetadataItems="@GetTwitterMetadata()">
     
     <StructuredData Type="StructuredDataType.BlogPost" Post="@Post" Url="@CanonicalUrl" />
     
     @if (BreadcrumbItems != null && BreadcrumbItems.Any())
     {
-        <StructuredData Type="StructuredDataType.Breadcrumb" 
-                      BreadcrumbItems="@BreadcrumbItems.Select(b => (b.Label, b.Url)).ToList()" />
+        <StructuredData Type="StructuredDataType.Breadcrumb"
+                        BreadcrumbItems="@BreadcrumbItems.Select(b => (b.Label, b.Url)).ToList()" />
     }
 </SeoHead>
 
@@ -45,6 +45,8 @@
     /// </summary>
     [Parameter]
     public List<Breadcrumb.BreadcrumbItem>? BreadcrumbItems { get; set; }
+
+    private BlogPostContent Content => Post?.Live ?? new BlogPostContent();
 
     /// <summary>
     /// Get Twitter metadata items for the post

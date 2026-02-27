@@ -1,3 +1,8 @@
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Services;
+
 namespace Viblog.Tests.Services;
 
 public class BlogSearchServiceTests
@@ -32,7 +37,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -57,7 +62,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -114,7 +119,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -139,7 +144,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -169,7 +174,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -226,7 +231,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -256,7 +261,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -318,7 +323,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -342,7 +347,7 @@ public class BlogSearchServiceTests
         _mockRepository.Setup(r => r.FindAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, bool>>>(),
             It.IsAny<PagingParameters>(),
-            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset>>>(),
+            It.IsAny<System.Linq.Expressions.Expression<Func<BlogPost, DateTimeOffset?>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()))
@@ -371,20 +376,32 @@ public class BlogSearchServiceTests
     #region Helper Methods
 
     private static BlogPost CreateBlogPost(string title)
-    {
-        return new BlogPost
+    {  
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = "Test content",
-            Short = "Test short",
-            SearchIndex = title.ToLower(),
-            IsPublished = true,
             PublishedAt = DateTimeOffset.UtcNow.AddDays(-1),
             AuthorName = "Test Author",
-            CategoryNames = ["Test"]
+            CategoryNames = ["Test"],
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = "Test content",
+                Short = "Test short",
+                SearchIndex = title.ToLower()
+            },
+            Live = new BlogPostContent
+            {
+                Title = title,
+                Content = "Test content",
+                Short = "Test short",
+                SearchIndex = title.ToLower()
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 
     #endregion

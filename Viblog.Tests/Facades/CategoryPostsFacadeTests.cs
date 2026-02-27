@@ -1,4 +1,10 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -176,7 +182,7 @@ public class CategoryPostsFacadeTests
         var result = await _facade.GetPostsByCategoryAsync(categoryId, pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished));
+        Assert.All(result.Items, post => Assert.NotNull(post.Live));
     }
 
     [Theory]
@@ -215,19 +221,32 @@ public class CategoryPostsFacadeTests
 
     private static BlogPost CreateTestPost(string title, string categoryId, bool isPublished = true)
     {
-        return new BlogPost
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = categoryId,
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = $"Content for {title}",
-            IsPublished = isPublished,
-            PublishedAt = isPublished ? DateTimeOffset.UtcNow : DateTimeOffset.MinValue,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            Live = isPublished ? new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            } : null,
+            PublishedAt = isPublished ? DateTimeOffset.UtcNow : null,
             CategoryIds = new List<string> { categoryId },
             CategoryNames = new List<string> { char.ToUpper(categoryId[0]) + categoryId[1..] },
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+        post.Draft.ComputeHash();
+        if (post.Live != null)
+        {
+            post.Live.ComputeHash();
+        }
+        return post;
     }
 }

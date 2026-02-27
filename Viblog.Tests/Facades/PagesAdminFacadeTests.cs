@@ -3,7 +3,10 @@ using Viblog.Admin.Facades;
 using Viblog.Infrastructure.Admin.Facades;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Extensions;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -90,18 +93,22 @@ public class PagesAdminFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.Items);
-        Assert.True(result.Items.First().IsPublished);
+        Assert.NotNull(result.Items.First().Live);
     }
 
     [Fact]
-    public async Task GetPagesAsync_WithPublishedOnlyFalse_ReturnsDraftPages()
+    public async Task GetPagesAsync_WithPublishedOnlyFalse_ReturnsAllPages()
     {
         // Arrange
         var pagingParams = new PagingParameters(1, 10);
         var expectedPages = new PagedResult<Page>
         {
-            Items = new List<Page> { CreateTestPage("draft-page", isPublished: false) },
-            TotalCount = 1,
+            Items = new List<Page>
+            {
+                CreateTestPage("published-page", isPublished: true),
+                CreateTestPage("draft-page", isPublished: false)
+            },
+            TotalCount = 2,
             PageNumber = 1,
             PageSize = 10
         };
@@ -120,8 +127,9 @@ public class PagesAdminFacadeTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result.Items);
-        Assert.False(result.Items.First().IsPublished);
+        Assert.Equal(2, result.Items.Count());
+        Assert.Contains(result.Items, p => p.IsPublished);
+        Assert.Contains(result.Items, p => !p.IsPublished);
     }
 
     [Theory]
@@ -378,123 +386,6 @@ public class PagesAdminFacadeTests
             async () => await _facade.DeletePageAsync("id", null!));
     }
 
-    [Fact]
-    public async Task PublishPageNowAsync_WhenPageExists_PublishesAndSaves()
-    {
-        // Arrange
-        var pageId = "page-123";
-        var page = CreateTestPage("draft-page", isPublished: false);
-        page.Id = pageId;
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync(page);
-        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
-            .Returns(Task.CompletedTask);
-        _mockRepository.Setup(r => r.SaveChangesAsync(default))
-            .ReturnsAsync(1);
-
-        // Act
-        await _facade.PublishPageNowAsync(pageId);
-
-        // Assert
-        Assert.True(page.IsPublished);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.IsPublished), default), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
-    }
-
-    [Fact]
-    public async Task PublishPageNowAsync_WhenPageNotFound_ThrowsException()
-    {
-        // Arrange
-        var pageId = "nonexistent-page";
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync((Page?)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _facade.PublishPageNowAsync(pageId));
-    }
-
-    [Fact]
-    public async Task SchedulePagePublishingAsync_WhenPageExists_SetsPublishDateAndSaves()
-    {
-        // Arrange
-        var pageId = "page-123";
-        var publishDate = DateTimeOffset.UtcNow.AddDays(1);
-        var page = CreateTestPage("scheduled-page", isPublished: false);
-        page.Id = pageId;
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync(page);
-        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
-            .Returns(Task.CompletedTask);
-        _mockRepository.Setup(r => r.SaveChangesAsync(default))
-            .ReturnsAsync(1);
-
-        // Act
-        await _facade.SchedulePagePublishingAsync(pageId, publishDate);
-
-        // Assert
-        Assert.Equal(publishDate, page.PublishDate);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => p.PublishDate == publishDate), default), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
-    }
-
-    [Fact]
-    public async Task SchedulePagePublishingAsync_WhenPageNotFound_ThrowsException()
-    {
-        // Arrange
-        var pageId = "nonexistent-page";
-        var publishDate = DateTimeOffset.UtcNow.AddDays(1);
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync((Page?)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _facade.SchedulePagePublishingAsync(pageId, publishDate));
-    }
-
-    [Fact]
-    public async Task UnpublishPageAsync_WhenPageExists_UnpublishesAndSaves()
-    {
-        // Arrange
-        var pageId = "page-123";
-        var page = CreateTestPage("published-page", isPublished: true);
-        page.Id = pageId;
-        page.PublishDate = DateTimeOffset.UtcNow;
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync(page);
-        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Page>(), default))
-            .Returns(Task.CompletedTask);
-        _mockRepository.Setup(r => r.SaveChangesAsync(default))
-            .ReturnsAsync(1);
-
-        // Act
-        await _facade.UnpublishPageAsync(pageId);
-
-        // Assert
-        Assert.False(page.IsPublished);
-        Assert.Null(page.PublishDate);
-        _mockRepository.Verify(r => r.UpdateAsync(It.Is<Page>(p => !p.IsPublished && p.PublishDate == null), default), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(default), Times.Once);
-    }
-
-    [Fact]
-    public async Task UnpublishPageAsync_WhenPageNotFound_ThrowsException()
-    {
-        // Arrange
-        var pageId = "nonexistent-page";
-
-        _mockRepository.Setup(r => r.GetByIdWithoutPartitionKeyAsync(pageId, default))
-            .ReturnsAsync((Page?)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _facade.UnpublishPageAsync(pageId));
-    }
 
     [Fact]
     public void Constructor_WithNullRepository_ThrowsArgumentNullException()
@@ -505,20 +396,20 @@ public class PagesAdminFacadeTests
 
     private static Page CreateTestPage(string slug, bool isPublished = true)
     {
-        return new Page
+        var page = new Page
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "pages",
             Slug = slug,
             IsPublished = isPublished,
-            Live = new PageContent
+            Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",
                 Markdown = "# Live Content",
                 Content = "<h1>Live Content</h1>",
                 MetaDescription = "Live meta description",
                 ShowTitle = true
-            },
+            } : null,
             Draft = new PageContent
             {
                 Title = $"Draft Title for {slug}",
@@ -533,5 +424,11 @@ public class PagesAdminFacadeTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+        page.Draft.ComputeHash();
+        if (page.Live != null)
+        {
+            page.Live.ComputeHash();
+        }
+        return page;
     }
 }

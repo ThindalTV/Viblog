@@ -55,18 +55,9 @@ public interface IPageRepository : IRepository<Page>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get pages with scheduled publish dates that are due to be published
+    /// Get pages with scheduled publish dates that are due to be published.
+    /// Called by <see cref="ContentPublishingBackgroundService"/> to find content ready to promote.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Collection of pages that should be published</returns>
     Task<IEnumerable<Page>> GetScheduledPagesReadyToPublishAsync(
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Promote scheduled drafts to live versions for pages ready to publish
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Number of pages promoted</returns>
-    Task<int> PromoteScheduledPagesAsync(
         CancellationToken cancellationToken = default);
 }

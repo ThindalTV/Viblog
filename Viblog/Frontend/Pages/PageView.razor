@@ -5,11 +5,14 @@
 @using Viblog.Infrastructure.Shared.Data.Entities
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.WebUtilities
+@using Viblog.Shared.Extensions
+@using Viblog.Infrastructure.Shared.Extensions
 @using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
 
 @inject IPageDetailFacade PageDetailFacade
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<PageView> Logger
 
 @if (_isLoading)
 {
@@ -64,6 +67,8 @@ else
     }
 
     <article class="page-detail">
+        @if (CurrentContent is not null)
+        {
         @if (CurrentContent.ShowTitle)
         {
             <header class="page-header">
@@ -91,6 +96,7 @@ else
                 </div>
             </footer>
         }
+        }
     </article>
 }
 
@@ -107,7 +113,7 @@ public string Slug { get; set; } = string.Empty;
 /// <summary>
 /// Gets the current content to display based on admin preview mode
 /// </summary>
-private PageContent CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
+private Viblog.Infrastructure.Shared.Data.Entities.Content.PageContent? CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
 
 protected override async Task OnInitializedAsync()
 {
@@ -187,8 +193,7 @@ private string GetPreviewUrl(bool showDraft)
         catch (Exception ex)
         {
             _errorMessage = "Unable to load the page. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading page with slug: {Slug}", Slug);
+            Logger.LogError(ex, "Error loading page with slug: {Slug}", Slug);
         }
         finally
         {

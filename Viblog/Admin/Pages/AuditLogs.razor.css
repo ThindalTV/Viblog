@@ -1,0 +1,146 @@
+.audit-logs-grid {
+    margin-top: 1rem;
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--text-primary, #212529);
+}
+
+.user-email {
+    font-size: 0.875rem;
+    color: var(--text-secondary, #6c757d);
+}
+
+.description {
+    line-height: 1.5;
+}
+
+.entity-name {
+    font-style: italic;
+    color: var(--text-secondary, #6c757d);
+    font-size: 0.9rem;
+}
+
+.action-badge,
+.entity-badge,
+.result-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Action badges */
+.action-badge {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.action-login {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.action-logout {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.action-loginfailed {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.action-passwordchanged,
+.action-passwordreset {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.action-usercreated,
+.action-postcreated,
+.action-pagecreated {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.action-userupdated,
+.action-postupdated,
+.action-pageupdated {
+    background-color: #e7f1ff;
+    color: #0a58ca;
+}
+
+.action-userdeleted,
+.action-postdeleted,
+.action-pagedeleted {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.action-useractivated,
+.action-postpublished,
+.action-pagepublished {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.action-userdeactivated,
+.action-postunpublished,
+.action-pageunpublished {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.action-postscheduled {
+    background-color: #d3d3f8;
+    color: #3d3d8e;
+}
+
+/* Entity badges */
+.entity-badge {
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
+}
+
+/* Result badges */
+.result-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.result-failed {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.result-partialsuccess {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.result-unauthorized {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.result-validationerror {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .audit-logs-grid {
+        font-size: 0.875rem;
+    }
+    
+    .user-email {
+        display: none;
+    }
+}

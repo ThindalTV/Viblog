@@ -1,6 +1,10 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Configuration;
+using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Services;
 
@@ -142,14 +146,12 @@ public class SitemapServiceTests
         {
             Id = "1",
             Slug = "updated-post",
-            Title = "Updated Post",
-            Content = "Content",
-            Short = "Short",
-            IsPublished = true,
             PublishedAt = publishedDate,
             UpdatedAt = updatedDate,
             AuthorName = "Author",
-            CategoryNames = ["Tech"]
+            CategoryNames = ["Tech"],
+            Draft = new BlogPostContent { Title = "Updated Post", Content = "Content", Short = "Short" },
+            Live = new BlogPostContent { Title = "Updated Post", Content = "Content", Short = "Short" }
         };
 
         var pagedPosts = new PagedResult<BlogPost>([post], 1, 1, 10);
@@ -399,13 +401,11 @@ public class SitemapServiceTests
             {
                 Id = "3",
                 Slug = "old-post",
-                Title = "Very Old Post",
-                Content = "Content",
-                Short = "Short",
-                IsPublished = true,
                 PublishedAt = DateTimeOffset.MinValue,
                 AuthorName = "Author",
-                CategoryNames = ["Tech"]
+                CategoryNames = ["Tech"],
+                Draft = new BlogPostContent { Title = "Very Old Post", Content = "Content", Short = "Short" },
+                Live = new BlogPostContent { Title = "Very Old Post", Content = "Content", Short = "Short" }
             }
         };
         var pagedPosts = new PagedResult<BlogPost>(posts, posts.Count, 1, 10);
@@ -450,21 +450,33 @@ public class SitemapServiceTests
         string[]? categories = null,
         string[]? tags = null)
     {
-        return new BlogPost
+        var publishedAt = new DateTimeOffset(year, month, 15, 12, 0, 0, TimeSpan.Zero);
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             Slug = slug,
-            Title = slug,
-            Content = "Content",
-            Short = "Short",
-            IsPublished = true,
             IsFeatured = isFeatured,
-            PublishedAt = new DateTimeOffset(year, month, 15, 12, 0, 0, TimeSpan.Zero),
+            PublishedAt = publishedAt,
             UpdatedAt = DateTimeOffset.MinValue,
             AuthorName = "Author",
             CategoryNames = categories?.ToList() ?? new List<string> { "Tech" },
-            Tags = tags?.ToList() ?? new List<string>()
+            Tags = tags?.ToList() ?? new List<string>(),
+            Draft = new BlogPostContent
+            {
+                Title = slug,
+                Content = "Content",
+                Short = "Short"
+            },
+            Live = new BlogPostContent
+            {
+                Title = slug,
+                Content = "Content",
+                Short = "Short"
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 
     #endregion

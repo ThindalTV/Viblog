@@ -50,8 +50,10 @@ public static class SitemapEndpoints
     /// <returns>Sitemap XML</returns>
     private static async Task<IResult> GetSitemap(
         ISitemapService sitemapService,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
+        var logger = loggerFactory.CreateLogger(nameof(SitemapEndpoints));
         try
         {
             var sitemap = await sitemapService.GenerateSitemapAsync(cancellationToken);
@@ -60,7 +62,7 @@ public static class SitemapEndpoints
         }
         catch (Exception ex)
         {
-            // In production, log the exception
+            logger.LogError(ex, "Error generating sitemap");
             return Results.Problem(
                 title: "Failed to generate sitemap",
                 detail: "An error occurred while generating the sitemap. Please try again later.",

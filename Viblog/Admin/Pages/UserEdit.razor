@@ -1,0 +1,317 @@
+@page "/admin/users/new"
+@page "/admin/users/edit/{userId}"
+@attribute [Authorize(Policy = RequireUserWrite)]
+@layout AdminLayout
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Authentication
+@using Viblog.Admin.Services
+@inject IUserManagementFacade UserManagementFacade
+@inject IMessageService MessageService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(IsNewUser ? "Create User" : "Edit User") - Viblog Admin</PageTitle>
+
+<div class="admin-page">
+    <div class="page-header">
+        <h1>@(IsNewUser ? "Create User" : "Edit User")</h1>
+    </div>
+
+    <div class="page-content">
+        <div class="card">
+            <EditForm Model="@_model" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="name">Name</label>
+                        <TelerikTextBox @bind-Value="@_model.Name"
+                                      Id="name"
+                                      Placeholder="Enter name"
+                                      Width="100%" />
+                        <ValidationMessage For="@(() => _model.Name)" />
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label for="email">Email</label>
+                        <TelerikTextBox @bind-Value="@_model.Email"
+                                      Id="email"
+                                      Placeholder="Enter email"
+                                      Enabled="@IsNewUser"
+                                      Width="100%" />
+                        <ValidationMessage For="@(() => _model.Email)" />
+                        @if (!IsNewUser)
+                        {
+                            <small class="form-text text-muted">
+                                Email cannot be changed. Create a new account if a different email is needed.
+                            </small>
+                        }
+                    </div>
+                </div>
+
+                @if (IsNewUser)
+                {
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <TelerikTextBox @bind-Value="@_model.Password"
+                                      Id="password"
+                                      Password="true"
+                                      Placeholder="Enter password"
+                                      Width="100%" />
+                        <ValidationMessage For="@(() => _model.Password)" />
+                        <small class="form-text text-muted">
+                            Must be at least 8 characters with uppercase, lowercase, number, and special character.
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="password-reset-section">
+                            <p class="form-text text-muted">Click the button below to reset this user's password.</p>
+                            <TelerikButton OnClick="@OnResetPassword"
+                                         ThemeColor="@ThemeConstants.Button.ThemeColor.Secondary">
+                                Reset Password
+                            </TelerikButton>
+                        </div>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <TelerikCheckBox @bind-Value="@_model.IsActive" Id="isActive" />
+                    <label for="isActive">Active</label>
+                </div>
+
+                <div class="form-group">
+                    <label>Permissions</label>
+                    <div class="claims-checkboxes">
+                        @foreach (var claim in _availableClaims)
+                        {
+                            <div class="claim-checkbox">
+                                <TelerikCheckBox @bind-Value="@_claimStates[claim]"
+                                               Id="@($"claim-{claim}")" />
+                                <label for="@($"claim-{claim}")">@GetClaimDisplayName(claim)</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <TelerikButton ButtonType="@ButtonType.Submit"
+                                 ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                                 Enabled="@(!_isSaving)">
+                        @if (_isSaving)
+                        {
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <span>@(IsNewUser ? "Create" : "Update")</span>
+                        }
+                    </TelerikButton>
+                    <TelerikButton OnClick="@OnCancel"
+                                 Enabled="@(!_isSaving)">
+                        Cancel
+                    </TelerikButton>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? UserId { get; set; }
+
+    private UserEditModel _model = new();
+    private List<string> _availableClaims = [];
+    private Dictionary<string, bool> _claimStates = new();
+    private bool _isSaving;
+
+    private bool IsNewUser => string.IsNullOrEmpty(UserId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _availableClaims = UserManagementFacade.GetAvailableClaims().ToList();
+
+        if (!IsNewUser)
+        {
+            var user = await UserManagementFacade.GetUserByIdAsync(UserId!);
+            if (user != null)
+            {
+                _model = new UserEditModel
+                {
+                    Name = user.DisplayName,
+                    Email = user.Email,
+                    IsActive = user.IsActive,
+                    Claims = new List<string>(user.CustomClaims)
+                };
+            }
+        }
+        else
+        {
+            _model.Claims = new List<string>(_availableClaims);
+        }
+
+        // Initialize claim states dictionary
+        _claimStates = _availableClaims.ToDictionary(
+            claim => claim,
+            claim => _model.Claims.Contains(claim)
+        );
+    }
+
+    private void OnClaimChanged(string claim, bool isChecked)
+    {
+        if (isChecked)
+        {
+            if (!_model.Claims.Contains(claim))
+            {
+                _model.Claims.Add(claim);
+            }
+        }
+        else
+        {
+            _model.Claims.Remove(claim);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isSaving = true;
+
+        try
+        {
+            // Sync claim states back to model
+            _model.Claims = _claimStates
+                .Where(kvp => kvp.Value)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            (Viblog.Infrastructure.Shared.Data.Entities.AdminUser? user, UserValidationResult validationResult) result;
+
+            if (IsNewUser)
+            {
+                if (string.IsNullOrWhiteSpace(_model.Password))
+                {
+                    MessageService.SetFail("Password is required for new users");
+                    _isSaving = false;
+                    return;
+                }
+
+                result = await UserManagementFacade.CreateUserAsync(
+                    _model.Name,
+                    _model.Email,
+                    _model.Password,
+                    _model.Claims
+                );
+            }
+            else
+            {
+                result = await UserManagementFacade.UpdateUserAsync(
+                    UserId!,
+                    _model.Name,
+                    _model.Email,
+                    _model.Claims,
+                    _model.IsActive
+                );
+            }
+
+            if (result.validationResult.IsValid && result.user != null)
+            {
+                MessageService.SetSuccess(IsNewUser ? "User created successfully" : "User updated successfully");
+                NavigationManager.NavigateTo("/admin/users");
+            }
+            else
+            {
+                var errors = string.Join(", ", result.validationResult.Errors);
+                MessageService.SetFail(errors);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Error saving user");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/admin/users");
+    }
+
+    private void OnResetPassword()
+    {
+        if (string.IsNullOrEmpty(UserId))
+        {
+            return;
+        }
+
+        DialogService.ShowPasswordResetDialog(
+            UserId,
+            _model.Name,
+            async (newPassword) => await HandlePasswordResetAsync(newPassword)
+        );
+    }
+
+    private async Task HandlePasswordResetAsync(string newPassword)
+    {
+        if (string.IsNullOrEmpty(UserId))
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await UserManagementFacade.ResetPasswordAsync(UserId, newPassword);
+
+            if (result.IsValid)
+            {
+                MessageService.SetSuccess("Password reset successfully");
+            }
+            else
+            {
+                var errors = string.Join(", ", result.Errors);
+                MessageService.SetFail(errors);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Error resetting password");
+        }
+    }
+
+    private string GetClaimDisplayName(string claim)
+    {
+        return claim switch
+        {
+            UserClaims.PostWrite => "Manage Posts",
+            UserClaims.PageWrite => "Manage Pages",
+            UserClaims.StatisticsRead => "View Statistics",
+            UserClaims.UserRead => "View Users",
+            UserClaims.UserWrite => "Manage Users",
+            _ => claim
+        };
+    }
+
+    private class UserEditModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [MinLength(2, ErrorMessage = "Name must be at least 2 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        public string Password { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        public List<string> Claims { get; set; } = [];
+    }
+}
+

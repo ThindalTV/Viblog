@@ -1,54 +1,6 @@
+using Viblog.Infrastructure.Admin.Services;
+
 namespace Viblog.Admin.Services;
-
-/// <summary>
-/// Service for managing and displaying dialogs
-/// </summary>
-public interface IDialogService
-{
-    /// <summary>
-    /// Event raised when a dialog should be shown or hidden
-    /// </summary>
-    event Func<DialogInfo?, Task>? OnDialogChanged;
-
-    /// <summary>
-    /// Show a confirmation dialog
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirm">Action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    /// <param name="cancelText">Cancel button text</param>
-    void ShowConfirmation(string title, string message, Action onConfirm, string confirmText = "Confirm", string cancelText = "Cancel");
-
-    /// <summary>
-    /// Show a confirmation dialog with async callback
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirmAsync">Async action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    /// <param name="cancelText">Cancel button text</param>
-    void ShowConfirmationAsync(string title, string message, Func<Task> onConfirmAsync, string confirmText = "Confirm", string cancelText = "Cancel");
-
-    /// <summary>
-    /// Show an alert dialog (only confirm button)
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirm">Optional action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    void ShowAlert(string title, string message, Action? onConfirm = null, string confirmText = "OK");
-
-    /// <summary>
-    /// Show the markdown syntax cheatsheet dialog
-    /// </summary>
-    void ShowMarkdownSyntaxDialog();
-
-    /// <summary>
-    /// Close the current dialog
-    /// </summary>
-    void Close();
-}
 
 /// <summary>
 /// Implementation of dialog service
@@ -117,6 +69,19 @@ public class DialogService : IDialogService
     public void ShowMarkdownSyntaxDialog()
     {
         _currentDialog = new MarkdownSyntaxDialogInfo();
+
+        _ = NotifyStateChangedAsync();
+    }
+
+    /// <inheritdoc/>
+    public void ShowPasswordResetDialog(string userId, string userName, Func<string, Task> onConfirmAsync)
+    {
+        _currentDialog = new PasswordResetDialogInfo
+        {
+            UserId = userId,
+            UserName = userName,
+            OnConfirmAsync = onConfirmAsync
+        };
 
         _ = NotifyStateChangedAsync();
     }

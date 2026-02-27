@@ -1,5 +1,6 @@
 using Viblog.Admin.Models;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 
 namespace Viblog.Admin.Extensions;
 
@@ -23,17 +24,16 @@ public static class BlogPostExtensions
             {
                 Id = post.Id,
                 PartitionKey = post.GroupKey,
-                Title = post.Title,
+                // Always map Draft content - editors always work on Draft
+                Title = post.Draft.Title,
                 Slug = post.Slug,
-                Short = post.Short,
-                Markdown = post.Markdown,
-                Content = string.IsNullOrWhiteSpace(post.Content) ? null : post.Content,
-                FeaturedImageUrl = post.FeaturedImageUrl,
-                FeaturedImageAlt = post.FeaturedImageAlt,
+                Short = post.Draft.Short,
+                Markdown = post.Draft.Markdown,
+                Content = string.IsNullOrWhiteSpace(post.Draft.Content) ? null : post.Draft.Content,
+                FeaturedImageUrl = post.Draft.FeaturedImageUrl,
+                FeaturedImageAlt = post.Draft.FeaturedImageAlt,
                 AuthorName = post.AuthorName,
                 AuthorId = post.AuthorId,
-                PublishedAt = post.PublishedAt,
-                IsPublished = post.IsPublished,
                 IsFeatured = post.IsFeatured,
                 Tags = [.. post.Tags],
                 CategoryIds = [.. post.CategoryIds]
@@ -47,27 +47,31 @@ public static class BlogPostExtensions
     /// <param name="model">The blog post view model</param>
     /// <returns>Blog post entity</returns>
     extension(BlogPostModel model)
-    {
+    { 
         public BlogPost ToEntity()
         {
             ArgumentNullException.ThrowIfNull(model);
 
             var post = new BlogPost
             {
-                Title = model.Title,
                 Slug = model.Slug,
-                Short = model.Short,
-                Markdown = model.Markdown,
-                Content = model.Content ?? string.Empty,
-                FeaturedImageUrl = model.FeaturedImageUrl,
-                FeaturedImageAlt = model.FeaturedImageAlt,
                 AuthorName = model.AuthorName,
                 AuthorId = model.AuthorId,
-                PublishedAt = model.PublishedAt,
-                IsPublished = model.IsPublished,
+                // IsPublished is NOT set here — it is computed from Live != null.
+                // Live content is managed exclusively by ContentSchedulingService.
+                // PublishedAt is set by ContentSchedulingService, not by the editor.
                 IsFeatured = model.IsFeatured,
                 Tags = model.Tags,
-                CategoryIds = model.CategoryIds
+                CategoryIds = model.CategoryIds,
+                Draft = new BlogPostContent
+                {
+                    Title = model.Title,
+                    Short = model.Short,
+                    Markdown = model.Markdown,
+                    Content = model.Content ?? string.Empty,
+                    FeaturedImageUrl = model.FeaturedImageUrl,
+                    FeaturedImageAlt = model.FeaturedImageAlt
+                }
             };
 
             // Preserve existing ID and partition key for updates
@@ -75,8 +79,6 @@ public static class BlogPostExtensions
             {
                 post.Id = model.Id;
             }
-
-            // For new posts, partition key will be set by repository's UpdatePartitionKey() method
 
             return post;
         }

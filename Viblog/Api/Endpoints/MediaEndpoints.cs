@@ -69,9 +69,9 @@ public static class MediaEndpoints
         [FromQuery] string? title,
         [FromQuery] string? description,
         [FromQuery] string? altText,
-        IMediaFacade mediaFacade,
-        IOptions<MediaLibrarySettings> settings,
-        ILogger<IMediaFacade> logger)
+        [FromServices] IMediaFacade mediaFacade,
+        [FromServices] IOptions<MediaLibrarySettings> settings,
+        [FromServices] ILogger<IMediaFacade> logger)
     {
         try
         {
@@ -134,8 +134,8 @@ public static class MediaEndpoints
     /// </summary>
     private static async Task<Results<Ok, NotFound, BadRequest<string>>> RemoveUploadedFileAsync(
         [FromForm] string file,
-        IMediaFacade mediaFacade,
-        ILogger<IMediaFacade> logger)
+        [FromServices] IMediaFacade mediaFacade,
+        [FromServices] ILogger<IMediaFacade> logger)
     {
         try
         {
@@ -180,7 +180,7 @@ public static class MediaEndpoints
     /// </summary>
     private static async Task<Results<Ok<MediaItem>, NotFound>> GetMediaItemAsync(
         string id,
-        IMediaFacade mediaFacade)
+        [FromServices] IMediaFacade mediaFacade)
     {
         // Use GetByIdAsync which is now available on IMediaFacade
         // Note: We need to know the partition key - for now we'll search
@@ -196,7 +196,7 @@ public static class MediaEndpoints
         [FromQuery] string? mimeTypeFilter = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
-        IMediaFacade mediaFacade = default!)
+        [FromServices] IMediaFacade mediaFacade = default!)
     {
         var paging = new PagingParameters { PageNumber = page, PageSize = pageSize };
         var result = await mediaFacade.GetMediaItemsAsync(mimeTypeFilter, paging, default);
@@ -209,8 +209,8 @@ public static class MediaEndpoints
     private static async Task<Results<Ok<MediaItem>, NotFound, BadRequest<string>>> UpdateMetadataAsync(
         string id,
         [FromBody] UpdateMetadataRequest request,
-        IMediaFacade mediaFacade,
-        ILogger<IMediaFacade> logger)
+        [FromServices] IMediaFacade mediaFacade,
+        [FromServices] ILogger<IMediaFacade> logger)
     {
         try
         {
@@ -244,8 +244,8 @@ public static class MediaEndpoints
     /// </summary>
     private static async Task<Results<NoContent, NotFound, BadRequest<string>>> DeleteMediaItemAsync(
         string id,
-        IMediaFacade mediaFacade,
-        ILogger<IMediaFacade> logger)
+        [FromServices] IMediaFacade mediaFacade,
+        [FromServices] ILogger<IMediaFacade> logger)
     {
         try
         {
@@ -274,8 +274,8 @@ public static class MediaEndpoints
     /// </summary>
     private static async Task<Results<Ok<int>, BadRequest<string>>> BulkDeleteAsync(
         [FromBody] BulkDeleteRequest request,
-        IMediaFacade mediaFacade,
-        ILogger<IMediaFacade> logger)
+        [FromServices] IMediaFacade mediaFacade,
+        [FromServices] ILogger<IMediaFacade> logger)
     {
         try
         {

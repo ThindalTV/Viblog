@@ -170,9 +170,9 @@ public class MediaFacadeTests
         };
 
         _mockMetadataRepository
-            .Setup(x => x.GetAllAsync(
+            .Setup(x => x.GetAllAsync<DateTimeOffset>(
                 It.IsAny<PagingParameters>(),
-                It.IsAny<Expression<Func<MediaItem, object>>>(),
+                It.IsAny<Expression<Func<MediaItem, DateTimeOffset>>>(),
                 It.IsAny<bool>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
@@ -186,10 +186,10 @@ public class MediaFacadeTests
         Assert.Equal(2, result.TotalCount);
         Assert.Equal("file1.jpg", result.Items.First().FileName);
         Assert.Equal("file2.pdf", result.Items.Last().FileName);
-        
-        _mockMetadataRepository.Verify(x => x.GetAllAsync(
+
+        _mockMetadataRepository.Verify(x => x.GetAllAsync<DateTimeOffset>(
             It.IsAny<PagingParameters>(),
-            It.IsAny<Expression<Func<MediaItem, object>>>(),
+            It.IsAny<Expression<Func<MediaItem, DateTimeOffset>>>(),
             It.IsAny<bool>(),
             It.IsAny<bool>(),
             It.IsAny<CancellationToken>()), Times.Once);

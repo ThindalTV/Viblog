@@ -1,0 +1,54 @@
+<a href="@Url" 
+   class="nav-item @(IsActive ? "active" : "")"
+   @onclick="OnClick"
+   @onclick:preventDefault="PreventDefault">
+    <TelerikSvgIcon Icon="@Icon" />
+    @if (Expanded)
+    {
+        <span class="nav-item-text">@Text</span>
+    }
+</a>
+
+@code {
+    /// <summary>
+    /// The text to display for this menu item
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The icon to display for this menu item
+    /// </summary>
+    [Parameter]
+    public ISvgIcon? Icon { get; set; }
+
+    /// <summary>
+    /// The URL this menu item navigates to
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Url { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the sidebar is expanded
+    /// </summary>
+    [Parameter]
+    public bool Expanded { get; set; }
+
+    /// <summary>
+    /// Whether this menu item is currently active/selected
+    /// </summary>
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Optional click handler
+    /// </summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    /// <summary>
+    /// Whether to prevent default navigation behavior (for custom click handlers)
+    /// </summary>
+    [Parameter]
+    public bool PreventDefault { get; set; }
+}

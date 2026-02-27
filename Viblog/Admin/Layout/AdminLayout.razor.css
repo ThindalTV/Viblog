@@ -46,10 +46,19 @@
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-section {
     margin-bottom: 2rem;
+}
+
+.nav-section-logout {
+    margin-top: auto;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-section-title {
@@ -59,32 +68,6 @@
     color: #90a4ae;
     font-weight: 600;
     letter-spacing: 0.05em;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1.5rem;
-    color: #b0bec5;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.nav-item:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-}
-
-.nav-item.active {
-    background-color: rgba(77, 208, 225, 0.1);
-    color: #4dd0e1;
-    border-right: 3px solid #4dd0e1;
-}
-
-.nav-item-text {
-    white-space: nowrap;
 }
 
 /* Stats Widget */

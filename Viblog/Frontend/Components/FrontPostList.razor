@@ -1,4 +1,5 @@
 @inject IFrontPageFacade FrontPageFacade
+@inject ILogger<FrontPostList> Logger
 
 <Section Title="Latest Posts">
     @if (_isLoading)
@@ -54,8 +55,7 @@
         catch (Exception ex)
         {
             _errorMessage = "Unable to load blog posts. Please try again later.";
-            // In production, log the exception
-            // Logger.LogError(ex, "Error loading front page posts");
+            Logger.LogError(ex, "Error loading front page posts");
         }
         finally
         {

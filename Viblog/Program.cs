@@ -1,15 +1,17 @@
-using Microsoft.EntityFrameworkCore;
 using Viblog.Components;
-using Viblog.Data.Filesystem;
 using Viblog.Frontend;
 using Viblog.Api;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
-using Viblog.Shared.Extensions;
-using Microsoft.Extensions.Options;
+using Viblog.Data.CosmosDb;
+using Viblog.Data.AzureStorage;
+using Viblog.Data.CosmosDb.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Aspire
+builder.AddServiceDefaults();
 
 // Configure all Viblog settings using the IOptions pattern
 builder.Services.AddViblogConfiguration(builder.Configuration);
@@ -18,8 +20,21 @@ builder.Services.AddViblogConfiguration(builder.Configuration);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Configure Circuit options for Blazor Server
+builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.DetailedErrors = true;
+    }
+});
+
+builder.AddCosmosDbContext<ApplicationDbContext>("aspireCosmosDatabase");
+
 // Configure Filesystem Data Access (replacing CosmosDB)
-builder.Services.AddFilesystemDataAccess(builder.Configuration);
+builder.Services.AddCosmosDbContext(builder.Configuration, false);
+builder.Services.AddCosmosDbRepositories();
+// builder.Services.AddFilesystemDataAccess(builder.Configuration);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -27,7 +42,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddBlogServices();
 
 // Register media storage services
-builder.Services.AddMediaStorage(builder.Configuration);
+builder.Services.AddAzureBlobStorageRepository();
 
 // Register Viblog Frontend services (statically rendered, no auth)
 builder.Services.AddViblogFrontend();
@@ -39,6 +54,9 @@ var app = builder.Build();
 
 // Seed database with sample data if empty
 await SeedDatabaseAsync(app);
+
+// Initialize admin system (creates default admin user in Auth0 if needed)
+await app.InitializeViblogAdminAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -78,7 +96,11 @@ if (!string.IsNullOrEmpty(mediaBasePath))
 }
 
 app.UseViblogFrontend();
-app.UseViblogAdmin();
+
+// Authentication & Authorization middleware
+// Must be after UseRouting() and before MapRazorComponents()
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
@@ -101,14 +123,18 @@ app.Run();
 static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
-    var blogPostRepository = scope.ServiceProvider.GetRequiredService<Viblog.Infrastructure.Shared.Data.Repositories.IBlogPostRepository>();
-    var filesystemOptions = scope.ServiceProvider.GetRequiredService<IOptions<Viblog.Data.Filesystem.Configuration.FilesystemStorageOptions>>();
+    var seeder = scope.ServiceProvider.GetRequiredService<Viblog.Shared.Data.Seeders.BlogPostSeeder>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation("Checking if database seeding is needed...");
-    await Viblog.Data.Filesystem.Data.Seeders.BlogPostSeeder.SeedAsync(
-        blogPostRepository, 
-        logger, 
-        filesystemOptions);
-    logger.LogInformation("Database seeding check completed.");
+    try
+    {
+        logger.LogInformation("Checking if database seeding is needed...");
+        await seeder.SeedAsync();
+        logger.LogInformation("Database seeding check completed.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error during database seeding");
+        // Don't throw - allow app to start even if seeding fails
+    }
 }
