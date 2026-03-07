@@ -86,11 +86,15 @@
                 <div class="picker-pagination">
                     <button class="btn-secondary btn-sm"
                             disabled="@(_currentPage <= 1)"
-                            @onclick="PreviousPageAsync">‹</button>
+                            @onclick="PreviousPageAsync">
+                        ‹
+                    </button>
                     <span>@_currentPage / @TotalPages</span>
                     <button class="btn-secondary btn-sm"
                             disabled="@(_currentPage >= TotalPages)"
-                            @onclick="NextPageAsync">›</button>
+                            @onclick="NextPageAsync">
+                        ›
+                    </button>
                 </div>
             }
         }
