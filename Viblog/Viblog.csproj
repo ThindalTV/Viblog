@@ -9,21 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Admin\Components\Media\**" />
-    <Compile Remove="Admin\Infrastructure\**" />
-    <Compile Remove="Shared\Infrastructure\**" />
-    <Content Remove="Admin\Components\Media\**" />
-    <Content Remove="Admin\Infrastructure\**" />
-    <Content Remove="Shared\Infrastructure\**" />
-    <EmbeddedResource Remove="Admin\Components\Media\**" />
-    <EmbeddedResource Remove="Admin\Infrastructure\**" />
-    <EmbeddedResource Remove="Shared\Infrastructure\**" />
-    <None Remove="Admin\Components\Media\**" />
-    <None Remove="Admin\Infrastructure\**" />
-    <None Remove="Shared\Infrastructure\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
     <PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
