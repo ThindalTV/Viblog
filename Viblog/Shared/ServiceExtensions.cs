@@ -1,5 +1,7 @@
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Facades;
 using Viblog.Infrastructure.Shared.Services;
+using Viblog.Shared.Facades;
 using Viblog.Shared.Services;
 
 namespace Viblog.Shared;
@@ -32,6 +34,7 @@ public static class ServiceExtensions
         // Register media services
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IMetadataExtractorService, MetadataExtractorService>();
+        services.AddScoped<IMediaFacade, MediaFacade>();
 
         return services;
     }

@@ -7,8 +7,8 @@
 
     <!-- Right Column: Folder Contents (includes MediaPreview) -->
     <FolderContents @bind-SearchTerm="_searchTerm"
-                   SelectedMediaType="_selectedMediaType"
-                   SelectedDateFolder="_selectedDateFolder"
+                   SelectedMediaType="@_selectedMediaType"
+                   SelectedDateFolder="@_selectedDateFolder"
                    OnItemSelected="HandleItemSelected"
                    OnUrlCopied="HandleUrlCopied" />
 </div>

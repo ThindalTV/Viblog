@@ -1,58 +1,47 @@
-@using Viblog.Admin.Components.Dialogs
-@using Viblog.Admin.Services
 @inject IDialogService DialogService
 @implements IDisposable
 
-<DialogBase @ref="_dialogBase" IsModal="true" CssClass="standard-dialog" OnClose="HandleClose">
-    <Title>
-        @if (!string.IsNullOrWhiteSpace(_dialogInfo?.Title))
-        {
-            <h2 class="dialog-title">@_dialogInfo.Title</h2>
-        }
-    </Title>
-    <Content>
+<TelerikDialog @bind-Visible="_visible" Title="@(_dialogInfo?.Title ?? string.Empty)">
+    <DialogContent>
         <p>@(_dialogInfo?.Message ?? string.Empty)</p>
-    </Content>
-    <ActionButtons>
+    </DialogContent>
+    <DialogButtons>
         @if (_dialogInfo?.ShowCancel == true)
         {
-            <button type="button" class="btn-dialog-cancel" @onclick="HandleCancel">
-                @_dialogInfo.CancelText
-            </button>
+            <TelerikButton OnClick="HandleCancel">@_dialogInfo.CancelText</TelerikButton>
         }
         @if (_dialogInfo?.ShowConfirm == true)
         {
-            <button type="button" class="btn-dialog-confirm" @onclick="HandleConfirm">
-                @_dialogInfo.ConfirmText
-            </button>
+            <TelerikButton OnClick="HandleConfirm" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@_dialogInfo.ConfirmText</TelerikButton>
         }
-    </ActionButtons>
-</DialogBase>
+    </DialogButtons>
+</TelerikDialog>
 
 @code {
-    private DialogBase? _dialogBase;
     private MessageDialogInfo? _dialogInfo;
+    private bool _visible;
 
     protected override void OnInitialized()
     {
         DialogService.OnDialogChanged += HandleDialogChangedAsync;
     }
 
-    private async Task HandleDialogChangedAsync(DialogInfo? dialog)
+    private Task HandleDialogChangedAsync(DialogInfo? dialog)
     {
         if (dialog is not MessageDialogInfo messageDialog)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         _dialogInfo = messageDialog;
+        _visible = true;
         StateHasChanged();
-
-        await (_dialogBase?.ShowAsync() ?? Task.CompletedTask);
+        return Task.CompletedTask;
     }
 
     private async Task HandleConfirm()
     {
+        _visible = false;
         if (_dialogInfo?.OnConfirmAsync != null)
         {
             await _dialogInfo.OnConfirmAsync.Invoke();
@@ -67,6 +56,7 @@
 
     private async Task HandleCancel()
     {
+        _visible = false;
         if (_dialogInfo?.OnCancelAsync != null)
         {
             await _dialogInfo.OnCancelAsync.Invoke();
@@ -76,11 +66,6 @@
             _dialogInfo?.OnCancel?.Invoke();
         }
 
-        DialogService.Close();
-    }
-
-    private void HandleClose()
-    {
         DialogService.Close();
     }
 

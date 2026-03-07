@@ -19,9 +19,21 @@
         
         <div class="preview-content">
             <div class="preview-image">
-                @if (SelectedItem.PreviewUrl != null)
+                @if (IsImage(SelectedItem.MimeType))
                 {
-                    <img src="@SelectedItem.PublicUrl" alt="@SelectedItem.AltText" />
+                    <img src="@SelectedItem.PublicUrl" alt="@(SelectedItem.AltText ?? SelectedItem.FileName)" />
+                }
+                else if (IsVideo(SelectedItem.MimeType))
+                {
+                    <video controls preload="metadata">
+                        <source src="@SelectedItem.PublicUrl" type="@SelectedItem.MimeType" />
+                    </video>
+                }
+                else if (IsAudio(SelectedItem.MimeType))
+                {
+                    <audio controls preload="metadata">
+                        <source src="@SelectedItem.PublicUrl" type="@SelectedItem.MimeType" />
+                    </audio>
                 }
                 else
                 {
@@ -31,47 +43,49 @@
                 }
             </div>
             
-            <div class="preview-info">
-                <div class="info-row">
-                    <label>Filename:</label>
-                    <span>@SelectedItem.FileName</span>
-                </div>
-                <div class="info-row">
-                    <label>Size:</label>
-                    <span>@FormatFileSize(SelectedItem.FileSize)</span>
-                </div>
-                <div class="info-row">
-                    <label>Type:</label>
-                    <span>@SelectedItem.MimeType</span>
-                </div>
-                <div class="info-row">
-                    <label>Uploaded:</label>
-                    <span>@SelectedItem.CreatedAt.ToString("MMMM d, yyyy h:mm tt")</span>
-                </div>
-                @if (SelectedItem.Width.HasValue && SelectedItem.Height.HasValue)
-                {
+            <div class="preview-sidebar">
+                <div class="preview-info">
                     <div class="info-row">
-                        <label>Dimensions:</label>
-                        <span>@SelectedItem.Width × @SelectedItem.Height</span>
+                        <label>Filename:</label>
+                        <span>@SelectedItem.FileName</span>
                     </div>
-                }
-                <div class="info-row url-row">
-                    <label>URL:</label>
-                    <input type="text" 
-                           readonly 
-                           value="@SelectedItem.PublicUrl" 
-                           @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)" 
-                           title="Click to copy" />
+                    <div class="info-row">
+                        <label>Size:</label>
+                        <span>@FormatFileSize(SelectedItem.FileSize)</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Type:</label>
+                        <span>@SelectedItem.MimeType</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Uploaded:</label>
+                        <span>@SelectedItem.CreatedAt.ToString("MMMM d, yyyy h:mm tt")</span>
+                    </div>
+                    @if (SelectedItem.Width.HasValue && SelectedItem.Height.HasValue)
+                    {
+                        <div class="info-row">
+                            <label>Dimensions:</label>
+                            <span>@SelectedItem.Width × @SelectedItem.Height</span>
+                        </div>
+                    }
+                    <div class="info-row url-row">
+                        <label>URL:</label>
+                        <input type="text" 
+                               readonly 
+                               value="@SelectedItem.PublicUrl" 
+                               @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)" 
+                               title="Click to copy" />
+                    </div>
                 </div>
-            </div>
-            
-            <div class="preview-actions">
-                <button class="btn-primary" @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)">
-                    Copy URL
-                </button>
-                <button class="btn-danger" @onclick="OnDeleteRequested">
-                    Delete
-                </button>
+
+                <div class="preview-actions">
+                    <button class="btn-primary" @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)">
+                        Copy URL
+                    </button>
+                    <button class="btn-danger" @onclick="OnDeleteRequested">
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -130,6 +144,10 @@
             Logger.LogError(ex, "Failed to copy URL to clipboard");
         }
     }
+
+    private static bool IsImage(string mimeType) => mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+    private static bool IsVideo(string mimeType) => mimeType.StartsWith("video/", StringComparison.OrdinalIgnoreCase);
+    private static bool IsAudio(string mimeType) => mimeType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase);
 
     private static string FormatFileSize(long bytes)
     {

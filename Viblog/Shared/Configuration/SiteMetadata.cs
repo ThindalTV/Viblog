@@ -21,11 +21,6 @@ public class SiteMetadata
     public string DefaultDescription { get; set; } = string.Empty;
 
     /// <summary>
-    /// Site author/owner name
-    /// </summary>
-    public string Author { get; set; } = string.Empty;
-
-    /// <summary>
     /// Twitter handle (without @) for Twitter Cards
     /// </summary>
     public string? TwitterHandle { get; set; }

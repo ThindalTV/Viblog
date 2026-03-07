@@ -4,13 +4,25 @@
 @using Viblog.Frontend.Components
 
 @inject IBlogPostListFacade BlogPostListFacade
+@inject IBlogSearchFacade BlogSearchFacade
 @inject NavigationManager Navigation
 @inject ILogger<Posts> Logger
 
-<PageTitle>All Posts</PageTitle>
+<PageTitle>@(IsSearchActive ? $"Search: {SearchTerm}" : "All Posts")</PageTitle>
 
 <section class="blog-section">
-    <h2 class="section-title">All Blog Posts</h2>
+    <div class="section-header">
+        <h2 class="section-title">@(IsSearchActive ? $"Search Results for \"{SearchTerm}\"" : "All Blog Posts")</h2>
+        <form class="search-form" method="get" action="/posts">
+            <input class="search-input"
+                   type="search"
+                   name="s"
+                   value="@SearchTerm"
+                   placeholder="Search posts..."
+                   aria-label="Search posts" />
+            <button class="search-btn" type="submit">Search</button>
+        </form>
+    </div>
     
     @if (_isLoading)
     {
@@ -23,9 +35,16 @@
     else if (_pagedResult == null || !_pagedResult.Items.Any())
     {
         <article class="blog-post">
-            <h3 class="post-title">No Posts Yet</h3>
+            <h3 class="post-title">@(IsSearchActive ? "No posts found" : "No Posts Yet")</h3>
             <p class="post-excerpt">
-                Check back soon for new content!
+                @if (IsSearchActive)
+                {
+                    @($"No posts match \"{SearchTerm}\". Try a different search term.")
+                }
+                else
+                {
+                    @("Check back soon for new content!")
+                }
             </p>
         </article>
     }
@@ -45,13 +64,21 @@
 
 @code {
     private const int PostsPerPage = 5;
-    
+    private const int MinSearchLength = 3;
+
     private PagedResult<BlogPost>? _pagedResult;
     private bool _isLoading = true;
     private string? _errorMessage;
 
     [Parameter]
     public int? PageNumber { get; set; }
+
+    [SupplyParameterFromQuery(Name = "s")]
+    public string? SearchTerm { get; set; }
+
+    private bool IsSearchActive => !string.IsNullOrWhiteSpace(SearchTerm) && SearchTerm.Length >= MinSearchLength;
+
+    private int CurrentPage => PageNumber ?? 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,10 +100,11 @@
         {
             _isLoading = true;
             _errorMessage = null;
-            
-            var currentPage = PageNumber ?? 1;
-            var pagingParams = new PagingParameters(currentPage, PostsPerPage);
-            _pagedResult = await BlogPostListFacade.GetPaginatedPostsAsync(pagingParams);
+
+            var pagingParams = new PagingParameters(CurrentPage, PostsPerPage);
+            _pagedResult = IsSearchActive
+                ? await BlogSearchFacade.SearchPostsAsync(SearchTerm!, pagingParams)
+                : await BlogPostListFacade.GetPaginatedPostsAsync(pagingParams);
         }
         catch (Exception ex)
         {
@@ -92,17 +120,15 @@
     private string GetPageUrl(int pageNumber)
     {
         if (pageNumber < 1)
-        {
             pageNumber = 1;
-        }
 
         if (_pagedResult != null && pageNumber > _pagedResult.TotalPages)
-        {
             pageNumber = _pagedResult.TotalPages;
-        }
 
-        return pageNumber == 1 
-            ? "/posts" 
-            : $"/posts/{pageNumber}";
+        var basePath = pageNumber == 1 ? "/posts" : $"/posts/{pageNumber}";
+
+        return IsSearchActive
+            ? $"{basePath}?s={Uri.EscapeDataString(SearchTerm!)}"
+            : basePath;
     }
 }

@@ -21,6 +21,9 @@ public class BlogPost : BaseEntity, ISchedulableContent
     // Stored publish state — set via SetLiveContent, used directly in EF queries
     public bool IsPublished { get; set; }
 
+    // Denormalized search index from Live content — set via SetLiveContent, used directly in EF queries
+    public string LiveSearchIndex { get; set; } = string.Empty;
+
     // BlogPost-specific metadata
     public string AuthorId { get; set; } = string.Empty;
     public string AuthorName { get; set; } = string.Empty;

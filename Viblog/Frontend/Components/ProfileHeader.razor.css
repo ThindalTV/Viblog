@@ -4,10 +4,10 @@
     color: #ffffff;
     padding: 2rem;
     display: grid;
-    grid-column-gap: 6rem;
+    grid-column-gap: var(--profile-column-gap);
     grid-template-columns: 1fr 1fr;
-    margin: -100px 10rem 0 10rem;
-    margin-bottom: 100px;
+    margin: var(--profile-top-overlap) var(--profile-side-margin) 0 var(--profile-side-margin);
+    margin-bottom: var(--profile-bottom-space);
 }
 
 .header-presentation {
@@ -39,7 +39,7 @@
 .socials {
     list-style: none;
     padding: 0;
-    margin: 1.5rem 0 0 0;
+    margin: 0;
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
@@ -72,6 +72,28 @@
         display: block;
     }
 
+.presentation-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 1rem;
+}
+
+.header-awards--inline {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .header-awards--inline img {
+        height: 110px;
+        width: auto;
+        display: block;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+
 .header-photo {
     aspect-ratio: 1/1;
     background-size: cover;
@@ -86,13 +108,13 @@
     padding: 0;
     margin: 0;
     display: flex;
-    gap: 2.25rem;
+    gap: var(--profile-award-gap);
     flex-wrap: wrap;
     justify-content: flex-end;
     align-items: flex-end;
     position: absolute;
-    bottom: -95px;
-    right: 50px;
+    bottom: var(--profile-award-bottom);
+    right: var(--profile-award-right);
 }
 
     .header-awards li {
@@ -109,19 +131,57 @@
         }
 
     .header-awards img {
-        height: 143px;
+        height: var(--profile-award-height);
         width: auto;
         display: block;
         filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
     }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1600px) {
     .header-content {
         grid-template-columns: 1fr;
-        gap: 2rem;
-        margin: -50px 2rem 0 2rem;
-        margin-bottom: 80px;
+        margin: var(--profile-top-overlap) var(--profile-side-margin) var(--profile-bottom-space) var(--profile-side-margin);
+    }
+
+    .header-photo {
+        display: none;
+    }
+
+    .presentation-footer {
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .header-awards--inline {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 1100px) {
+    .header-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin: -50px 0 80px 0;
+        padding: 0;
+    }
+
+    .presentation-footer {
+        justify-content: flex-start;
+        gap: 0.75rem;
+    }
+
+    .header-awards--inline {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .header-awards--inline img {
+        height: 28px;
+        width: auto;
     }
 
     .header-presentation h2 {
@@ -134,8 +194,8 @@
 
     .socials {
         gap: 0.75rem;
-        justify-content: center;
-        margin: 1.25rem 0 0 0;
+        justify-content: flex-start;
+        margin: 0;
     }
 
     .socials a {
@@ -148,23 +208,27 @@
         height: 28px;
     }
 
+    .header-photo {
+        height: 300px;
+        aspect-ratio: unset;
+    }
+
     .header-awards {
         position: absolute;
         bottom: -76px;
-        right: 40px;
-        gap: 1.875rem;
+        right: 20px;
+        gap: 1.5rem;
     }
 
     .header-awards img {
-        height: 114px;
+        height: 100px;
     }
 }
 
 @media (max-width: 640px) {
     .header-content {
-        padding: 1rem;
-        margin: -30px 1rem 0 1rem;
-        margin-bottom: 60px;
+        padding: 0;
+        margin: -30px 0 60px 0;
     }
 
     .header-presentation h2 {
@@ -173,6 +237,10 @@
 
     .bio-content {
         font-size: 0.9rem;
+    }
+
+    .header-awards--inline img {
+        height: 24px;
     }
 
     .socials a {
@@ -186,16 +254,20 @@
     }
 
     .socials {
-        margin: 1rem 0 0 0;
+        margin: 0;
+    }
+
+    .header-photo {
+        height: 250px;
     }
 
     .header-awards {
         bottom: -57px;
-        right: 30px;
-        gap: 1.5rem;
+        right: 10px;
+        gap: 1rem;
     }
 
     .header-awards img {
-        height: 86px;
+        height: 80px;
     }
 }

@@ -8,6 +8,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     list-style: none;
     margin: 0;
     padding: 0.75rem 0;
@@ -20,7 +21,7 @@
 }
 
 .breadcrumb-item:not(:last-child)::after {
-    content: '›';
+    content: '\203A';
     margin: 0 0.5rem;
     color: #929292;
     font-size: 1.25rem;
@@ -30,6 +31,7 @@
     color: #555555;
     text-decoration: none;
     transition: color 0.2s ease;
+    padding: 0.5rem 0.25rem;
 }
 
 .breadcrumb-item a:hover {
@@ -40,6 +42,7 @@
 .breadcrumb-item span {
     color: #1a1a1a;
     font-weight: 500;
+    padding: 0.5rem 0.25rem;
 }
 
 /* Mobile Responsive */

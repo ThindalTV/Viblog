@@ -38,18 +38,30 @@
     --spacing-xxl: 3rem;
 
     /* Layout */
+    --max-width-container: 1600px;
     --max-width-content: 1200px;
     --sidebar-width: 250px;
+
+    /* Profile Header */
+    --profile-side-margin: 10rem;
+    --profile-top-overlap: -100px;
+    --profile-bottom-space: 100px;
+    --profile-column-gap: 6rem;
+    --profile-award-height: 143px;
+    --profile-award-bottom: -95px;
+    --profile-award-right: 50px;
+    --profile-award-gap: 2.25rem;
 
     /* Components */
     --border-radius: 4px;
     --border-radius-sm: 0.25rem;
     --border-radius-lg: 0.5rem;
 
-    /* Breakpoints (for reference in media queries) */
-    --breakpoint-mobile: 640.98px;
-    --breakpoint-tablet: 768px;
-    --breakpoint-desktop: 641px;
+    /* Breakpoints (documentation only — cannot be used inside @media conditions) */
+    --bp-xs: 640px;     /* small mobile */
+    --bp-sm: 768px;     /* mobile / small tablet */
+    --bp-md: 1100px;    /* tablet */
+    --bp-lg: 1600px;    /* desktop */
 
     /* Z-index */
     --z-index-dropdown: 1000;

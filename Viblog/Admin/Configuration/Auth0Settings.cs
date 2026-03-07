@@ -35,15 +35,15 @@ public class Auth0Settings
 
     /// <summary>
     /// Callback path after successful Auth0 login
-    /// Default: /admin/auth/callback
+    /// Default: /viblog/auth/callback
     /// </summary>
-    public string CallbackPath { get; set; } = "/admin/auth/callback";
+    public string CallbackPath { get; set; } = "/viblog/auth/callback";
 
     /// <summary>
     /// Where to redirect after logout
-    /// Default: /admin/login
+    /// Default: /viblog/login
     /// </summary>
-    public string LogoutRedirectUri { get; set; } = "/admin/login";
+    public string LogoutRedirectUri { get; set; } = "/viblog/login";
 
     /// <summary>
     /// Auth0 Management API connection string

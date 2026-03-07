@@ -24,7 +24,6 @@ public class FeedFacadeTests
             SiteName = "Test Blog",
             BaseUrl = "https://testblog.com",
             DefaultDescription = "Test blog description",
-            Author = "Test Author"
         });
         
         _facade = new FeedFacade(_mockRepository.Object, mockOptions.Object);

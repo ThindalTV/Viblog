@@ -1,5 +1,5 @@
-@page "/admin/users/new"
-@page "/admin/users/edit/{userId}"
+@page "/viblog/users/new"
+@page "/viblog/users/edit/{userId}"
 @attribute [Authorize(Policy = RequireUserWrite)]
 @layout AdminLayout
 @using Viblog.Infrastructure.Shared.Data.Entities
@@ -220,7 +220,7 @@
             if (result.validationResult.IsValid && result.user != null)
             {
                 MessageService.SetSuccess(IsNewUser ? "User created successfully" : "User updated successfully");
-                NavigationManager.NavigateTo("/admin/users");
+                NavigationManager.NavigateTo("/viblog/users");
             }
             else
             {
@@ -240,7 +240,7 @@
 
     private void OnCancel()
     {
-        NavigationManager.NavigateTo("/admin/users");
+        NavigationManager.NavigateTo("/viblog/users");
     }
 
     private void OnResetPassword()

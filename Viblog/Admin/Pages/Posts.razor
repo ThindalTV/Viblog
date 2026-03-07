@@ -1,4 +1,4 @@
-@page "/admin/posts"
+@page "/viblog/posts"
 @using Viblog.Admin.Components
 @using Viblog.Infrastructure.Shared.Data.Entities.Content
 @using Viblog.Admin.Extensions;
@@ -17,7 +17,7 @@
         <div class="page-actions">
             <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
                            Icon="@SvgIcon.Plus"
-                           OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/admin/posts/new"))">
+                           OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/viblog/posts/new"))">
                 New Post
             </TelerikButton>
         </div>
@@ -112,12 +112,7 @@
                                 if (post is not null)
                                 {
                                     <div class="status-cell">
-                                        <ContentStatusBadge IsPublished="@post.IsPublished"
-                                                            HasPendingUpdate="@post.HasPendingUpdate"
-                                                            ScheduleStatus="@post.Schedule.Status"
-                                                            ScheduledDate="@post.Schedule.ScheduledPublishDate"
-                                                            PublishedAt="@post.PublishedAt"
-                                                            IsDeleted="@post.IsDeleted" />
+                                        <ContentStatusBadge Content="@post" />
                                     </div>
                                 }
                             }
@@ -182,7 +177,7 @@
         var post = args.Item as BlogPost;
         if (post != null)
         {
-            NavigationManager.NavigateTo($"/admin/posts/edit/{post.Id}");
+            NavigationManager.NavigateTo($"/viblog/posts/edit/{post.Id}");
         }
     }
 

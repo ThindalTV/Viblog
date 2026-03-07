@@ -1,4 +1,4 @@
-@page "/admin/login"
+@page "/viblog/login"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [AllowAnonymous]
@@ -9,7 +9,7 @@
     <Authorized>
         @{
             // User is already authenticated, redirect to dashboard
-            Navigation.NavigateTo("/admin", true);
+            Navigation.NavigateTo("/viblog", true);
         }
     </Authorized>
     <NotAuthorized>
@@ -39,7 +39,7 @@
                         </div>
 
                         <div class="form-actions">
-                            <a href="/admin/auth/challenge" class="btn-login">
+                            <a href="/viblog/auth/challenge" class="btn-login">
                                 <span>Try Again</span>
                             </a>
                         </div>
@@ -87,8 +87,8 @@
             {
                 // Auto-redirect to Auth0 challenge
                 var challengeUrl = string.IsNullOrEmpty(ReturnUrl) 
-                    ? "/admin/auth/challenge" 
-                    : $"/admin/auth/challenge?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+                    ? "/viblog/auth/challenge" 
+                    : $"/viblog/auth/challenge?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
 
                 Navigation.NavigateTo(challengeUrl, forceLoad: true);
             }

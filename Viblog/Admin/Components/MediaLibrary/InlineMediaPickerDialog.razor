@@ -1,0 +1,109 @@
+@using Viblog.Infrastructure.Shared.Data.Entities
+
+@if (_isVisible)
+{
+    <TelerikWindow Visible="@_isVisible"
+                   VisibleChanged="@OnWindowVisibleChanged"
+                   Modal="true"
+                   Width="560px"
+                   Height="auto">
+        <WindowTitle>
+            <strong>Insert Media</strong>
+        </WindowTitle>
+        <WindowContent>
+            <div class="inline-picker-dialog-content">
+                <InlineMediaPicker OnMediaItemSelected="OnItemSelectedAsync" />
+            </div>
+        </WindowContent>
+        <WindowActions>
+        </WindowActions>
+        <WindowFooter>
+            <div class="inline-picker-dialog-footer">
+                @if (_selectedItem != null)
+                {
+                    <span class="picker-selection-label" title="@_selectedItem.FileName">
+                        @_selectedItem.FileName
+                    </span>
+                }
+                <TelerikButton OnClick="@CloseAsync"
+                               ThemeColor="@ThemeConstants.Button.ThemeColor.Base">
+                    Cancel
+                </TelerikButton>
+                <TelerikButton OnClick="@InsertAsync"
+                               ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                               Enabled="@(_selectedItem != null)">
+                    Insert
+                </TelerikButton>
+            </div>
+        </WindowFooter>
+    </TelerikWindow>
+}
+
+@code {
+    private bool _isVisible;
+    private MediaItem? _selectedItem;
+
+    /// <summary>
+    /// Raised when the user confirms a selection. The string value is the markdown
+    /// to insert: <c>![alt](url)</c> for images, <c>[filename](url)</c> for other files.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnInsertMarkdown { get; set; }
+
+    /// <summary>
+    /// Opens the dialog.
+    /// </summary>
+    public void Open()
+    {
+        _selectedItem = null;
+        _isVisible = true;
+        StateHasChanged();
+    }
+
+    private Task OnItemSelectedAsync(MediaItem item)
+    {
+        _selectedItem = item;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task InsertAsync()
+    {
+        if (_selectedItem == null || !OnInsertMarkdown.HasDelegate)
+            return;
+
+        var markdown = BuildMarkdown(_selectedItem);
+        await OnInsertMarkdown.InvokeAsync(markdown);
+        await CloseAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        _isVisible = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task OnWindowVisibleChanged(bool visible)
+    {
+        if (!visible)
+            await CloseAsync();
+    }
+
+    private static string BuildMarkdown(MediaItem item)
+    {
+        var sanitizedName = Path.GetFileName(item.StoragePath);
+        var alt = item.AltText ?? item.Title ?? Path.GetFileNameWithoutExtension(item.StoragePath);
+
+        if (item.MimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return $"![{alt}]({item.PublicUrl})";
+
+        if (item.MimeType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            return $"<video controls src=\"{item.PublicUrl}\"></video>";
+
+        if (item.MimeType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+            return $"<audio controls src=\"{item.PublicUrl}\"></audio>";
+
+        return $"[{alt}]({item.PublicUrl})";
+    }
+}

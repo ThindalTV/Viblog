@@ -123,6 +123,13 @@ app.Run();
 static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
+
+    // Ensure the Cosmos DB database and all containers exist before any
+    // repository is used. This replaces the fire-and-forget call that was
+    // previously in CosmosDbRepository's constructor.
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+
     var seeder = scope.ServiceProvider.GetRequiredService<Viblog.Shared.Data.Seeders.BlogPostSeeder>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 

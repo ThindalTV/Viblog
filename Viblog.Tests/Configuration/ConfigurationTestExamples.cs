@@ -19,7 +19,6 @@ public class ConfigurationTestExamples
         {
             SiteName = "Test Blog",
             BaseUrl = "https://testblog.com",
-            Author = "Test Author"
         };
 
         var options = Options.Create(siteMetadata);

@@ -41,7 +41,6 @@ public class ConfigurationUsageExamples
         {
             var siteName = _siteMetadata.SiteName;
             var baseUrl = _siteMetadata.BaseUrl;
-            var author = _siteMetadata.Author;
         }
     }
 

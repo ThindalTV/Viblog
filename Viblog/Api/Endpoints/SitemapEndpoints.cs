@@ -86,7 +86,7 @@ public static class SitemapEndpoints
             
             # Disallow admin and account areas
             Disallow: /Account/
-            Disallow: /admin/
+            Disallow: /viblog/
             
             # Disallow search results to avoid duplicate content
             Disallow: /search

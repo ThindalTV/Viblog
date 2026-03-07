@@ -26,14 +26,14 @@
 ### Allowed URLs
 **Callback URLs:**
 ```
-https://localhost:7001/admin/auth/callback
-http://localhost:5000/admin/auth/callback
+https://localhost:7001/viblog/auth/callback
+http://localhost:5000/viblog/auth/callback
 ```
 
 **Logout URLs:**
 ```
-https://localhost:7001/admin/login
-http://localhost:5000/admin/login
+https://localhost:7001/viblog/login
+http://localhost:5000/viblog/login
 ```
 
 **Web Origins:**
@@ -44,8 +44,8 @@ http://localhost:5000
 
 ### Production URLs (Add Later)
 ```
-https://yourdomain.com/admin/auth/callback
-https://yourdomain.com/admin/login
+https://yourdomain.com/viblog/auth/callback
+https://yourdomain.com/viblog/login
 https://yourdomain.com
 ```
 

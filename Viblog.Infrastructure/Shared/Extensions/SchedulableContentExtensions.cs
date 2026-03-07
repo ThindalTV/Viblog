@@ -11,6 +11,13 @@ public static class SchedulableContentExtensions
     extension(ISchedulableContent content)
     {
         /// <summary>
+        /// True when content is published and has a scheduled update pending.
+        /// Equivalent to Live != null &amp;&amp; Schedule.Status == Scheduled.
+        /// </summary>
+        public bool HasPendingUpdate =>
+            content.IsPublished && content.Schedule.Status == ContentStatus.Scheduled;
+
+        /// <summary>
         /// Gets the Live content for display.
         /// </summary>
         public BaseContent? GetLiveContent()
@@ -86,6 +93,7 @@ public static class SchedulableContentExtensions
                 case BlogPost post:
                     post.Live = value as BlogPostContent;
                     post.IsPublished = post.Live is not null;
+                    post.LiveSearchIndex = post.Live?.SearchIndex ?? string.Empty;
                     break;
                 case Page page:
                     page.Live = value as PageContent;

@@ -11,7 +11,7 @@
                 <NotAuthorized>
                     @{
                         var returnUrl = Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri));
-                        Navigation.NavigateTo($"/admin/login?ReturnUrl={returnUrl}", forceLoad: true);
+                        Navigation.NavigateTo($"/viblog/login?ReturnUrl={returnUrl}", forceLoad: true);
                     }
                 </NotAuthorized>
             </AuthorizeRouteView>
@@ -25,7 +25,7 @@
                     </div>
                     <div class="page-content">
                         <p>The page you're looking for doesn't exist.</p>
-                        <a href="/admin">Return to Dashboard</a>
+                        <a href="/viblog">Return to Dashboard</a>
                     </div>
                 </div>
             </LayoutView>

@@ -1,9 +1,13 @@
 @using Viblog.Admin.Components.Input
+@using Viblog.Admin.Components.MediaLibrary
 @using Viblog.Admin.Services
 @using Viblog.Infrastructure.Shared.Services
+@using Microsoft.JSInterop
 
 @inject IMarkdownService MarkdownService
 @inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <div class="markdown-editor">
     @if (!string.IsNullOrWhiteSpace(Label))
@@ -17,8 +21,15 @@
     }
 
     <div class="editor-container">
-        <div class="editor-panel">
-            <div class="panel-header">Edit</div>
+        <div class="editor-panel" @ref="_editorPanel">
+            <div class="panel-header">
+                <span>Edit</span>
+                <button type="button" class="btn-insert-media" title="Insert media"
+                        @onclick="() => _mediaPickerDialog?.Open()"
+                        disabled="@Disabled">
+                    &#128444;
+                </button>
+            </div>
             <TextInput Value="@Markdown"
                       ValueChanged="@HandleMarkdownChanged"
                       Multiline="true"
@@ -43,6 +54,8 @@
         </div>
     </div>
 </div>
+
+<InlineMediaPickerDialog @ref="_mediaPickerDialog" OnInsertMarkdown="InsertMarkdownAsync" />
 
 @code {
     /// <summary>
@@ -127,4 +140,33 @@
     {
         DialogService.ShowMarkdownSyntaxDialog();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "/js/markdownEditor.js");
+        }
+    }
+
+    private async Task InsertMarkdownAsync(string markdown)
+    {
+        if (_jsModule == null || Disabled)
+            return;
+
+        var newValue = await _jsModule.InvokeAsync<string?>("insertAtCursor", _editorPanel, markdown);
+        if (newValue != null)
+            await HandleMarkdownChanged(newValue);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule != null)
+            await _jsModule.DisposeAsync();
+    }
+
+    private InlineMediaPickerDialog? _mediaPickerDialog;
+    private ElementReference _editorPanel;
+    private IJSObjectReference? _jsModule;
 }

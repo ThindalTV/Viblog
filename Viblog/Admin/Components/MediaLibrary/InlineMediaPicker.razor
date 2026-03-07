@@ -1,0 +1,290 @@
+@using Viblog.Admin.Models
+@using Viblog.Infrastructure.Admin.Services
+@using Viblog.Infrastructure.Shared.Data.Common
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Services
+@inject IMediaService MediaService
+@inject IMediaLibraryBroadcastService BroadcastService
+@inject ILogger<InlineMediaPicker> Logger
+@implements IAsyncDisposable
+
+<div class="inline-media-picker">
+    <!-- Toolbar: folder select + upload -->
+    <div class="picker-toolbar">
+        <select class="folder-select"
+                value="@_selectedFolder"
+                @onchange="OnFolderChangedAsync"
+                disabled="@_isLoading">
+            <option value="">— Select folder —</option>
+            @foreach (var folder in _folders)
+            {
+                <option value="@folder.DateFolder">@folder.DisplayName</option>
+            }
+        </select>
+
+        <label class="upload-label @(_isUploading ? "uploading" : "")"
+               title="Upload a file">
+            <InputFile OnChange="OnFileSelectedAsync"
+                       accept="@AcceptedFileTypes"
+                       disabled="@_isUploading"
+                       class="upload-input" />
+            @if (_isUploading)
+            {
+                <span>Uploading…</span>
+            }
+            else
+            {
+                <span>↑ Upload</span>
+            }
+        </label>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_uploadError))
+    {
+        <div class="picker-error">@_uploadError</div>
+    }
+
+    <!-- File grid -->
+    <div class="picker-grid-wrapper">
+        @if (_isLoading)
+        {
+            <div class="picker-status">Loading…</div>
+        }
+        else if (string.IsNullOrEmpty(_selectedFolder))
+        {
+            <div class="picker-status">Select a folder to browse files.</div>
+        }
+        else if (!_items.Any())
+        {
+            <div class="picker-status">No files in this folder.</div>
+        }
+        else
+        {
+            <div class="picker-file-grid">
+                @foreach (var item in _items)
+                {
+                    var sanitizedName = Path.GetFileName(item.StoragePath);
+                    <div class="picker-grid-item @(item.Id == _selectedItem?.Id ? "selected" : "")"
+                         @onclick="() => SelectItem(item)">
+                        <div class="picker-thumb">
+                            @if (item.MimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <img src="@item.PublicUrl" alt="" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="picker-ext">@item.FileExtension</span>
+                            }
+                        </div>
+                        <span class="picker-grid-name" title="@sanitizedName">@sanitizedName</span>
+                    </div>
+                }
+            </div>
+
+            @if (_totalCount > _pageSize)
+            {
+                <div class="picker-pagination">
+                    <button class="btn-secondary btn-sm"
+                            disabled="@(_currentPage <= 1)"
+                            @onclick="PreviousPageAsync">‹</button>
+                    <span>@_currentPage / @TotalPages</span>
+                    <button class="btn-secondary btn-sm"
+                            disabled="@(_currentPage >= TotalPages)"
+                            @onclick="NextPageAsync">›</button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<DateFolderInfo> _folders = [];
+    private List<MediaItem> _items = [];
+    private MediaItem? _selectedItem;
+    private string? _selectedFolder;
+    private bool _isLoading;
+    private bool _isUploading;
+    private string? _uploadError;
+    private int _currentPage = 1;
+    private readonly int _pageSize = 30;
+    private int _totalCount;
+
+    private int TotalPages => (int)Math.Ceiling((double)_totalCount / _pageSize);
+
+    private string AcceptedFileTypes =>
+        ".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.mp4,.webm,.mp3";
+
+    /// <summary>
+    /// Raised when a media item is selected by clicking or after a successful upload.
+    /// </summary>
+    [Parameter]
+    public EventCallback<MediaItem> OnMediaItemSelected { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        BroadcastService.OnFolderContentsChanged += HandleFolderContentsChangedAsync;
+        await LoadFoldersAsync();
+    }
+
+    private async Task LoadFoldersAsync()
+    {
+        try
+        {
+            var folders = await MediaService.GetDateFoldersAsync(cancellationToken: CancellationToken.None);
+            _folders = folders.Select(df => new DateFolderInfo
+            {
+                DateFolder = df,
+                DisplayName = DateFolderInfo.GetDisplayName(df)
+            }).ToList();
+
+            // Auto-select the newest folder
+            if (_selectedFolder == null && _folders.Count > 0)
+            {
+                _selectedFolder = _folders[0].DateFolder;
+                await LoadItemsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load date folders");
+        }
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        if (string.IsNullOrEmpty(_selectedFolder))
+            return;
+
+        _isLoading = true;
+        try
+        {
+            var paging = new PagingParameters { PageNumber = _currentPage, PageSize = _pageSize };
+            var result = await MediaService.GetItemsByDateFolderAsync(
+                _selectedFolder,
+                mediaTypeFilter: null,
+                paging,
+                CancellationToken.None);
+
+            _items = result.Items.ToList();
+            _totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load media items for folder {Folder}", _selectedFolder);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnFolderChangedAsync(ChangeEventArgs e)
+    {
+        _selectedFolder = e.Value as string;
+        _currentPage = 1;
+        _selectedItem = null;
+        await LoadItemsAsync();
+    }
+
+    private async Task OnFileSelectedAsync(InputFileChangeEventArgs e)
+    {
+        _uploadError = null;
+        _isUploading = true;
+        StateHasChanged();
+
+        try
+        {
+            var file = e.File;
+            var folderPath = string.IsNullOrEmpty(_selectedFolder)
+                ? DateTimeOffset.UtcNow.ToString("yyyyMM")
+                : _selectedFolder;
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            var uploaded = await MediaService.UploadAsync(
+                file.Name,
+                stream,
+                file.ContentType,
+                folderPath,
+                cancellationToken: CancellationToken.None);
+
+            // Ensure the folder is listed and selected
+            if (!_folders.Any(f => f.DateFolder == folderPath))
+            {
+                await LoadFoldersAsync();
+            }
+
+            _selectedFolder = folderPath;
+            _currentPage = 1;
+            await LoadItemsAsync();
+
+            // Auto-select the newly uploaded file
+            var match = _items.FirstOrDefault(i => i.Id == uploaded.Id)
+                        ?? _items.FirstOrDefault(i => i.FileName == uploaded.FileName);
+            if (match != null)
+                SelectItem(match);
+        }
+        catch (Exception ex)
+        {
+            _uploadError = $"Upload failed: {ex.Message}";
+            Logger.LogError(ex, "File upload failed in InlineMediaPicker");
+        }
+        finally
+        {
+            _isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectItem(MediaItem item)
+    {
+        _selectedItem = item;
+        if (OnMediaItemSelected.HasDelegate)
+            _ = OnMediaItemSelected.InvokeAsync(item);
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+            await LoadItemsAsync();
+        }
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (_currentPage < TotalPages)
+        {
+            _currentPage++;
+            await LoadItemsAsync();
+        }
+    }
+
+    private async Task HandleFolderContentsChangedAsync(FolderContentsChangedEventArgs args)
+    {
+        var isRelevant = args.DateFolder == null || args.DateFolder == _selectedFolder;
+        if (!isRelevant)
+            return;
+
+        await InvokeAsync(async () =>
+        {
+            await LoadFoldersAsync();
+            if (!string.IsNullOrEmpty(_selectedFolder))
+                await LoadItemsAsync();
+            StateHasChanged();
+        });
+    }
+
+    private static string FormatFileSize(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => $"{bytes / 1024} KB",
+        _ => $"{bytes / 1024 / 1024} MB"
+    };
+
+    public ValueTask DisposeAsync()
+    {
+        BroadcastService.OnFolderContentsChanged -= HandleFolderContentsChangedAsync;
+        return ValueTask.CompletedTask;
+    }
+}

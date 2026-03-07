@@ -31,4 +31,13 @@ public interface IBlogPostDetailFacade
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Collection of related blog posts</returns>
     Task<IEnumerable<BlogPost>> GetRelatedPostsAsync(string slug, int maxPosts = 5, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get the previous and next published posts with full content relative to the given post.
+    /// Posts without live markdown content (shorts) are skipped.
+    /// </summary>
+    /// <param name="publishedAt">The publish date of the current post</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Tuple of (previous post, next post), either may be null</returns>
+    Task<(BlogPost? previous, BlogPost? next)> GetAdjacentPostsAsync(DateTimeOffset publishedAt, CancellationToken cancellationToken = default);
 }

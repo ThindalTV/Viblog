@@ -1,10 +1,8 @@
-@page "/admin/media"
+@page "/viblog/media"
 @attribute [Authorize(Policy = Admin)]
 @layout AdminLayout
 @using Viblog.Admin.Layout
 @using Viblog.Admin.Components.MediaLibrary
-@using Viblog.Admin.Services
-@inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<MediaLibrary> Logger
 
 <PageTitle>Media Library - Viblog Admin</PageTitle>
@@ -33,15 +31,10 @@
         _showUploadDialog = true;
     }
 
-    private async Task OnFilesUploadedAsync()
+    private void OnFilesUploadedAsync()
     {
-        Logger.LogInformation("Files uploaded successfully - broadcasting to all users");
-        
-        // Broadcast to all users that new files were uploaded
-        // Use null for folder/type since uploads can go to various folders based on date
-        await BroadcastService.BroadcastFolderContentsChangedAsync(
-            FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
-        
+        // The dialog broadcasts to the media browser after each file upload.
+        // This callback only needs to close the dialog.
         _showUploadDialog = false;
     }
 }

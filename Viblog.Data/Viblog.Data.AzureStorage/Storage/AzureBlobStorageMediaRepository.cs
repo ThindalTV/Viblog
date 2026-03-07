@@ -29,10 +29,15 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
             ?? configuration["MediaStorage:BlobStorage:ConnectionString"]
             ?? throw new InvalidOperationException("BlobStorage ConnectionString is not configured");
 
-        _containerName = configuration["MediaStorage:BlobStorage:ContainerName"]
+        var rawContainerName = configuration["MediaStorage:BlobStorage:ContainerName"]
             ?? throw new InvalidOperationException("BlobStorage ContainerName is not configured");
 
-        _cdnUrl = configuration["MediaStorage:BlobStorage:CdnUrl"];
+        // Azure Blob Storage container names must be lowercase
+        _containerName = rawContainerName.ToLowerInvariant();
+
+        // Treat empty string the same as null — avoids malformed relative URLs like "/images/..."
+        var cdnUrl = configuration["MediaStorage:BlobStorage:CdnUrl"];
+        _cdnUrl = string.IsNullOrWhiteSpace(cdnUrl) ? null : cdnUrl;
 
         _blobServiceClient = new BlobServiceClient(connectionString);
     }
@@ -61,7 +66,7 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
             var extension = Path.GetExtension(fileName);
 
             // Sanitize filename
-            baseFileName = SanitizeFileName(baseFileName);
+            baseFileName = MediaFileNameSanitizer.Sanitize(baseFileName);
 
             // Try to find an available filename (handle collisions)
             var storagePath = await FindAvailableFileNameAsync(
@@ -94,10 +99,9 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
             fileStream.Position = originalPosition;
             var fileSize = fileStream.Length;
 
-            // Generate public URL
-            var publicUrl = _cdnUrl != null
-                ? $"{_cdnUrl.TrimEnd('/')}/{storagePath}"
-                : blobClient.Uri.ToString();
+            // Generate public URL — percent-encode each path segment so the URL is valid
+            // even if the blob name contains spaces or other characters
+            var publicUrl = BuildPublicUrl(storagePath);
 
             _logger.LogInformation("Uploaded file to blob storage: {StoragePath}", storagePath);
 
@@ -116,9 +120,9 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
     }
 
     /// <summary>
-    /// Find an available filename by checking for collisions and adding a number suffix
+    /// Find an available filename by delegating collision logic to <see cref="MediaFileNameSanitizer.ResolveCollisionAsync"/>
     /// </summary>
-    private async Task<string> FindAvailableFileNameAsync(
+    private Task<string> FindAvailableFileNameAsync(
         BlobContainerClient containerClient,
         string categoryFolder,
         string datePath,
@@ -126,44 +130,24 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
         string extension,
         CancellationToken cancellationToken)
     {
-        // Try the original filename first
-        var storagePath = $"{categoryFolder}/{datePath}/{baseFileName}{extension}";
-        var blobClient = containerClient.GetBlobClient(storagePath);
-
-        if (!await blobClient.ExistsAsync(cancellationToken))
-        {
-            return storagePath;
-        }
-
-        // File exists, try with incrementing numbers
-        var counter = 1;
-        while (counter < 1000) // Prevent infinite loop
-        {
-            storagePath = $"{categoryFolder}/{datePath}/{baseFileName}{counter}{extension}";
-            blobClient = containerClient.GetBlobClient(storagePath);
-
-            if (!await blobClient.ExistsAsync(cancellationToken))
-            {
-                return storagePath;
-            }
-
-            counter++;
-        }
-
-        // If we still can't find a unique name after 1000 attempts, fall back to GUID
-        storagePath = $"{categoryFolder}/{datePath}/{baseFileName}_{Guid.NewGuid():N}{extension}";
-        return storagePath;
+        var prefix = $"{categoryFolder}/{datePath}/";
+        return MediaFileNameSanitizer.ResolveCollisionAsync(
+            prefix,
+            baseFileName,
+            extension,
+            async (path, ct) => (await containerClient.GetBlobClient(path).ExistsAsync(ct)).Value,
+            cancellationToken);
     }
 
     /// <summary>
-    /// Sanitize filename to remove invalid characters
+    /// Build a public URL for <paramref name="storagePath"/>.
+    /// No encoding is needed because <see cref="MediaFileNameSanitizer.Sanitize"/> guarantees the
+    /// filename portion contains only URL-safe ASCII characters.
     /// </summary>
-    private static string SanitizeFileName(string fileName)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
-        return string.IsNullOrWhiteSpace(sanitized) ? "file" : sanitized;
-    }
+    private string BuildPublicUrl(string storagePath) =>
+        _cdnUrl != null
+            ? $"{_cdnUrl.TrimEnd('/')}/{storagePath}"
+            : $"/media/{storagePath}";
 
     /// <inheritdoc/>
     public async Task<Stream> DownloadAsync(
@@ -222,12 +206,10 @@ public class AzureBlobStorageMediaRepository : IMediaStorageRepository
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             var blobClient = containerClient.GetBlobClient(storagePath);
 
-            // If no expiration is specified or CDN is configured, return the direct/CDN URL
+            // If no expiration is specified, return the CDN or app-relative URL
             if (expiration == null)
             {
-                return _cdnUrl != null
-                    ? $"{_cdnUrl.TrimEnd('/')}/{storagePath}"
-                    : blobClient.Uri.ToString();
+                return BuildPublicUrl(storagePath);
             }
 
             // Generate SAS token for time-limited access

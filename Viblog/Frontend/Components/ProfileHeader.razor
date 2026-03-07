@@ -8,22 +8,40 @@
             <div class="bio-content">
                 @Bio
             </div>
-            @if (SocialLinks != null && SocialLinks.Any())
-            {
-                <ul class="socials">
-                    @foreach (var link in SocialLinks)
-                    {
-                        <li>
-                            <a href="@link.Url" 
-                               target="_blank" 
-                               rel="nofollow noopener noreferrer" 
-                               aria-label="@link.Label">
-                                <img src="@link.Icon" alt="@link.Label" />
-                            </a>
-                        </li>
-                    }
-                </ul>
-            }
+            <div class="presentation-footer">
+                @if (Awards != null && Awards.Any())
+                {
+                    <ul class="header-awards--inline">
+                        @foreach (var award in Awards)
+                        {
+                            <li>
+                                <a href="@award.Url"
+                                   target="_blank"
+                                   rel="nofollow noopener noreferrer"
+                                   title="@award.Title">
+                                    <img src="@award.ImageUrl" alt="@award.AltText" />
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (SocialLinks != null && SocialLinks.Any())
+                {
+                    <ul class="socials">
+                        @foreach (var link in SocialLinks)
+                        {
+                            <li>
+                                <a href="@link.Url"
+                                   target="_blank"
+                                   rel="nofollow noopener noreferrer"
+                                   aria-label="@link.Label">
+                                    <img src="@link.Icon" alt="@link.Label" />
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
         </section>
         <section class="header-photo box">
             @if (Awards != null && Awards.Any())

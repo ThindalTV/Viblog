@@ -19,8 +19,11 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = context.Set<TEntity>();
-
-        _context.Database.EnsureCreatedAsync();
+        // EnsureCreatedAsync is called once at application startup (Program.cs).
+        // Do NOT call it here: an unawaited async call on the context would start a
+        // background operation that leaves the DbContext "busy", causing
+        // "A second operation was started on this context instance" for any method
+        // called before it completes.
     }
 
     /// <inheritdoc/>

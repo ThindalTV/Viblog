@@ -1,4 +1,4 @@
-@page "/admin/pages"
+@page "/viblog/pages"
 @attribute [Authorize(Policy = RequirePageWrite)]
 @layout AdminLayout
 @using Viblog.Admin.Components
@@ -21,7 +21,7 @@
         <div class="page-actions">
             <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
                          Icon="@SvgIcon.Plus"
-                         OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/admin/pages/new"))">
+                         OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/viblog/pages/new"))">
                 New Page
             </TelerikButton>
         </div>
@@ -116,11 +116,7 @@
                                 if (item != null)
                                 {
                                     <div class="status-cell">
-                                        <ContentStatusBadge IsPublished="@item.IsPublished"
-                                                            HasPendingUpdate="@item.HasPendingUpdate"
-                                                            ScheduleStatus="@item.Schedule.Status"
-                                                            ScheduledDate="@item.Schedule.ScheduledPublishDate"
-                                                            IsDeleted="@item.IsDeleted" />
+                                        <ContentStatusBadge Content="@item" />
                                     </div>
                                 }
                             }
@@ -211,7 +207,7 @@
         var item = args.Item as PageEntity;
         if (item != null)
         {
-            NavigationManager.NavigateTo($"/admin/pages/edit/{item.Id}");
+            NavigationManager.NavigateTo($"/viblog/pages/edit/{item.Id}");
         }
     }
 }

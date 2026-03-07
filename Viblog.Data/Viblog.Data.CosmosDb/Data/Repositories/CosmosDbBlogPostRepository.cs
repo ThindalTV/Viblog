@@ -40,12 +40,41 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
     }
 
     /// <inheritdoc/>
-    public override Task UpdateAsync(BlogPost entity, CancellationToken cancellationToken = default)
+    public override async Task UpdateAsync(BlogPost entity, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        entity.SetPartitionKey(); // Update partition key based on published state
-        return base.UpdateAsync(entity, cancellationToken);
+        var originalGroupKey = entity.GroupKey;
+
+        // Detach via Entry() BEFORE SetPartitionKey() mutates GroupKey.
+        // Entry() does not trigger DetectChanges; ChangeTracker.Entries<T>() does.
+        // If the entity is not tracked this is a no-op.
+        _context.Entry(entity).State = EntityState.Detached;
+
+        entity.SetPartitionKey(); // Safe to mutate now that entity is detached
+
+        if (entity.GroupKey == originalGroupKey)
+        {
+            // Partition key unchanged — base.UpdateAsync re-attaches and updates normally.
+            await base.UpdateAsync(entity, cancellationToken);
+            return;
+        }
+
+        // Partition key changed (e.g. publish/unpublish moves between "draft" and year partition).
+        // CosmosDB does not allow updating partition keys in place — delete old document then reinsert.
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        // Phase 1: delete using the original partition key
+        var newGroupKey = entity.GroupKey;
+        entity.GroupKey = originalGroupKey;
+        _dbSet.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken); // entity is Detached after this
+
+        // Phase 2: stage the reinsert with the new partition key.
+        // The caller's SaveChangesAsync will commit the insert.
+        // Use _dbSet.AddAsync directly to preserve the original CreatedAt.
+        entity.GroupKey = newGroupKey;
+        await _dbSet.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -188,7 +217,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         if (publishedOnly)
         {
-            query = query.Where(p => p.Live != null && p.PublishedAt <= DateTimeOffset.UtcNow);
+            query = query.Where(p => p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow);
         }
 
         return await ApplyPagingAndSortingAsync(
@@ -233,7 +262,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         var endDate = startDate.AddMonths(1);
 
         return await FindAsync(
-            p => (!publishedOnly || p.Live != null) &&
+            p => (!publishedOnly || p.IsPublished) &&
                  p.PublishedAt >= startDate &&
                  p.PublishedAt < endDate,
             pagingParameters,
@@ -254,18 +283,44 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
             return [];
         }
 
-        // Find posts that share at least one tag, excluding the current post
-        var relatedPosts = await FindAsync(
-            p => p.Live != null && 
-                 p.Id != post.Id &&
-                 p.Tags.Any(tag => post.Tags.Contains(tag)),
-            new PagingParameters(1, maxPosts),
-            p => p.PublishedAt,
-            ascending: false,
-            includeDeleted: false,
-            cancellationToken);
+        var postId = post.Id;
+        var postTags = post.Tags;
 
-        return relatedPosts.Items;
+        // Fetch published posts (excluding this one) server-side, then filter tag overlap
+        // client-side — CosmosDB EF cannot translate nested Any/Contains over owned entities.
+        var candidates = await _dbSet
+            .Where(p => !p.IsDeleted && p.IsPublished && p.Id != postId)
+            .ToListAsync(cancellationToken);
+
+        return candidates
+            .Where(p => p.Tags.Any(tag => postTags.Contains(tag)))
+            .OrderByDescending(p => p.PublishedAt)
+            .Take(maxPosts);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<(BlogPost? previous, BlogPost? next)> GetAdjacentPostsAsync(
+        DateTimeOffset publishedAt,
+        CancellationToken cancellationToken = default)
+    {
+        // Fetch a small batch before and after the reference date (date filter is server-side).
+        // Content check is done client-side — CosmosDB EF cannot translate string operations on nested objects.
+        var beforeBatch = await _dbSet
+            .Where(p => !p.IsDeleted && p.IsPublished && p.PublishedAt < publishedAt && p.PublishedAt <= DateTimeOffset.UtcNow)
+            .OrderByDescending(p => p.PublishedAt)
+            .Take(10)
+            .ToListAsync(cancellationToken);
+
+        var afterBatch = await _dbSet
+            .Where(p => !p.IsDeleted && p.IsPublished && p.PublishedAt > publishedAt && p.PublishedAt <= DateTimeOffset.UtcNow)
+            .OrderBy(p => p.PublishedAt)
+            .Take(10)
+            .ToListAsync(cancellationToken);
+
+        var previous = beforeBatch.FirstOrDefault(p => p.Live != null && !string.IsNullOrWhiteSpace(p.Live.Markdown));
+        var next = afterBatch.FirstOrDefault(p => p.Live != null && !string.IsNullOrWhiteSpace(p.Live.Markdown));
+
+        return (previous, next);
     }
 
     /// <inheritdoc/>
@@ -283,37 +338,10 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
             cancellationToken);
 
         if (post == null)
-        {
             return null;
-        }
 
-        var oldPublishedAt = post.PublishedAt;
         post.PublishedAt = newPublishedAt;
-        
-        var oldPartitionKey = post.GroupKey;
-        post.SetPartitionKey();
-        var newPartitionKey = post.GroupKey;
-
-        // If partition key hasn't changed, just update normally
-        if (oldPartitionKey == newPartitionKey)
-        {
-            post.UpdatedAt = DateTimeOffset.UtcNow;
-            _dbSet.Update(post);
-            await _context.SaveChangesAsync(cancellationToken);
-            return post;
-        }
-
-        // Partition key changed (year changed or published/draft status changed)
-        // We need to delete the old document and create a new one
-        // CosmosDB doesn't allow updating partition keys directly
-        
-        // Remove from old partition
-        _dbSet.Remove(post);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Create new document with same ID but different partition key
-        post.UpdatedAt = DateTimeOffset.UtcNow;
-        await _dbSet.AddAsync(post, cancellationToken);
+        await UpdateAsync(post, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         return post;

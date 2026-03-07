@@ -10,128 +10,129 @@
     <script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js"></script>
 </HeadContent>
 
-<CascadingAuthenticationState>
-    <AuthorizeView>
-        <Authorized Context="authContext">
-            <div class="admin-container">
-                <aside class="admin-sidebar @(_expanded ? "expanded" : "collapsed")">
-                    <div class="sidebar-header">
-                        <div class="logo">
-                            <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
-                            @if (_expanded)
-                            {
-                                <span class="logo-text">Viblo<strong>G</strong></span>
-                            }
-                        </div>
-                    </div>
-
-                    <nav class="sidebar-nav">
-                        <div class="nav-section">
-                            <div class="nav-section-title">@(_expanded ? "Navigation" : "")</div>
-                            @foreach (var item in _navigationItems)
-                            {
-                                <MenuItem Text="@item.Text"
-                                         Icon="@item.Icon"
-                                         Url="@item.Url"
-                                         Expanded="@_expanded" 
-                                         IsActive="@IsSelected(item)" />
-                            }
-                        </div>
-
-                        <div class="nav-section">
-                            <div class="nav-section-title">@(_expanded ? "Stats" : "")</div>
-                            <div class="stats-widget">
-                                <div class="stat-item">
-                                    <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
-                                    @if (_expanded)
-                                    {
-                                        <div class="stat-content">
-                                            <div class="stat-label">September Earnings</div>
-                                            <div class="stat-value">$1158</div>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="stat-item">
-                                    <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
-                                    @if (_expanded)
-                                    {
-                                        <div class="stat-content">
-                                            <div class="stat-label">August Earnings</div>
-                                            <div class="stat-value">$1901</div>
-                                        </div>
-                                    }
-                                </div>
+<TelerikRootComponent>
+    <CascadingAuthenticationState>
+        <AuthorizeView>
+            <Authorized Context="authContext">
+                <div class="admin-container">
+                    <aside class="admin-sidebar @(_expanded ? "expanded" : "collapsed")">
+                        <div class="sidebar-header">
+                            <div class="logo">
+                                <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                                @if (_expanded)
+                                {
+                                    <span class="logo-text">Viblo<strong>G</strong></span>
+                                }
                             </div>
                         </div>
 
-                        <div class="nav-section nav-section-logout">
-                            <MenuItem Text="Logout"
-                                     Icon="@SvgIcon.Logout"
-                                     Url="/admin/logout"
-                                     Expanded="@_expanded" 
-                                     IsActive="false" />
-                        </div>
-                    </nav>
-                </aside>
-
-                <div class="admin-main">
-                    <header class="admin-header">
-                        <div class="header-left">
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@(_expanded ? SvgIcon.ChevronDoubleLeft : SvgIcon.Menu)"
-                                         OnClick="@((MouseEventArgs args) => _expanded = !_expanded)">
-                            </TelerikButton>
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@SvgIcon.X">
-                            </TelerikButton>
-                            <div class="search-box">
-                                <TelerikSvgIcon Icon="@SvgIcon.Search" />
-                                <input type="text" placeholder="Search..." />
+                        <nav class="sidebar-nav">
+                            <div class="nav-section">
+                                <div class="nav-section-title">@(_expanded ? "Navigation" : "")</div>
+                                @foreach (var item in _navigationItems)
+                                {
+                                    <MenuItem Text="@item.Text"
+                                              Icon="@item.Icon"
+                                              Url="@item.Url"
+                                              Expanded="@_expanded"
+                                              IsActive="@IsSelected(item)" />
+                                }
                             </div>
-                        </div>
+
+                            <div class="nav-section">
+                                <div class="nav-section-title">@(_expanded ? "Stats" : "")</div>
+                                <div class="stats-widget">
+                                    <div class="stat-item">
+                                        <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                        @if (_expanded)
+                                        {
+                                            <div class="stat-content">
+                                                <div class="stat-label">September Earnings</div>
+                                                <div class="stat-value">$1158</div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="stat-item">
+                                        <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                        @if (_expanded)
+                                        {
+                                            <div class="stat-content">
+                                                <div class="stat-label">August Earnings</div>
+                                                <div class="stat-value">$1901</div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="nav-section nav-section-logout">
+                                <MenuItem Text="Logout"
+                                          Icon="@SvgIcon.Logout"
+                                          Url="/viblog/logout"
+                                          Expanded="@_expanded"
+                                          IsActive="false" />
+                            </div>
+                        </nav>
+                    </aside>
+
+                    <div class="admin-main">
+                        <header class="admin-header">
+                            <div class="header-left">
+                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                               Icon="@(_expanded ? SvgIcon.ChevronDoubleLeft : SvgIcon.Menu)"
+                                               OnClick="@((MouseEventArgs args) => _expanded = !_expanded)">
+                                </TelerikButton>
+                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                               Icon="@SvgIcon.X">
+                                </TelerikButton>
+                                <div class="search-box">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Search" />
+                                    <input type="text" placeholder="Search..." />
+                                </div>
+                            </div>
                         
-                        <div class="header-right">
-                            <div class="user-menu">
-                                <span class="user-name">@authContext.User.Identity?.Name</span>
+                            <div class="header-right">
+                                <div class="user-menu">
+                                    <span class="user-name">@authContext.User.Identity?.Name</span>
+                                </div>
                             </div>
+                        </header>
+
+                        <div class="admin-breadcrumb">
+                            <a href="/viblog">Home</a>
+                            <span class="separator">/</span>
+                            <span>@GetCurrentPageName()</span>
                         </div>
-                    </header>
 
-                    <div class="admin-breadcrumb">
-                        <a href="/admin">Home</a>
-                        <span class="separator">/</span>
-                        <span>@GetCurrentPageName()</span>
+                        <main class="admin-content">
+                            <MessageDisplay />
+                            <DialogContainer />
+                            @Body
+                        </main>
                     </div>
-
-                    <main class="admin-content">
-                        <MessageDisplay />
-                        <DialogContainer />
-                        @Body
-                    </main>
                 </div>
-            </div>
-        </Authorized>
-        <NotAuthorized>
-            @Body
-        </NotAuthorized>
-    </AuthorizeView>
-</CascadingAuthenticationState>
-<ReconnectModal />
-
+            </Authorized>
+            <NotAuthorized>
+                @Body
+            </NotAuthorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+    <ReconnectModal />
+</TelerikRootComponent>
 @code {
     private bool _expanded = true;
 
     private List<DrawerItem> _navigationItems = new()
     {
-        new DrawerItem { Text = "Dashboard", Icon = SvgIcon.Grid, Url = "/admin" },
-        new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/admin/posts" },
-        new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/admin/pages" },
-        new DrawerItem { Text = "Media", Icon = SvgIcon.Image, Url = "/admin/media" },
-        new DrawerItem { Text = "Users", Icon = SvgIcon.User, Url = "/admin/users" },
-        new DrawerItem { Text = "Profile", Icon = SvgIcon.User, Url = "/admin/profile" },
-        new DrawerItem { Text = "Audit Logs", Icon = SvgIcon.FileReport, Url = "/admin/audit-logs" },
-        new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/analytics" },
-        new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/admin/settings" }
+        new DrawerItem { Text = "Dashboard", Icon = SvgIcon.Grid, Url = "/viblog" },
+        new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/viblog/posts" },
+        new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/viblog/pages" },
+        new DrawerItem { Text = "Media", Icon = SvgIcon.Image, Url = "/viblog/media" },
+        new DrawerItem { Text = "Users", Icon = SvgIcon.User, Url = "/viblog/users" },
+        new DrawerItem { Text = "Profile", Icon = SvgIcon.User, Url = "/viblog/profile" },
+        new DrawerItem { Text = "Audit Logs", Icon = SvgIcon.FileReport, Url = "/viblog/audit-logs" },
+        new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/viblog/analytics" },
+        new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/viblog/settings" }
     };
 
     protected override void OnInitialized()
@@ -149,8 +150,8 @@
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         var targetPath = item.Url.TrimStart('/');
         
-        // For Media Library, also match subpaths like /admin/media/folder1
-        if (item.Url == "/admin/media" && currentPath.StartsWith("admin/media", StringComparison.OrdinalIgnoreCase))
+        // For Media Library, also match subpaths like /viblog/media/folder1
+        if (item.Url == "/viblog/media" && currentPath.StartsWith("viblog/media", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
@@ -163,13 +164,13 @@
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         
         // Check for exact match first
-        var item = _navigationItems.FirstOrDefault(i => 
+        var item = _navigationItems.FirstOrDefault(i =>
             currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
 
         // If no exact match, check if current path starts with any nav item URL
         if (item == null)
         {
-            item = _navigationItems.FirstOrDefault(i => 
+            item = _navigationItems.FirstOrDefault(i =>
                 currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
         }
         
@@ -179,7 +180,7 @@
     private void HandleLogout()
     {
         // Redirect to logout endpoint which will handle Auth0 logout
-        Navigation.NavigateTo("/admin/logout", forceLoad: true);
+        Navigation.NavigateTo("/viblog/logout", forceLoad: true);
     }
 
     public void Dispose()

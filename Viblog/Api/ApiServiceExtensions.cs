@@ -20,7 +20,10 @@ public static class ApiServiceExtensions
         // Map SEO endpoints (sitemap.xml, robots.txt)
         app.MapSitemapEndpoints();
 
-        // Map media library endpoints
+        // Serve media files through the app at /media/{storagePath}
+        app.MapMediaServeEndpoints();
+
+        // Map media library management endpoints
         var mediaGroup = app.MapGroup("/api/media")
             .WithTags("Media");
         mediaGroup.MapMediaEndpoints();

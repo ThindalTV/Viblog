@@ -211,7 +211,7 @@ public class Auth0SyncService : IIdentityProviderSyncService
             var ticket = new PasswordChangeTicketRequest
             {
                 UserId = localUser.ExternalUserId,
-                ResultUrl = $"{_auth0Settings.ManagementApiUrl}/admin/login",
+                ResultUrl = $"{_auth0Settings.ManagementApiUrl}/viblog/login",
                 MarkEmailAsVerified = true
             };
 

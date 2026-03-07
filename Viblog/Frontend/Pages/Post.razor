@@ -19,7 +19,7 @@ else if (_errorMessage != null)
     <div class="post-error">
         <h2>Error</h2>
         <p class="error-message">@_errorMessage</p>
-        <a href="/" class="back-link">? Back to Home</a>
+        <a href="/" class="back-link">&larr; Back to Home</a>
     </div>
 }
 else if (_post == null)
@@ -27,7 +27,7 @@ else if (_post == null)
     <div class="post-not-found">
         <h2>Post Not Found</h2>
         <p>The post you're looking for doesn't exist or has been removed.</p>
-        <a href="/posts" class="back-link">? View All Posts</a>
+        <a href="/posts" class="back-link">&larr; View All Posts</a>
     </div>
 }
 else
@@ -35,6 +35,14 @@ else
     <PostSeoHead Post="@_post" CanonicalUrl="@GetCanonicalUrl()" BreadcrumbItems="@_breadcrumbItems" />
 
     <Breadcrumb Items="_breadcrumbItems" />
+
+    @if (!string.IsNullOrWhiteSpace(Content?.FeaturedImageUrl))
+    {
+        <div class="post-featured-image">
+            <img src="@Content?.FeaturedImageUrl"
+                 alt="@(Content?.FeaturedImageAlt ?? Content?.Title)" />
+        </div>
+    }
 
     <article class="post-detail">
         @if (_post.IsFeatured)
@@ -69,14 +77,6 @@ else
             }
         </header>
 
-        @if (!string.IsNullOrWhiteSpace(Content?.FeaturedImageUrl))
-        {
-            <div class="post-featured-image">
-                <img src="@Content?.FeaturedImageUrl"
-                     alt="@(Content?.FeaturedImageAlt ?? Content?.Title)" />
-            </div>
-        }
-
         <div class="post-content">
             @((MarkupString)(Content?.Content ?? ""))
         </div>
@@ -100,14 +100,40 @@ else
             </footer>
         }
 
-        <div class="post-navigation">
-            <a href="/posts" class="back-link">? View All Posts</a>
-        </div>
+        <nav class="post-navigation">
+            @if (_previousPost != null)
+            {
+                <a href="/post/@_previousPost.PublishedAt?.Year/@_previousPost.Slug" class="post-nav-link post-nav-prev">
+                    <span class="post-nav-label">&larr; Previous</span>
+                    <span class="post-nav-title">@(_previousPost.Live?.Title ?? _previousPost.Draft.Title)</span>
+                </a>
+            }
+            else
+            {
+                <span class="post-nav-placeholder"></span>
+            }
+
+            <a href="/posts" class="post-nav-all">All Posts</a>
+
+            @if (_nextPost != null)
+            {
+                <a href="/post/@_nextPost.PublishedAt?.Year/@_nextPost.Slug" class="post-nav-link post-nav-next">
+                    <span class="post-nav-label">Next &rarr;</span>
+                    <span class="post-nav-title">@(_nextPost.Live?.Title ?? _nextPost.Draft.Title)</span>
+                </a>
+            }
+            else
+            {
+                <span class="post-nav-placeholder"></span>
+            }
+        </nav>
     </article>
 }
 
 @code {
     private BlogPost? _post;
+    private BlogPost? _previousPost;
+    private BlogPost? _nextPost;
     private bool _isLoading = true;
     private string? _errorMessage;
     private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
@@ -158,19 +184,21 @@ else
             var related = await BlogPostDetailFacade.GetRelatedPostsAsync(Slug, maxPosts: 3);
             _relatedPosts = related.ToList();
 
-            // Increment view count if post is found
-            // Fire and forget - don't wait for view count update
-            _ = Task.Run(async () =>
+            // Load adjacent posts for prev/next navigation
+            if (_post.PublishedAt.HasValue)
             {
-                try
-                {
-                    await BlogPostDetailFacade.IncrementViewCountAsync(_post.Id, _post.GroupKey);
-                }
-                catch
-                {
-                    // Silently fail - view count is not critical
-                }
-            });
+                (_previousPost, _nextPost) = await BlogPostDetailFacade.GetAdjacentPostsAsync(_post.PublishedAt.Value);
+            }
+
+            // Increment view count if post is found
+            try
+            {
+                await BlogPostDetailFacade.IncrementViewCountAsync(_post.Id, _post.GroupKey);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to increment view count for post {Slug}", Slug);
+            }
         }
         catch (Exception ex)
         {

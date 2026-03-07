@@ -96,8 +96,8 @@ public static class RegisterAdminExtensions
                 })
                 .AddCookie(options =>
                 {
-                    options.LoginPath = "/admin/login";
-                    options.AccessDeniedPath = "/admin/access-denied";
+                    options.LoginPath = "/viblog/login";
+                    options.AccessDeniedPath = "/viblog/access-denied";
                     options.ExpireTimeSpan = TimeSpan.FromHours(8);
                     options.SlidingExpiration = true;
                     options.Cookie.HttpOnly = true;
@@ -114,7 +114,7 @@ public static class RegisterAdminExtensions
                     options.CallbackPath = auth0Settings.CallbackPath;
 
                     // Configure sign-out paths
-                    options.SignedOutCallbackPath = "/admin/signout-callback";
+                    options.SignedOutCallbackPath = "/viblog/signout-callback";
                     options.SignedOutRedirectUri = auth0Settings.LogoutRedirectUri;
 
                     // Request scopes
@@ -180,8 +180,8 @@ public static class RegisterAdminExtensions
                 collection.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                     .AddCookie(options =>
                     {
-                        options.LoginPath = "/admin/login";
-                        options.AccessDeniedPath = "/admin/access-denied";
+                        options.LoginPath = "/viblog/login";
+                        options.AccessDeniedPath = "/viblog/access-denied";
                     });
             }
 
@@ -250,11 +250,11 @@ public static class RegisterAdminExtensions
         public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
             // Auth0 Challenge endpoint - initiates Auth0 login
-            endpoints.MapGet("/admin/auth/challenge", async (HttpContext context, string? returnUrl = null) =>
+            endpoints.MapGet("/viblog/auth/challenge", async (HttpContext context, string? returnUrl = null) =>
             {
                 var properties = new AuthenticationProperties
                 {
-                    RedirectUri = returnUrl ?? "/admin"
+                    RedirectUri = returnUrl ?? "/viblog"
                 };
 
                 await context.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme, properties);
@@ -262,7 +262,7 @@ public static class RegisterAdminExtensions
             .AllowAnonymous();
 
             // Auth0 Logout endpoint
-            endpoints.MapGet("/admin/logout", async (HttpContext context) =>
+            endpoints.MapGet("/viblog/logout", async (HttpContext context) =>
             {
                 var properties = new AuthenticationProperties
                 {
@@ -276,9 +276,9 @@ public static class RegisterAdminExtensions
             .RequireAuthorization();
 
             // Access denied page
-            endpoints.MapGet("/admin/access-denied", (HttpContext context) =>
+            endpoints.MapGet("/viblog/access-denied", (HttpContext context) =>
             {
-                context.Response.Redirect("/admin/login?error=access_denied");
+                context.Response.Redirect("/viblog/login?error=access_denied");
                 return Task.CompletedTask;
             })
             .AllowAnonymous();

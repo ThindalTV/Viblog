@@ -1,0 +1,128 @@
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using Viblog.Infrastructure.Shared.Data.Entities
+@using Viblog.Infrastructure.Shared.Extensions
+@inject IDialogService DialogService
+
+@{
+    var isEditMode = Content is not null;
+    var isDeleted = Content?.IsDeleted ?? false;
+    var isPublished = Content?.IsPublished ?? false;
+}
+
+<ContentStatusBadge Content="@Content" />
+
+@if (!isDeleted)
+{
+    <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@IsSaving">
+        @(_confirmPublishNow ? "Click to confirm" : (isPublished ? "Publish Update Now" : "Publish Now"))
+    </button>
+
+    <button type="button" class="btn-action btn-schedule" @onclick="HandleScheduleClickAsync" disabled="@IsSaving">
+        @(isPublished ? "Schedule Update" : "Schedule Publish")
+    </button>
+
+    @if (isEditMode && isPublished)
+    {
+        <button type="button" class="btn-action btn-unpublish" @onclick="HandleUnpublishClick" disabled="@IsSaving">
+            Unpublish
+        </button>
+
+        <button type="button" class="btn-action btn-delete" @onclick="HandleDeleteClick" disabled="@IsSaving">
+            Delete
+        </button>
+    }
+
+    <button type="button" class="btn-action btn-save-draft" @onclick="() => OnSaveDraft.InvokeAsync()" disabled="@IsSaving">
+        @if (IsSaving)
+        {
+            <span>Saving...</span>
+        }
+        else
+        {
+            <span>@(isEditMode ? "Save Draft" : "Create")</span>
+        }
+    </button>
+}
+
+<ScheduleTimePicker @bind-Visible="_schedulePickerVisible"
+                    Title="@(Content?.Schedule.Status == ContentStatus.Scheduled ? "Change Scheduled Time" : "Schedule Publication")"
+                    InitialDate="@(Content?.Schedule.Status == ContentStatus.Scheduled ? Content.Schedule.ScheduledPublishDate : null)"
+                    OnConfirm="HandleScheduleConfirmedAsync" />
+
+@code {
+    /// <summary>Whether a save or publish operation is currently in progress.</summary>
+    [Parameter] public bool IsSaving { get; set; }
+
+    /// <summary>
+    /// The content entity being edited. Null when creating new content.
+    /// All state (IsDeleted, IsPublished, schedule, etc.) is derived from this object.
+    /// </summary>
+    [Parameter] public ISchedulableContent? Content { get; set; }
+
+    /// <summary>Raised when the user clicks Save Draft / Create.</summary>
+    [Parameter] public EventCallback OnSaveDraft { get; set; }
+
+    /// <summary>Raised when the user confirms Publish Now.</summary>
+    [Parameter] public EventCallback OnPublishNow { get; set; }
+
+    /// <summary>Raised when the user picks a schedule date and confirms.</summary>
+    [Parameter] public EventCallback<DateTimeOffset> OnScheduleConfirmed { get; set; }
+
+    /// <summary>Raised when the user confirms the Unpublish dialog.</summary>
+    [Parameter] public EventCallback OnUnpublish { get; set; }
+
+    /// <summary>Raised when the user confirms the Delete dialog.</summary>
+    [Parameter] public EventCallback OnDelete { get; set; }
+
+    private bool _confirmPublishNow;
+    private bool _schedulePickerVisible;
+
+    private async Task HandlePublishNowClickAsync()
+    {
+        if (!_confirmPublishNow)
+        {
+            _confirmPublishNow = true;
+            return;
+        }
+
+        _confirmPublishNow = false;
+        await OnPublishNow.InvokeAsync();
+    }
+
+    private Task HandleScheduleClickAsync()
+    {
+        _confirmPublishNow = false;
+        _schedulePickerVisible = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleScheduleConfirmedAsync(DateTimeOffset date)
+    {
+        await OnScheduleConfirmed.InvokeAsync(date);
+    }
+
+    private void HandleUnpublishClick()
+    {
+        _confirmPublishNow = false;
+        DialogService.ShowConfirmationAsync(
+            "Unpublish",
+            "This will remove the content from public view. Your draft will be preserved. Are you sure?",
+            async () => await OnUnpublish.InvokeAsync(),
+            "Unpublish",
+            "Cancel");
+    }
+
+    private void HandleDeleteClick()
+    {
+        _confirmPublishNow = false;
+        DialogService.ShowConfirmationAsync(
+            "Delete",
+            "This will permanently delete this content. Are you sure?",
+            async () => await OnDelete.InvokeAsync(),
+            "Delete",
+            "Cancel");
+    }
+
+    private string GetPublishNowCssClass() =>
+        _confirmPublishNow ? "btn-action btn-publish-now btn-confirm-active" : "btn-action btn-publish-now";
+}

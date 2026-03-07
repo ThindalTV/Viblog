@@ -1,9 +1,12 @@
 @using Viblog.Admin.Models
+@using Viblog.Infrastructure.Admin.Services
 @using Viblog.Infrastructure.Shared.Data.Entities
 @using Viblog.Infrastructure.Shared.Helpers
 @using Viblog.Infrastructure.Shared.Services
 @inject IMediaService MediaService
+@inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<FolderSelector> Logger
+@implements IAsyncDisposable
 
 <div class="folder-selector">
     <!-- File Type Filter -->
@@ -49,6 +52,10 @@
     private List<DateFolderInfo> _dateFolders = [];
     private bool _isLoading;
     private MediaTypeCategory? _previousMediaType;
+    // Prevents concurrent DB operations on the same scoped DbContext: if a load is
+    // already in progress (e.g. triggered by the broadcast cascade), a second call
+    // skips immediately rather than starting a concurrent context operation.
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     /// <summary>
     /// Selected media type filter
@@ -71,6 +78,7 @@
     protected override async Task OnInitializedAsync()
     {
         _previousMediaType = SelectedMediaType;
+        BroadcastService.OnFolderContentsChanged += HandleFolderContentsChangedAsync;
         await LoadDateFoldersAsync();
     }
 
@@ -86,6 +94,9 @@
 
     private async Task LoadDateFoldersAsync()
     {
+        if (!await _loadLock.WaitAsync(0))
+            return; // Another load is already running on the same DbContext scope
+
         try
         {
             _isLoading = true;
@@ -113,6 +124,7 @@
         finally
         {
             _isLoading = false;
+            _loadLock.Release();
         }
     }
 
@@ -126,5 +138,21 @@
     {
         SelectedDateFolder = dateFolder;
         await SelectedDateFolderChanged.InvokeAsync(dateFolder);
+    }
+
+    private async Task HandleFolderContentsChangedAsync(FolderContentsChangedEventArgs args)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadDateFoldersAsync();
+            StateHasChanged();
+        });
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        BroadcastService.OnFolderContentsChanged -= HandleFolderContentsChangedAsync;
+        _loadLock.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

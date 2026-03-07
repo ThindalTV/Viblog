@@ -38,3 +38,8 @@
     background-color: var(--color-error-light, #fce8e6);
     color: var(--color-error, #d93025);
 }
+
+.status-unsaved {
+    background-color: var(--color-warning-light, #fef7e0);
+    color: var(--color-warning, #b06000);
+}

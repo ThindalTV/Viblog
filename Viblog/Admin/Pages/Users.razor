@@ -1,4 +1,4 @@
-@page "/admin/users"
+@page "/viblog/users"
 @attribute [Authorize(Policy = RequireUserRead)]
 @layout AdminLayout
 @using Viblog.Infrastructure.Shared.Data.Entities
@@ -18,7 +18,7 @@
             {
                 <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
                              Icon="@SvgIcon.Plus"
-                             OnClick="@(() => NavigationManager.NavigateTo("/admin/users/new"))">
+                             OnClick="@(() => NavigationManager.NavigateTo("/viblog/users/new"))">
                     New User
                 </TelerikButton>
             }
@@ -119,8 +119,8 @@
                                         <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
                                                      Icon="@SvgIcon.Pencil"
                                                      Title="Edit"
-                                                     OnClick="@(() => NavigationManager.NavigateTo($"/admin/users/edit/{user!.Id}"))">
-                                        </TelerikButton>
+                                                     OnClick="@(() => NavigationManager.NavigateTo($"/viblog/users/edit/{user!.Id}"))">
+                                                     </TelerikButton>
                                         <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
                                                      Icon="@SvgIcon.Trash"
                                                      Title="Delete"

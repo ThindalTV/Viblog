@@ -111,105 +111,25 @@ h1 {
     color: var(--text-primary, #333);
 }
 
-.btn-primary,
-.btn-secondary,
 .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     font-size: 1rem;
+    font-weight: 500;
     border: 1px solid transparent;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-weight: 600;
     white-space: nowrap;
     background: none;
     text-decoration: none;
 }
 
-.btn-action {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.btn-primary {
-    background-color: var(--primary-color, #007bff);
-    color: white;
-    border-color: var(--primary-color, #007bff);
-}
-
-.btn-primary:hover:not(:disabled) {
-    background-color: var(--primary-hover, #0056b3);
-    border-color: var(--primary-hover, #0056b3);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color, #6c757d);
-    color: white;
-    border-color: var(--secondary-color, #6c757d);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background-color: var(--secondary-hover, #5a6268);
-    border-color: var(--secondary-hover, #5a6268);
-}
-
-.btn-publish-now {
-    background-color: var(--success-light, #e6f4ea);
-    color: var(--success, #1e8e3e);
-    border-color: var(--success, #1e8e3e);
-}
-
-.btn-publish-now:hover:not(:disabled) {
-    background-color: var(--success-hover, #d4edda);
-    border-color: var(--success-dark, #0d5f23);
-}
-
-.btn-publish-later,
-.btn-schedule {
-    background-color: var(--info-light, #e8f0fe);
-    color: var(--info, #1a73e8);
-    border-color: var(--info, #1a73e8);
-}
-
-.btn-publish-later:hover:not(:disabled),
-.btn-schedule:hover:not(:disabled) {
-    background-color: var(--info-hover, #d2e3fc);
-    border-color: var(--info-dark, #1557b0);
-}
-
-.btn-unpublish {
-    background-color: var(--warning-light, #fff4e5);
-    color: var(--warning, #f57c00);
-    border-color: var(--warning, #f57c00);
-}
-
-.btn-unpublish:hover:not(:disabled) {
-    background-color: var(--warning-hover, #ffe0b2);
-    border-color: var(--warning-dark, #e65100);
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled,
 .btn-action:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
-}
-
-.btn-cancel-schedule {
-    background-color: var(--color-secondary-light, #f1f3f4);
-    color: var(--color-text-secondary, #5f6368);
-    border-color: var(--color-text-secondary, #5f6368);
-}
-
-.btn-cancel-schedule:hover:not(:disabled) {
-    background-color: var(--color-hover, #e2e5e9);
 }
 
 .btn-adopt {
@@ -222,13 +142,24 @@ h1 {
     background-color: var(--color-purple-hover, #e1bee7);
 }
 
-.btn-confirm-active {
-    animation: pulse-confirm 0.8s ease-in-out infinite alternate;
+.author-field-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
 }
 
-@keyframes pulse-confirm {
-    from { opacity: 1; }
-    to { opacity: 0.75; }
+.author-field-group > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.author-field-group ::deep input[type="text"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.author-field-group .btn-action {
+    margin-bottom: 1rem;
 }
 
 .deleted-banner {

@@ -34,7 +34,7 @@ public class BlogSearchService : IBlogSearchService
         if (publishedOnly)
         {
             return await _repository.FindAsync(
-                p => p.Live != null && p.Live.SearchIndex.Contains(normalizedSearchTerm),
+                p => p.IsPublished && p.LiveSearchIndex.Contains(normalizedSearchTerm),
                 pagingParameters,
                 p => p.PublishedAt,
                 ascending: false,
@@ -44,7 +44,7 @@ public class BlogSearchService : IBlogSearchService
 
         return await _repository.FindAsync(
             p => p.Draft.SearchIndex.Contains(normalizedSearchTerm) ||
-                 (p.Live != null && p.Live.SearchIndex.Contains(normalizedSearchTerm)),
+                 (p.IsPublished && p.LiveSearchIndex.Contains(normalizedSearchTerm)),
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
@@ -67,7 +67,7 @@ public class BlogSearchService : IBlogSearchService
         if (publishedOnly)
         {
             return await _repository.FindAsync(
-                p => p.Live != null && p.Live.SearchIndex.Contains(normalizedTitleTerm),
+                p => p.IsPublished && p.LiveSearchIndex.Contains(normalizedTitleTerm),
                 pagingParameters,
                 p => p.PublishedAt,
                 ascending: false,
@@ -77,7 +77,7 @@ public class BlogSearchService : IBlogSearchService
 
         return await _repository.FindAsync(
             p => p.Draft.SearchIndex.Contains(normalizedTitleTerm) ||
-                 (p.Live != null && p.Live.SearchIndex.Contains(normalizedTitleTerm)),
+                 (p.IsPublished && p.LiveSearchIndex.Contains(normalizedTitleTerm)),
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,

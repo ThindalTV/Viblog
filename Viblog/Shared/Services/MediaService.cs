@@ -257,6 +257,18 @@ public class MediaService : IMediaService
         ArgumentException.ThrowIfNullOrWhiteSpace(dateFolder);
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
+        if (dateFolder.Length != 6 || !int.TryParse(dateFolder, out _))
+        {
+            _logger.LogWarning("Skipping query for invalid date folder format: {DateFolder}", dateFolder);
+            return new PagedResult<MediaItem>
+            {
+                Items = [],
+                TotalCount = 0,
+                PageNumber = pagingParameters.PageNumber,
+                PageSize = pagingParameters.PageSize
+            };
+        }
+
         try
         {
             return await _metadataRepository.GetItemsByDateFolderAsync(

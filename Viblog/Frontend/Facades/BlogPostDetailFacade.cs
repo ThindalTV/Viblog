@@ -54,12 +54,20 @@ public class BlogPostDetailFacade : IBlogPostDetailFacade
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
 
         var post = await _blogPostRepository.GetBySlugAsync(slug, publishedOnly: true, cancellationToken);
-        
+
         if (post == null)
         {
             return Enumerable.Empty<BlogPost>();
         }
 
         return await _blogPostRepository.GetRelatedPostsAsync(post, maxPosts, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<(BlogPost? previous, BlogPost? next)> GetAdjacentPostsAsync(
+        DateTimeOffset publishedAt,
+        CancellationToken cancellationToken = default)
+    {
+        return await _blogPostRepository.GetAdjacentPostsAsync(publishedAt, cancellationToken);
     }
 }

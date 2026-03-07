@@ -195,8 +195,7 @@ public class SitemapEndpointsTests
         var robotsTxt = GenerateRobotsTxt(options);
 
         // Assert
-        Assert.Contains("Disallow: /Account/", robotsTxt);
-        Assert.Contains("Disallow: /admin/", robotsTxt);
+        Assert.Contains("Disallow: /viblog/", robotsTxt);
     }
 
     [Fact]
@@ -367,8 +366,7 @@ public class SitemapEndpointsTests
             Allow: /
             
             # Disallow admin and account areas
-            Disallow: /Account/
-            Disallow: /admin/
+            Disallow: /viblog/
             
             # Disallow search results to avoid duplicate content
             Disallow: /search

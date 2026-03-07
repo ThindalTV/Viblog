@@ -1,5 +1,5 @@
-@page "/admin/pages/new"
-@page "/admin/pages/edit/{id}"
+@page "/viblog/pages/new"
+@page "/viblog/pages/edit/{id}"
 @attribute [Authorize(Policy = RequirePageWrite)]
 @layout AdminLayout
 @using Viblog.Admin.Components
@@ -28,90 +28,13 @@
     @if (!_isLoading)
     {
         <div class="page-actions">
-            @if (_isEditMode && _page != null)
-            {
-                <ContentStatusBadge IsPublished="@_page.IsPublished"
-                                    HasPendingUpdate="@_page.HasPendingUpdate"
-                                    ScheduleStatus="@_page.Schedule.Status"
-                                    ScheduledDate="@_page.Schedule.ScheduledPublishDate"
-                                    IsDeleted="@_page.IsDeleted" />
-            }
-
-            @if (_page?.IsDeleted != true)
-            {
-                @if (_isEditMode && _page != null)
-                {
-                    var isScheduled = _page.Schedule.Status == ContentStatus.Scheduled;
-
-                    @if (_page.Live == null)
-                    {
-                        <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@_isSaving">
-                            @(_confirmPublishNow ? "Click to confirm" : "Publish Now")
-                        </button>
-                        @if (!isScheduled)
-                        {
-                            <button type="button" class="btn-action btn-schedule" @onclick="ShowScheduleDialogAsync" disabled="@_isSaving">
-                                Schedule
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn-action btn-schedule" @onclick="ShowChangeTimeDialogAsync" disabled="@_isSaving">
-                                Change Time
-                            </button>
-                            <button type="button" class="btn-action btn-cancel-schedule" @onclick="CancelScheduleAsync" disabled="@_isSaving">
-                                Cancel Schedule
-                            </button>
-                        }
-                    }
-                    else
-                    {
-                        <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@_isSaving">
-                            @(_confirmPublishNow ? "Click to confirm" : "Publish Update Now")
-                        </button>
-                        @if (!isScheduled)
-                        {
-                            <button type="button" class="btn-action btn-schedule" @onclick="ShowScheduleDialogAsync" disabled="@_isSaving">
-                                Schedule Update
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn-action btn-schedule" @onclick="ShowChangeTimeDialogAsync" disabled="@_isSaving">
-                                Change Time
-                            </button>
-                            <button type="button" class="btn-action btn-cancel-schedule" @onclick="CancelScheduleAsync" disabled="@_isSaving">
-                                Cancel Schedule
-                            </button>
-                        }
-                        <button type="button" class="btn-action btn-unpublish" @onclick="ShowUnpublishDialogAsync" disabled="@_isSaving">
-                            Unpublish
-                        </button>
-                    }
-
-                    @if (!string.IsNullOrWhiteSpace(_currentUserId) && _page.AuthorId != _currentUserId)
-                    {
-                        <button type="button" class="btn-action btn-adopt" @onclick="AdoptAsync" disabled="@_isSaving">
-                            Adopt
-                        </button>
-                    }
-                }
-
-                <button type="submit" form="edit-page-form" class="btn-primary" disabled="@_isSaving">
-                    @if (_isSaving)
-                    {
-                        <span>Saving...</span>
-                    }
-                    else
-                    {
-                        <span>@(_isEditMode ? "Update Page" : "Create Page")</span>
-                    }
-                </button>
-
-                <button type="button" class="btn-secondary" @onclick="Cancel" disabled="@_isSaving">
-                    Cancel
-                </button>
-            }
+            <ContentEditorActions IsSaving="@_isSaving"
+                                  Content="@_page"
+                                  OnSaveDraft="HandleSaveDraftAsync"
+                                  OnPublishNow="HandlePublishNowAsync"
+                                  OnScheduleConfirmed="HandleScheduleConfirmedAsync"
+                                  OnUnpublish="HandleUnpublishAsync"
+                                  OnDelete="HandleDeleteAsync" />
         </div>
     }
 </div>
@@ -123,11 +46,6 @@
     </div>
 }
 
-<ScheduleTimePicker @bind-Visible="_scheduleDialogVisible"
-                    Title="@(_page?.Schedule.Status == ContentStatus.Scheduled ? "Change Scheduled Time" : "Schedule Publication")"
-                    InitialDate="@_scheduleInitialDate"
-                    OnConfirm="OnScheduleConfirmedAsync" />
-
 @if (_isLoading)
 {
     <div class="loading">
@@ -136,7 +54,7 @@
 }
 else
 {
-    <EditForm id="edit-page-form" Model="@_model" OnValidSubmit="HandleValidSubmit" class="edit-page-form">
+    <EditForm id="edit-page-form" EditContext="@_editContext" OnValidSubmit="HandleValidSubmit" class="edit-page-form">
         <DataAnnotationsValidator />
         
         <FormSection Title="Basic Information">
@@ -157,12 +75,20 @@ else
                     <CheckboxInput @bind-Value="_model.Draft.ShowTitle"
                                    Label="Show title as heading on page" />
 
-                    <TextInput @bind-Value="_model.AuthorName"
-                              Label="Author Name"
-                              Placeholder="Author name"
-                              Required="true"
-                              Disabled="@_isEditMode"
-                              ValidationFor="@(() => _model.AuthorName)" />
+                    <div class="author-field-group">
+                        <TextInput @bind-Value="_model.AuthorName"
+                                  Label="Author Name"
+                                  Placeholder="Author name"
+                                  Required="true"
+                                  Disabled="@_isEditMode"
+                                  ValidationFor="@(() => _model.AuthorName)" />
+                        @if (_isEditMode && _page?.IsDeleted != true && !string.IsNullOrWhiteSpace(_currentUserId) && _page?.AuthorId != _currentUserId)
+                        {
+                            <button type="button" class="btn-action btn-adopt" @onclick="AdoptAsync" disabled="@_isSaving">
+                                Adopt
+                            </button>
+                        }
+                    </div>
                 </div>
 
                 <div class="form-column">
@@ -244,100 +170,117 @@ else
 }
 
 @code {
-private PageModel _model = new();
-private Page? _page;
-private bool _isLoading = true;
-private bool _isSaving;
-private bool _isEditMode;
-private bool _scheduleDialogVisible;
-private DateTimeOffset? _scheduleInitialDate;
-private bool _confirmPublishNow;
-private string _currentUserId = string.Empty;
+    private PageModel _model = new();
+    private Page? _page;
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isEditMode;
+    private string _currentUserId = string.Empty;
+    private EditContext _editContext = new(new PageModel());
 
-[Parameter]
-public string? Id { get; set; }
+    [Parameter]
+    public string? Id { get; set; }
 
-protected override async Task OnInitializedAsync()
-{
-    _isEditMode = !string.IsNullOrWhiteSpace(Id);
+    private void RebuildEditContext() => _editContext = new EditContext(_model);
 
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-
-    if (_isEditMode)
+    protected override async Task OnInitializedAsync()
     {
-        await LoadPageAsync();
-    }
-    else
-    {
-        var userName = authState.User.Identity?.Name ?? "Anonymous";
-        _model = new PageModel { AuthorName = userName };
-        _isLoading = false;
-    }
-}
+        _isEditMode = !string.IsNullOrWhiteSpace(Id);
 
-private async Task LoadPageAsync()
-{
-    try
-    {
-        _isLoading = true;
-        MessageService.Clear();
-        _confirmPublishNow = false;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        var page = await PagesAdminFacade.GetPageByIdAsync(Id!);
-
-        if (page == null)
+        if (_isEditMode)
         {
-            MessageService.SetFail("Page not found.");
-            return;
+            await LoadPageAsync();
         }
+        else
+        {
+            var userName = authState.User.Identity?.Name ?? "Anonymous";
+            _model = new PageModel { AuthorName = userName };
+            RebuildEditContext();
+            _isLoading = false;
+        }
+    }
 
-        _page = page;
-        _model = page.ToModel();
-    }
-    catch (Exception ex)
+    private async Task LoadPageAsync()
     {
-        MessageService.SetError(ex, "Failed to load page. Please try again.");
+        try
+        {
+            _isLoading = true;
+            MessageService.Clear();
+
+            var page = await PagesAdminFacade.GetPageByIdAsync(Id!);
+
+            if (page == null)
+            {
+                MessageService.SetFail("Page not found.");
+                return;
+            }
+
+            _page = page;
+            _model = page.ToModel();
+            RebuildEditContext();
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to load page. Please try again.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
-    finally
-    {
-        _isLoading = false;
-    }
-}
 
     private void HandleTitleBlur(FocusEventArgs e)
     {
-        // Auto-generate slug if it's empty when title loses focus
         if (string.IsNullOrWhiteSpace(_model.Slug))
         {
             _model.Slug = TextUtilities.Slugify(_model.Draft.Title) ?? string.Empty;
         }
     }
 
+    // Save Draft (button callback) — validates before delegating to the form submit handler
+    private async Task HandleSaveDraftAsync()
+    {
+        if (!_editContext.Validate()) return;
+        await HandleValidSubmit();
+    }
+
+    // Save Draft (form submit) — warns when a schedule would be cancelled
     private async Task HandleValidSubmit()
     {
         if (_page?.IsDeleted == true) return;
 
+        if (_isEditMode && _page?.Schedule.Status == ContentStatus.Scheduled)
+        {
+            DialogService.ShowConfirmationAsync(
+                "Save Draft",
+                "Saving as a draft will cancel the scheduled publish. Do you want to continue?",
+                ExecuteSaveDraftAsync,
+                "Save Draft",
+                "Cancel");
+            return;
+        }
+
+        await ExecuteSaveDraftAsync();
+    }
+
+    private async Task ExecuteSaveDraftAsync()
+    {
         try
         {
             _isSaving = true;
-            _confirmPublishNow = false;
             MessageService.Clear();
 
             if (_isEditMode && _page != null)
             {
-                // Update only the draft fields; leave Live, Schedule, etc. intact
-                _page.Draft.Title = _model.Draft.Title;
-                _page.Draft.Markdown = _model.Draft.Markdown;
-                _page.Draft.Content = _model.Draft.Content ?? string.Empty;
-                _page.Draft.ShowTitle = _model.Draft.ShowTitle;
-                _page.Draft.FeaturedImageUrl = _model.Draft.FeaturedImageUrl;
-                _page.Draft.FeaturedImageAlt = _model.Draft.FeaturedImageAlt;
-                _page.Draft.MetaDescription = _model.Draft.MetaDescription;
-                _page.Draft.MetaKeywords = _model.Draft.MetaKeywords;
-                _page.Slug = _model.Slug;
-                _page.UpdatedAt = DateTimeOffset.UtcNow;
+                if (_page.Schedule.Status == ContentStatus.Scheduled)
+                {
+                    await PagesAdminFacade.CancelPageScheduleAsync(Id!);
+                }
 
+                ApplyModelToPage();
                 await PagesAdminFacade.UpdatePageAsync(_page);
                 MessageService.SetSuccess("Page saved successfully!");
                 await LoadPageAsync();
@@ -347,7 +290,7 @@ private async Task LoadPageAsync()
                 var page = _model.ToEntity();
                 await PagesAdminFacade.CreatePageAsync(page);
                 MessageService.SetSuccess("Page created successfully!");
-                Navigation.NavigateTo($"/admin/pages/edit/{page.Id}");
+                Navigation.NavigateTo($"/viblog/pages/edit/{page.Id}");
             }
         }
         catch (Exception ex)
@@ -360,30 +303,38 @@ private async Task LoadPageAsync()
         }
     }
 
-    private void Cancel() => Navigation.NavigateTo("/admin/pages");
-
-    // Publish Now — two-step inline confirmation
-    private async Task HandlePublishNowClickAsync()
-    {
-        if (!_confirmPublishNow)
-        {
-            _confirmPublishNow = true;
-            return;
-        }
-
-        _confirmPublishNow = false;
-        await ExecutePublishNowAsync();
-    }
-
-    private async Task ExecutePublishNowAsync()
+    // Publish Now
+    private async Task HandlePublishNowAsync()
     {
         try
         {
             _isSaving = true;
             StateHasChanged();
-            await PagesAdminFacade.PublishPageNowAsync(Id!);
-            MessageService.SetSuccess(_page?.Live == null ? "Page published successfully!" : "Draft update published successfully!");
-            await LoadPageAsync();
+
+            if (_isEditMode)
+            {
+                if (!_editContext.Validate()) return;
+
+                if (_page != null)
+                {
+                    ApplyModelToPage();
+                    await PagesAdminFacade.UpdatePageAsync(_page);
+                }
+
+                await PagesAdminFacade.PublishPageNowAsync(Id!);
+                MessageService.SetSuccess(_page?.Live == null ? "Page published successfully!" : "Draft update published successfully!");
+                await LoadPageAsync();
+            }
+            else
+            {
+                if (!_editContext.Validate()) return;
+
+                var page = _model.ToEntity();
+                await PagesAdminFacade.CreatePageAsync(page);
+                await PagesAdminFacade.PublishPageNowAsync(page.Id);
+                MessageService.SetSuccess("Page created and published!");
+                Navigation.NavigateTo("/viblog/pages");
+            }
         }
         catch (Exception ex)
         {
@@ -396,31 +347,37 @@ private async Task LoadPageAsync()
         }
     }
 
-    // Schedule / Change Time
-    private Task ShowScheduleDialogAsync()
-    {
-        _confirmPublishNow = false;
-        _scheduleInitialDate = null;
-        _scheduleDialogVisible = true;
-        return Task.CompletedTask;
-    }
-
-    private Task ShowChangeTimeDialogAsync()
-    {
-        _confirmPublishNow = false;
-        _scheduleInitialDate = _page?.Schedule.ScheduledPublishDate;
-        _scheduleDialogVisible = true;
-        return Task.CompletedTask;
-    }
-
-    private async Task OnScheduleConfirmedAsync(DateTimeOffset date)
+    // Schedule Publish
+    private async Task HandleScheduleConfirmedAsync(DateTimeOffset date)
     {
         try
         {
             _isSaving = true;
-            await PagesAdminFacade.SchedulePagePublishingAsync(Id!, date);
-            MessageService.SetSuccess($"Page scheduled for {date:MMM d, yyyy 'at' HH:mm} UTC.");
-            await LoadPageAsync();
+
+            if (_isEditMode)
+            {
+                if (!_editContext.Validate()) return;
+
+                if (_page != null)
+                {
+                    ApplyModelToPage();
+                    await PagesAdminFacade.UpdatePageAsync(_page);
+                }
+
+                await PagesAdminFacade.SchedulePagePublishingAsync(Id!, date);
+                MessageService.SetSuccess($"Page scheduled for {date:MMM d, yyyy 'at' HH:mm} UTC.");
+                await LoadPageAsync();
+            }
+            else
+            {
+                if (!_editContext.Validate()) return;
+
+                var page = _model.ToEntity();
+                await PagesAdminFacade.CreatePageAsync(page);
+                await PagesAdminFacade.SchedulePagePublishingAsync(page.Id, date);
+                MessageService.SetSuccess($"Page created and scheduled for {date:MMM d, yyyy 'at' HH:mm} UTC.");
+                Navigation.NavigateTo($"/viblog/pages/edit/{page.Id}");
+            }
         }
         catch (Exception ex)
         {
@@ -432,40 +389,8 @@ private async Task LoadPageAsync()
         }
     }
 
-    // Cancel Schedule
-    private async Task CancelScheduleAsync()
-    {
-        _confirmPublishNow = false;
-        try
-        {
-            _isSaving = true;
-            await PagesAdminFacade.CancelPageScheduleAsync(Id!);
-            MessageService.SetSuccess("Schedule cancelled.");
-            await LoadPageAsync();
-        }
-        catch (Exception ex)
-        {
-            MessageService.SetError(ex, "Failed to cancel schedule. Please try again.");
-        }
-        finally
-        {
-            _isSaving = false;
-        }
-    }
-
-    // Unpublish — modal confirmation
-    private void ShowUnpublishDialogAsync()
-    {
-        _confirmPublishNow = false;
-        DialogService.ShowConfirmationAsync(
-            "Unpublish Page",
-            "This will remove the page from public view. Your draft will be preserved. Are you sure?",
-            ConfirmUnpublishAsync,
-            "Unpublish",
-            "Cancel");
-    }
-
-    private async Task ConfirmUnpublishAsync()
+    // Unpublish
+    private async Task HandleUnpublishAsync()
     {
         try
         {
@@ -487,10 +412,44 @@ private async Task LoadPageAsync()
         }
     }
 
+    // Delete
+    private async Task HandleDeleteAsync()
+    {
+        try
+        {
+            _isSaving = true;
+            await PagesAdminFacade.DeletePageAsync(Id!, _page!.GroupKey);
+            MessageService.SetSuccess("Page deleted.");
+            Navigation.NavigateTo("/viblog/pages");
+        }
+        catch (Exception ex)
+        {
+            MessageService.SetError(ex, "Failed to delete page. Please try again.");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // Apply current form model to the page entity
+    private void ApplyModelToPage()
+    {
+        _page!.Draft.Title = _model.Draft.Title;
+        _page.Draft.Markdown = _model.Draft.Markdown;
+        _page.Draft.Content = _model.Draft.Content ?? string.Empty;
+        _page.Draft.ShowTitle = _model.Draft.ShowTitle;
+        _page.Draft.FeaturedImageUrl = _model.Draft.FeaturedImageUrl;
+        _page.Draft.FeaturedImageAlt = _model.Draft.FeaturedImageAlt;
+        _page.Draft.MetaDescription = _model.Draft.MetaDescription;
+        _page.Draft.MetaKeywords = _model.Draft.MetaKeywords;
+        _page.Slug = _model.Slug;
+        _page.UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     // Adopt
     private async Task AdoptAsync()
     {
-        _confirmPublishNow = false;
         try
         {
             _isSaving = true;
@@ -507,8 +466,4 @@ private async Task LoadPageAsync()
             _isSaving = false;
         }
     }
-
-    private string GetPublishNowCssClass() =>
-        _confirmPublishNow ? "btn-action btn-publish-now btn-confirm-active" : "btn-action btn-publish-now";
 }
-

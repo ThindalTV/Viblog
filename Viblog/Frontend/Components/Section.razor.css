@@ -30,11 +30,22 @@
 }
 
 /* Mobile Responsive */
+@media (max-width: 768px) {
+    .section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
 @media (max-width: 640.98px) {
     .section-title {
         font-size: 1.5rem;
     }
-    
+
     .section-title::after {
         width: 50%;
     }

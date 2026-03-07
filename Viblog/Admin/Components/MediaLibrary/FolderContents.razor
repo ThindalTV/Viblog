@@ -111,7 +111,12 @@
     private int _currentPage = 1;
     private readonly int _pageSize = 20;
     private int _totalCount;
-    
+    // Prevents concurrent DB operations on the same scoped DbContext. The broadcast
+    // can trigger both OnParametersSetAsync (via SelectedDateFolderChanged cascade)
+    // and HandleFolderContentsChanged in the same render cycle; the lock ensures
+    // only one LoadMediaItemsAsync runs at a time.
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
+
     // Track previous values to detect meaningful changes
     private string? _previousDateFolder;
     private MediaTypeCategory? _previousMediaType;
@@ -190,6 +195,9 @@
 
     private async Task LoadMediaItemsAsync()
     {
+        if (!await _loadLock.WaitAsync(0))
+            return; // Another load is already running on the same DbContext scope
+
         try
         {
             _isLoading = true;
@@ -238,6 +246,7 @@
         finally
         {
             _isLoading = false;
+            _loadLock.Release();
         }
     }
 
@@ -337,6 +346,7 @@
     public async ValueTask DisposeAsync()
     {
         BroadcastService.OnFolderContentsChanged -= HandleFolderContentsChanged;
+        _loadLock.Dispose();
         await ValueTask.CompletedTask;
     }
 }

@@ -63,6 +63,30 @@
     border-radius: 4px 4px 0 0;
     border: 1px solid var(--border-color, #ddd);
     border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-insert-media {
+    background: none;
+    border: none;
+    padding: 0 0.125rem;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--admin-primary, #2563eb);
+    opacity: 0.75;
+    transition: opacity 0.15s;
+}
+
+.btn-insert-media:hover {
+    opacity: 1;
+}
+
+.btn-insert-media:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .preview-container {
