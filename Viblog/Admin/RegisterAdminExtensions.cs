@@ -284,6 +284,12 @@ public static class RegisterAdminExtensions
     {
         public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
+            endpoints.MapGet("/callback", async context =>
+            {
+                // Let the OIDC middleware handle it - just needs to be a reachable route
+                await context.Response.WriteAsync("Processing...");
+            }).AllowAnonymous();
+
             // Auth0 Challenge endpoint - initiates Auth0 login
             endpoints.MapGet("/viblog/auth/challenge", async (HttpContext context, string? returnUrl = null) =>
             {
