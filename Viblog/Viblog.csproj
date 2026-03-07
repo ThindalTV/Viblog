@@ -34,6 +34,7 @@
   <ItemGroup>
     <Folder Include="Admin\Authentication\" />
     <Folder Include="Admin\Pages\Media\" />
+    <Folder Include="Docs\intent\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

@@ -14,10 +14,6 @@ The admin area uses a custom authentication system located in:
 - `Admin/Configuration/AdminAuthenticationSettings.cs` - Hardcoded credentials (temporary)
 - `Admin/Pages/Login.razor` - Admin login page
 
-**Current Credentials** (will be replaced with external service):
-- Email: `eric@ericjohansson.se`
-- Password: `admin123!`
-
 ### Identity Components
 The `Components/Account` folder contains ASP.NET Core Identity scaffolding:
 - These components are **registered globally** but **only used in admin**
