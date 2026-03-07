@@ -29,7 +29,7 @@ jobs:
         run: dotnet nuget add source 'https://nuget.telerik.com/v3/index.json' --name 'TelerikOnlineFeed' --username 'api-key' --password '${{secrets.TELERIK_NUGET_KEY}}' --store-password-in-clear-text
 
       - name: Build with dotnet
-        run: dotnet build /src/Viblog/Viblog.csproj --configuration Release
+        run: dotnet build src/Viblog/Viblog.csproj --configuration Release
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
