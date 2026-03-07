@@ -102,7 +102,7 @@ public static class RegisterAdminExtensions
                     options.SlidingExpiration = true;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.SameSite = SameSiteMode.None;
                     options.Cookie.Name = "Viblog.Admin.Auth";
                 })
                 .AddOpenIdConnect(options =>
