@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Security.Claims;
 using Viblog.Admin.Authentication;
@@ -284,6 +285,15 @@ public static class RegisterAdminExtensions
     {
         public IEndpointRouteBuilder MapViblogAdminEndpoints()
         {
+            // Temporarily add this to test Data Protection is working
+            endpoints.MapGet("/test-dp", (IDataProtectionProvider dp) =>
+            {
+                var protector = dp.CreateProtector("test");
+                var encrypted = protector.Protect("hello");
+                var decrypted = protector.Unprotect(encrypted);
+                return $"Encrypted: {encrypted}, Decrypted: {decrypted}";
+            });
+
             endpoints.MapGet("/callback", async context =>
             {
                 // Let the OIDC middleware handle it - just needs to be a reachable route
