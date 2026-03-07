@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Viblog.Infrastructure.Shared.Data.Entities;
+﻿using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Data.CosmosDb.Data.Entities;
 
@@ -22,7 +20,7 @@ internal static class PartitionKeyExtensions
         {
             if (post.IsPublished)
             {
-                post.GroupKey = post.PublishedAt.Year.ToString();
+                post.GroupKey = post.PublishedAt!.Value.Year.ToString();
             }
             else
             {

@@ -75,6 +75,20 @@ public interface IPagesAdminFacade
     /// <param name="id">The page ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     Task UnpublishPageAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cancel the scheduled publishing of a page
+    /// </summary>
+    /// <param name="id">The page ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task CancelPageScheduleAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transfer ownership of a page to the currently authenticated user
+    /// </summary>
+    /// <param name="id">The page ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task AdoptPageAsync(string id, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

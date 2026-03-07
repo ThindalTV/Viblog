@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Viblog.Infrastructure.Shared.Auditing;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
@@ -14,18 +17,24 @@ public class MediaService : IMediaService
     private readonly IMediaStorageRepository _storageRepository;
     private readonly IMediaMetadataRepository _metadataRepository;
     private readonly IMetadataExtractorService _metadataExtractor;
+    private readonly IAuditLogService? _auditLogService;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly ILogger<MediaService> _logger;
 
     public MediaService(
         IMediaStorageRepository storageRepository,
         IMediaMetadataRepository metadataRepository,
         IMetadataExtractorService metadataExtractor,
-        ILogger<MediaService> logger)
+        ILogger<MediaService> logger,
+        IAuditLogService? auditLogService = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _storageRepository = storageRepository;
         _metadataRepository = metadataRepository;
         _metadataExtractor = metadataExtractor;
         _logger = logger;
+        _auditLogService = auditLogService; // Optional
+        _httpContextAccessor = httpContextAccessor; // Optional
     }
 
     /// <inheritdoc/>
@@ -134,6 +143,14 @@ public class MediaService : IMediaService
 
             _logger.LogInformation("Media item created: {Id}", mediaItem.Id);
 
+            // Log media upload
+            await LogAuditAsync(
+                AuditAction.MediaUploaded,
+                mediaItem.Id,
+                mediaItem.FileName,
+                $"Uploaded media file '{mediaItem.FileName}' to {mediaItem.FolderPath}",
+                cancellationToken);
+
             await memoryStream.DisposeAsync();
 
             return mediaItem;
@@ -179,6 +196,14 @@ public class MediaService : IMediaService
             await _metadataRepository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Media item soft deleted: {Id}", id);
+
+            // Log media deletion
+            await LogAuditAsync(
+                AuditAction.MediaDeleted,
+                mediaItem.Id,
+                mediaItem.FileName,
+                $"Deleted media file '{mediaItem.FileName}' from {mediaItem.FolderPath}",
+                cancellationToken);
 
             // Note: We keep the file in storage for now
             // Physical deletion can be handled by a separate cleanup job
@@ -302,5 +327,43 @@ public class MediaService : IMediaService
             _logger.LogError(ex, "Failed to update media item metadata: {Id}", id);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Helper method to log audit entries
+    /// </summary>
+    private async Task LogAuditAsync(
+        AuditAction action,
+        string entityId,
+        string entityName,
+        string description,
+        CancellationToken cancellationToken)
+    {
+        if (_auditLogService == null || _httpContextAccessor?.HttpContext == null)
+        {
+            return;
+        }
+
+        var user = _httpContextAccessor.HttpContext.User;
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        var userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
+        var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "unknown@email.com";
+
+        await _auditLogService.LogActionAsync(
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            action: action,
+            entityType: EntityType.Media,
+            entityId: entityId,
+            entityName: entityName,
+            description: description,
+            result: ActionResult.Success,
+            cancellationToken: cancellationToken);
     }
 }

@@ -1,4 +1,10 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -170,22 +176,36 @@ public class BlogPostListFacadeTests
         var result = await _facade.GetPaginatedPostsAsync(pagingParams);
 
         // Assert
-        Assert.All(result.Items, post => Assert.True(post.IsPublished));
+        Assert.All(result.Items, post => Assert.NotNull(post.Live));
     }
 
     private static BlogPost CreateTestPost(string title, int id, bool isPublished = true)
     {
-        return new BlogPost
+        var publishDate = DateTimeOffset.UtcNow.AddDays(-id);
+        var post = new BlogPost
         {
             Id = id.ToString(),
             GroupKey = "test",
-            Title = title,
             Slug = title.ToLower().Replace(" ", "-"),
-            Content = $"Content for {title}",
-            IsPublished = isPublished,
-            PublishedAt = isPublished ? DateTimeOffset.UtcNow.AddDays(-id) : DateTimeOffset.MinValue,
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-id),
-            UpdatedAt = DateTimeOffset.UtcNow.AddDays(-id)
+            PublishedAt = isPublished ? publishDate : null,
+            Draft = new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            },
+            Live = isPublished ? new BlogPostContent
+            {
+                Title = title,
+                Content = $"Content for {title}"
+            } : null,
+            CreatedAt = publishDate,
+            UpdatedAt = publishDate
         };
+        post.Draft.ComputeHash();
+        if (post.Live != null)
+        {
+            post.Live.ComputeHash();
+        }
+        return post;
     }
 }

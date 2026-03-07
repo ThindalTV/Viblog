@@ -1,4 +1,5 @@
 using Viblog.Admin.Services;
+using Viblog.Infrastructure.Admin.Services;
 
 namespace Viblog.Tests.Services;
 
@@ -15,19 +16,25 @@ public class DialogServiceTests
         var title = "Confirm Action";
         var message = "Are you sure?";
         void OnConfirm() { return; }
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmation(title, message, OnConfirm, "Yes", "No");
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal(title, service.CurrentDialog.Title);
-        Assert.Equal(message, service.CurrentDialog.Message);
-        Assert.Equal("Yes", service.CurrentDialog.ConfirmText);
-        Assert.Equal("No", service.CurrentDialog.CancelText);
-        Assert.True(service.CurrentDialog.ShowConfirm);
-        Assert.True(service.CurrentDialog.ShowCancel);
-        Assert.NotNull(service.CurrentDialog.OnConfirm);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal(title, capturedDialog.Title);
+        Assert.Equal(message, capturedDialog.Message);
+        Assert.Equal("Yes", capturedDialog.ConfirmText);
+        Assert.Equal("No", capturedDialog.CancelText);
+        Assert.True(capturedDialog.ShowConfirm);
+        Assert.True(capturedDialog.ShowCancel);
+        Assert.NotNull(capturedDialog.OnConfirm);
     }
 
     [Fact]
@@ -36,14 +43,20 @@ public class DialogServiceTests
         // Arrange
         var service = new DialogService();
         void OnConfirm() { }
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmation("Title", "Message", OnConfirm);
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal("Confirm", service.CurrentDialog.ConfirmText);
-        Assert.Equal("Cancel", service.CurrentDialog.CancelText);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal("Confirm", capturedDialog.ConfirmText);
+        Assert.Equal("Cancel", capturedDialog.CancelText);
     }
 
     [Fact]
@@ -57,19 +70,25 @@ public class DialogServiceTests
         {
             await Task.Delay(1);
         }
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmationAsync(title, message, OnConfirmAsync, "Proceed", "Cancel");
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal(title, service.CurrentDialog.Title);
-        Assert.Equal(message, service.CurrentDialog.Message);
-        Assert.Equal("Proceed", service.CurrentDialog.ConfirmText);
-        Assert.Equal("Cancel", service.CurrentDialog.CancelText);
-        Assert.True(service.CurrentDialog.ShowConfirm);
-        Assert.True(service.CurrentDialog.ShowCancel);
-        Assert.NotNull(service.CurrentDialog.OnConfirmAsync);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal(title, capturedDialog.Title);
+        Assert.Equal(message, capturedDialog.Message);
+        Assert.Equal("Proceed", capturedDialog.ConfirmText);
+        Assert.Equal("Cancel", capturedDialog.CancelText);
+        Assert.True(capturedDialog.ShowConfirm);
+        Assert.True(capturedDialog.ShowCancel);
+        Assert.NotNull(capturedDialog.OnConfirmAsync);
     }
 
     [Fact]
@@ -79,17 +98,23 @@ public class DialogServiceTests
         var service = new DialogService();
         var title = "Alert";
         var message = "Important information";
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowAlert(title, message);
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal(title, service.CurrentDialog.Title);
-        Assert.Equal(message, service.CurrentDialog.Message);
-        Assert.Equal("OK", service.CurrentDialog.ConfirmText);
-        Assert.True(service.CurrentDialog.ShowConfirm);
-        Assert.False(service.CurrentDialog.ShowCancel);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal(title, capturedDialog.Title);
+        Assert.Equal(message, capturedDialog.Message);
+        Assert.Equal("OK", capturedDialog.ConfirmText);
+        Assert.True(capturedDialog.ShowConfirm);
+        Assert.False(capturedDialog.ShowCancel);
     }
 
     [Fact]
@@ -97,13 +122,19 @@ public class DialogServiceTests
     {
         // Arrange
         var service = new DialogService();
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowAlert("Title", "Message", null, "Got It");
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal("Got It", service.CurrentDialog.ConfirmText);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal("Got It", capturedDialog.ConfirmText);
     }
 
     [Fact]
@@ -112,27 +143,42 @@ public class DialogServiceTests
         // Arrange
         var service = new DialogService();
         void OnConfirm() { }
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowAlert("Title", "Message", OnConfirm);
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.NotNull(service.CurrentDialog.OnConfirm);
+        Assert.NotNull(capturedDialog);
+        Assert.NotNull(capturedDialog.OnConfirm);
     }
 
     [Fact]
-    public void Close_ClearsCurrentDialog()
+    public void Close_SendsNullDialog()
     {
         // Arrange
         var service = new DialogService();
+        DialogInfo? capturedDialog = null;
+        var eventCount = 0;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog;
+            eventCount++;
+            return Task.CompletedTask;
+        };
         service.ShowConfirmation("Title", "Message", () => { });
 
         // Act
         service.Close();
 
         // Assert
-        Assert.Null(service.CurrentDialog);
+        Assert.Null(capturedDialog);
+        Assert.Equal(2, eventCount); // Once for show, once for close
     }
 
     [Fact]
@@ -141,7 +187,11 @@ public class DialogServiceTests
         // Arrange
         var service = new DialogService();
         var eventRaised = false;
-        service.OnDialogChanged += (sender, args) => eventRaised = true;
+        service.OnDialogChanged += (dialog) =>
+        {
+            eventRaised = true;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmation("Title", "Message", () => { });
@@ -157,7 +207,11 @@ public class DialogServiceTests
         var service = new DialogService();
         service.ShowConfirmation("Title", "Message", () => { });
         var eventRaised = false;
-        service.OnDialogChanged += (sender, args) => eventRaised = true;
+        service.OnDialogChanged += (dialog) =>
+        {
+            eventRaised = true;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.Close();
@@ -171,25 +225,40 @@ public class DialogServiceTests
     {
         // Arrange
         var service = new DialogService();
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
         service.ShowConfirmation("Old Title", "Old Message", () => { });
 
         // Act
         service.ShowConfirmation("New Title", "New Message", () => { });
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal("New Title", service.CurrentDialog.Title);
-        Assert.Equal("New Message", service.CurrentDialog.Message);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal("New Title", capturedDialog.Title);
+        Assert.Equal("New Message", capturedDialog.Message);
     }
 
     [Fact]
-    public void CurrentDialog_InitiallyNull()
+    public void InitialState_NoDialogShown()
     {
-        // Arrange & Act
+        // Arrange
         var service = new DialogService();
+        DialogInfo? capturedDialog = null;
+        var eventRaised = false;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog;
+            eventRaised = true;
+            return Task.CompletedTask;
+        };
 
-        // Assert
-        Assert.Null(service.CurrentDialog);
+        // Assert - no event raised initially
+        Assert.False(eventRaised);
+        Assert.Null(capturedDialog);
     }
 
     [Fact]
@@ -199,8 +268,16 @@ public class DialogServiceTests
         var service = new DialogService();
         var subscriber1Called = false;
         var subscriber2Called = false;
-        service.OnDialogChanged += (sender, args) => subscriber1Called = true;
-        service.OnDialogChanged += (sender, args) => subscriber2Called = true;
+        service.OnDialogChanged += (dialog) =>
+        {
+            subscriber1Called = true;
+            return Task.CompletedTask;
+        };
+        service.OnDialogChanged += (dialog) =>
+        {
+            subscriber2Called = true;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmation("Title", "Message", () => { });
@@ -221,11 +298,17 @@ public class DialogServiceTests
             await Task.CompletedTask;
             executed = true;
         }
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         service.ShowConfirmationAsync("Title", "Message", OnConfirm);
 
         // Act
-        var callback = service.CurrentDialog?.OnConfirmAsync;
+        var callback = capturedDialog?.OnConfirmAsync;
         if (callback is not null)
         {
             await callback.Invoke();
@@ -242,11 +325,17 @@ public class DialogServiceTests
         var service = new DialogService();
         var executed = false;
         void OnConfirm() => executed = true;
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         service.ShowConfirmation("Title", "Message", OnConfirm);
 
         // Act
-        service.CurrentDialog?.OnConfirm?.Invoke();
+        capturedDialog?.OnConfirm?.Invoke();
 
         // Assert
         Assert.True(executed);
@@ -260,14 +349,20 @@ public class DialogServiceTests
     {
         // Arrange
         var service = new DialogService();
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowConfirmation("Title", "Message", () => { }, confirmText, cancelText);
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Equal(confirmText, service.CurrentDialog.ConfirmText);
-        Assert.Equal(cancelText, service.CurrentDialog.CancelText);
+        Assert.NotNull(capturedDialog);
+        Assert.Equal(confirmText, capturedDialog.ConfirmText);
+        Assert.Equal(cancelText, capturedDialog.CancelText);
     }
 
     [Fact]
@@ -275,13 +370,19 @@ public class DialogServiceTests
     {
         // Arrange
         var service = new DialogService();
+        MessageDialogInfo? capturedDialog = null;
+        service.OnDialogChanged += (dialog) =>
+        {
+            capturedDialog = dialog as MessageDialogInfo;
+            return Task.CompletedTask;
+        };
 
         // Act
         service.ShowAlert("Title", "Message");
 
         // Assert
-        Assert.NotNull(service.CurrentDialog);
-        Assert.Null(service.CurrentDialog.OnConfirm);
-        Assert.Null(service.CurrentDialog.OnConfirmAsync);
+        Assert.NotNull(capturedDialog);
+        Assert.Null(capturedDialog.OnConfirm);
+        Assert.Null(capturedDialog.OnConfirmAsync);
     }
 }

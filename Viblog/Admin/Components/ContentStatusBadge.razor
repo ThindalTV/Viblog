@@ -1,0 +1,65 @@
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
+
+@{
+    var (cssClass, icon, label) = GetBadgeInfo();
+}
+
+<span class="status-badge @cssClass" title="@GetTitle()">
+    <span class="status-icon">@((MarkupString)icon)</span>
+    @label
+</span>
+
+@code {
+    /// <summary>True when Live content exists (entity.Live != null).</summary>
+    [Parameter, EditorRequired] public bool IsPublished { get; set; }
+
+    /// <summary>True when published and a scheduled draft update is pending.</summary>
+    [Parameter] public bool HasPendingUpdate { get; set; }
+
+    /// <summary>Current schedule status from entity.Schedule.Status.</summary>
+    [Parameter] public ContentStatus ScheduleStatus { get; set; }
+
+    /// <summary>Scheduled publish date, if any.</summary>
+    [Parameter] public DateTimeOffset? ScheduledDate { get; set; }
+
+    /// <summary>When the content was first published (for the Published badge label).</summary>
+    [Parameter] public DateTimeOffset? PublishedAt { get; set; }
+
+    /// <summary>True when the content has been soft-deleted.</summary>
+    [Parameter] public bool IsDeleted { get; set; }
+
+    private (string cssClass, string icon, string label) GetBadgeInfo()
+    {
+        if (IsDeleted)
+            return ("status-deleted", "&#x1F5D1;", "Deleted");
+
+        if (IsPublished && HasPendingUpdate && ScheduledDate.HasValue)
+        {
+            var date = ScheduledDate.Value.ToString("MMM d, yyyy 'at' HH:mm");
+            return ("status-update", "&#x21BB;", $"Published \u00b7 Update {date}");
+        }
+
+        if (IsPublished)
+        {
+            var date = PublishedAt.HasValue ? $" \u2014 {PublishedAt.Value.ToString("MMM d, yyyy")}" : string.Empty;
+            return ("status-published", "&#x2713;", $"Published{date}");
+        }
+
+        if (ScheduleStatus == ContentStatus.Scheduled && ScheduledDate.HasValue)
+        {
+            var date = ScheduledDate.Value.ToString("MMM d, yyyy 'at' HH:mm");
+            return ("status-scheduled", "&#x23F0;", $"Scheduled \u2014 {date}");
+        }
+
+        return ("status-draft", "&#x270E;", "Draft");
+    }
+
+    private string GetTitle()
+    {
+        if (IsDeleted) return "This content has been deleted.";
+        if (HasPendingUpdate && ScheduledDate.HasValue) return $"Live with a draft update scheduled for {ScheduledDate.Value:u}";
+        if (IsPublished) return PublishedAt.HasValue ? $"Published on {PublishedAt.Value:u}" : "Published";
+        if (ScheduleStatus == ContentStatus.Scheduled && ScheduledDate.HasValue) return $"Scheduled for {ScheduledDate.Value:u}";
+        return "Draft — not publicly visible";
+    }
+}

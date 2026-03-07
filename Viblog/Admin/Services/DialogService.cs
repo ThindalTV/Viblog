@@ -1,54 +1,6 @@
+using Viblog.Infrastructure.Admin.Services;
+
 namespace Viblog.Admin.Services;
-
-/// <summary>
-/// Service for managing and displaying dialogs
-/// </summary>
-public interface IDialogService
-{
-    /// <summary>
-    /// Event raised when a dialog should be shown
-    /// </summary>
-    event EventHandler? OnDialogChanged;
-
-    /// <summary>
-    /// Current dialog being displayed
-    /// </summary>
-    DialogInfo? CurrentDialog { get; }
-
-    /// <summary>
-    /// Show a confirmation dialog
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirm">Action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    /// <param name="cancelText">Cancel button text</param>
-    void ShowConfirmation(string title, string message, Action onConfirm, string confirmText = "Confirm", string cancelText = "Cancel");
-
-    /// <summary>
-    /// Show a confirmation dialog with async callback
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirmAsync">Async action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    /// <param name="cancelText">Cancel button text</param>
-    void ShowConfirmationAsync(string title, string message, Func<Task> onConfirmAsync, string confirmText = "Confirm", string cancelText = "Cancel");
-
-    /// <summary>
-    /// Show an alert dialog (only confirm button)
-    /// </summary>
-    /// <param name="title">Dialog title</param>
-    /// <param name="message">Dialog message</param>
-    /// <param name="onConfirm">Optional action to execute when confirmed</param>
-    /// <param name="confirmText">Confirm button text</param>
-    void ShowAlert(string title, string message, Action? onConfirm = null, string confirmText = "OK");
-
-    /// <summary>
-    /// Close the current dialog
-    /// </summary>
-    void Close();
-}
 
 /// <summary>
 /// Implementation of dialog service
@@ -58,7 +10,7 @@ public class DialogService : IDialogService
     private DialogInfo? _currentDialog;
 
     /// <inheritdoc/>
-    public event EventHandler? OnDialogChanged;
+    public event Func<DialogInfo?, Task>? OnDialogChanged;
 
     /// <inheritdoc/>
     public DialogInfo? CurrentDialog => _currentDialog;
@@ -66,7 +18,7 @@ public class DialogService : IDialogService
     /// <inheritdoc/>
     public void ShowConfirmation(string title, string message, Action onConfirm, string confirmText = "Confirm", string cancelText = "Cancel")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -77,13 +29,13 @@ public class DialogService : IDialogService
             OnConfirm = onConfirm
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void ShowConfirmationAsync(string title, string message, Func<Task> onConfirmAsync, string confirmText = "Confirm", string cancelText = "Cancel")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -94,13 +46,13 @@ public class DialogService : IDialogService
             OnConfirmAsync = onConfirmAsync
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void ShowAlert(string title, string message, Action? onConfirm = null, string confirmText = "OK")
     {
-        _currentDialog = new DialogInfo
+        _currentDialog = new MessageDialogInfo
         {
             Title = title,
             Message = message,
@@ -110,18 +62,39 @@ public class DialogService : IDialogService
             OnConfirm = onConfirm
         };
 
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
+    }
+
+    /// <inheritdoc/>
+    public void ShowMarkdownSyntaxDialog()
+    {
+        _currentDialog = new MarkdownSyntaxDialogInfo();
+
+        _ = NotifyStateChangedAsync();
+    }
+
+    /// <inheritdoc/>
+    public void ShowPasswordResetDialog(string userId, string userName, Func<string, Task> onConfirmAsync)
+    {
+        _currentDialog = new PasswordResetDialogInfo
+        {
+            UserId = userId,
+            UserName = userName,
+            OnConfirmAsync = onConfirmAsync
+        };
+
+        _ = NotifyStateChangedAsync();
     }
 
     /// <inheritdoc/>
     public void Close()
     {
         _currentDialog = null;
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync();
     }
 
-    private void NotifyStateChanged()
+    private async Task NotifyStateChangedAsync()
     {
-        OnDialogChanged?.Invoke(this, EventArgs.Empty);
+        await (OnDialogChanged?.Invoke(_currentDialog) ?? Task.CompletedTask);
     }
 }

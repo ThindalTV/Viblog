@@ -148,4 +148,12 @@ public interface IBlogPostRepository : IRepository<BlogPost>
         string currentPartitionKey,
         DateTimeOffset newPublishedAt,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get blog posts that are scheduled and ready to be published (scheduled date has passed).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Blog posts ready to publish</returns>
+    Task<IEnumerable<BlogPost>> GetScheduledPostsReadyToPublishAsync(
+        CancellationToken cancellationToken = default);
 }

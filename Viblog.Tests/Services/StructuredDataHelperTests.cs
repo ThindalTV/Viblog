@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Configuration;
 
 namespace Viblog.Tests.Services;
@@ -228,8 +230,8 @@ public class StructuredDataHelperTests
         var root = doc.RootElement;
 
         // Assert
-        Assert.Equal(post.Title, root.GetProperty("headline").GetString());
-        Assert.Equal(post.Short, root.GetProperty("description").GetString());
+        Assert.Equal(post.Live!.Title, root.GetProperty("headline").GetString());
+        Assert.Equal(post.Live.Short, root.GetProperty("description").GetString());
         Assert.Equal(postUrl, root.GetProperty("url").GetString());
     }
 
@@ -238,7 +240,7 @@ public class StructuredDataHelperTests
     {
         // Arrange
         var post = CreateBlogPost();
-        post.MetaDescription = "Custom meta description";
+        post.Live!.MetaDescription = "Custom meta description";
         var postUrl = "https://example.com/post/2024/test-post";
 
         // Act
@@ -335,8 +337,8 @@ public class StructuredDataHelperTests
     {
         // Arrange
         var post = CreateBlogPost();
-        post.FeaturedImageUrl = "https://example.com/featured.jpg";
-        post.FeaturedImageAlt = "Featured image description";
+        post.Live!.FeaturedImageUrl = "https://example.com/featured.jpg";
+        post.Live.FeaturedImageAlt = "Featured image description";
         var postUrl = "https://example.com/post/2024/test-post";
 
         // Act
@@ -355,7 +357,7 @@ public class StructuredDataHelperTests
     {
         // Arrange
         var post = CreateBlogPost();
-        post.FeaturedImageUrl = null;
+        post.Live!.FeaturedImageUrl = null;
         var postUrl = "https://example.com/post/2024/test-post";
 
         // Act
@@ -390,7 +392,7 @@ public class StructuredDataHelperTests
     {
         // Arrange
         var post = CreateBlogPost();
-        post.Content = "<p>This is a test post with some content.</p>";
+        post.Live!.Content = "<p>This is a test post with some content.</p>";
         var postUrl = "https://example.com/post/2024/test-post";
 
         // Act
@@ -424,7 +426,7 @@ public class StructuredDataHelperTests
     {
         // Arrange
         var post = CreateBlogPost();
-        post.Content = "<h1>Title</h1><p>This is <strong>bold</strong> text.</p>";
+        post.Live!.Content = "<h1>Title</h1><p>This is <strong>bold</strong> text.</p>";
         var postUrl = "https://example.com/post/2024/test-post";
 
         // Act
@@ -611,20 +613,32 @@ public class StructuredDataHelperTests
 
     private static BlogPost CreateBlogPost()
     {
-        return new BlogPost
+        var publishedAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero);
+        var post = new BlogPost
         {
             Id = "1",
-            Title = "Test Blog Post",
             Slug = "test-post",
-            Content = "<p>This is test content.</p>",
-            Short = "Test short description",
-            IsPublished = true,
-            PublishedAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero),
+            PublishedAt = publishedAt,
             UpdatedAt = DateTimeOffset.MinValue,
             AuthorName = "Test Author",
             CategoryNames = ["Technology"],
-            Tags = ["test"]
+            Tags = ["test"],
+            Draft = new BlogPostContent
+            {
+                Title = "Test Blog Post",
+                Content = "<p>This is test content.</p>",
+                Short = "Test short description"
+            },
+            Live = new BlogPostContent
+            {
+                Title = "Test Blog Post",
+                Content = "<p>This is test content.</p>",
+                Short = "Test short description"
+            }
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 
     #endregion

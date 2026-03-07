@@ -2,7 +2,6 @@
 @implements IDisposable
 @using Viblog.Admin.Components
 @using Viblog.Admin.Services
-@inject AdminAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
 <HeadContent>
@@ -21,7 +20,7 @@
                             <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
                             @if (_expanded)
                             {
-                                <span class="logo-text">Admin<strong>K</strong></span>
+                                <span class="logo-text">Viblo<strong>G</strong></span>
                             }
                         </div>
                     </div>
@@ -31,29 +30,11 @@
                             <div class="nav-section-title">@(_expanded ? "Navigation" : "")</div>
                             @foreach (var item in _navigationItems)
                             {
-                                <a href="@item.Url" 
-                                   class="nav-item @(IsSelected(item) ? "active" : "")">
-                                    <TelerikSvgIcon Icon="@item.Icon" />
-                                    @if (_expanded)
-                                    {
-                                        <span class="nav-item-text">@item.Text</span>
-                                    }
-                                </a>
-                            }
-                        </div>
-
-                        <div class="nav-section">
-                            <div class="nav-section-title">@(_expanded ? "Tools" : "")</div>
-                            @foreach (var item in _toolsItems)
-                            {
-                                <a href="@item.Url" 
-                                   class="nav-item @(IsSelected(item) ? "active" : "")">
-                                    <TelerikSvgIcon Icon="@item.Icon" />
-                                    @if (_expanded)
-                                    {
-                                        <span class="nav-item-text">@item.Text</span>
-                                    }
-                                </a>
+                                <MenuItem Text="@item.Text"
+                                         Icon="@item.Icon"
+                                         Url="@item.Url"
+                                         Expanded="@_expanded" 
+                                         IsActive="@IsSelected(item)" />
                             }
                         </div>
 
@@ -82,6 +63,14 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="nav-section nav-section-logout">
+                            <MenuItem Text="Logout"
+                                     Icon="@SvgIcon.Logout"
+                                     Url="/admin/logout"
+                                     Expanded="@_expanded" 
+                                     IsActive="false" />
+                        </div>
                     </nav>
                 </aside>
 
@@ -102,30 +91,8 @@
                         </div>
                         
                         <div class="header-right">
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@SvgIcon.Pencil">
-                            </TelerikButton>
-                            <div class="notification-badge">
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.Envelop">
-                                </TelerikButton>
-                                <span class="badge">4</span>
-                            </div>
-                            <div class="notification-badge">
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.Bell">
-                                </TelerikButton>
-                                <span class="badge">1</span>
-                            </div>
-                            <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                         Icon="@SvgIcon.GlobeOutline">
-                            </TelerikButton>
                             <div class="user-menu">
-                                <img src="https://via.placeholder.com/32" alt="User" class="user-avatar" />
                                 <span class="user-name">@authContext.User.Identity?.Name</span>
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                             Icon="@SvgIcon.ChevronDown">
-                                </TelerikButton>
                             </div>
                         </div>
                     </header>
@@ -138,7 +105,7 @@
 
                     <main class="admin-content">
                         <MessageDisplay />
-                        <Dialog />
+                        <DialogContainer />
                         @Body
                     </main>
                 </div>
@@ -153,7 +120,6 @@
 
 @code {
     private bool _expanded = true;
-    private DrawerItem? _selectedItem;
 
     private List<DrawerItem> _navigationItems = new()
     {
@@ -161,16 +127,11 @@
         new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/admin/posts" },
         new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/admin/pages" },
         new DrawerItem { Text = "Media", Icon = SvgIcon.Image, Url = "/admin/media" },
+        new DrawerItem { Text = "Users", Icon = SvgIcon.User, Url = "/admin/users" },
+        new DrawerItem { Text = "Profile", Icon = SvgIcon.User, Url = "/admin/profile" },
+        new DrawerItem { Text = "Audit Logs", Icon = SvgIcon.FileReport, Url = "/admin/audit-logs" },
         new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/analytics" },
         new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/admin/settings" }
-    };
-
-    private List<DrawerItem> _toolsItems = new()
-    {
-        new DrawerItem { Text = "Sales Statistics", Icon = SvgIcon.ChartLineMarkers, Url = "/admin/sales" },
-        new DrawerItem { Text = "Layout Templates", Icon = SvgIcon.TemplateManager, Url = "/admin/templates" },
-        new DrawerItem { Text = "Management Tools", Icon = SvgIcon.Gear, Url = "/admin/management" },
-        new DrawerItem { Text = "Forms", Icon = SvgIcon.FileAdd, Url = "/admin/forms" }
     };
 
     protected override void OnInitialized()
@@ -203,37 +164,26 @@
         
         // Check for exact match first
         var item = _navigationItems.FirstOrDefault(i => 
-            currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
-            ?? _toolsItems.FirstOrDefault(i => 
-                currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
-        
+            currentPath.Equals(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+
         // If no exact match, check if current path starts with any nav item URL
         if (item == null)
         {
             item = _navigationItems.FirstOrDefault(i => 
-                currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
-                ?? _toolsItems.FirstOrDefault(i => 
-                    currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+                currentPath.StartsWith(i.Url.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
         }
         
         return item?.Text ?? "Dashboard";
     }
 
-    private async Task HandleLogout()
+    private void HandleLogout()
     {
-        await AuthStateProvider.MarkUserAsLoggedOut();
-        Navigation.NavigateTo("/admin/login", forceLoad: true);
+        // Redirect to logout endpoint which will handle Auth0 logout
+        Navigation.NavigateTo("/admin/logout", forceLoad: true);
     }
 
     public void Dispose()
     {
         Navigation.LocationChanged -= OnLocationChanged;
-    }
-
-    public class DrawerItem
-    {
-        public string Text { get; set; } = string.Empty;
-        public ISvgIcon? Icon { get; set; }
-        public string Url { get; set; } = string.Empty;
     }
 }

@@ -33,7 +33,7 @@ public class FrontPageFacade : IFrontPageFacade
         // Get featured posts from the last month
         var featuredPosts = await _blogPostRepository.FindAsync(
             p => p.IsFeatured && 
-                 p.IsPublished && 
+                 p.IsPublished &&
                  p.PublishedAt <= DateTimeOffset.UtcNow &&
                  p.PublishedAt >= oneMonthAgo,
             new PagingParameters(1, maxPosts),
@@ -81,7 +81,7 @@ public class FrontPageFacade : IFrontPageFacade
 
         var featuredPosts = await _blogPostRepository.FindAsync(
             p => p.IsFeatured && 
-                 p.IsPublished && 
+                 p.IsPublished &&
                  p.PublishedAt <= DateTimeOffset.UtcNow &&
                  p.PublishedAt >= oneMonthAgo,
             new PagingParameters(1, maxPosts),

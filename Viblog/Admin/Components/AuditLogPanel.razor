@@ -1,0 +1,120 @@
+@using Viblog.Infrastructure.Shared.Auditing
+@using Viblog.Infrastructure.Shared.Data.Common
+@using Viblog.Infrastructure.Shared.Data.Entities
+
+@inject IAuditLogService AuditLogService
+
+<div class="audit-log-panel">
+    <h3 class="audit-log-title">Activity History</h3>
+
+    @if (_isLoading && _logs.Count == 0)
+    {
+        <p class="audit-log-loading">Loading activity...</p>
+    }
+    else if (_logs.Count == 0)
+    {
+        <p class="audit-log-empty">No activity recorded yet.</p>
+    }
+    else
+    {
+        <ol class="audit-log-timeline">
+            @foreach (var log in _logs)
+            {
+                <li class="audit-log-entry">
+                    <span class="audit-log-timestamp" title="@log.Timestamp.ToString("u")">
+                        @log.Timestamp.ToString("MMM dd, yyyy 'at' HH:mm")
+                    </span>
+                    <span class="audit-log-user">@log.UserName</span>
+                    <span class="audit-log-action">@GetActionLabel(log.Action)</span>
+                    @if (!string.IsNullOrWhiteSpace(log.Description))
+                    {
+                        <span class="audit-log-description">@log.Description</span>
+                    }
+                </li>
+            }
+        </ol>
+
+        @if (_hasMore)
+        {
+            <button type="button" class="btn-secondary audit-log-load-more"
+                    @onclick="LoadMoreAsync" disabled="@_isLoading">
+                @(_isLoading ? "Loading..." : "Load more")
+            </button>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The type of entity to display history for.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public EntityType EntityType { get; set; }
+
+    /// <summary>
+    /// The ID of the entity to display history for.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string EntityId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Maximum number of entries to load per page.
+    /// </summary>
+    [Parameter]
+    public int PageSize { get; set; } = 20;
+
+    private readonly List<AuditLog> _logs = new();
+    private bool _isLoading;
+    private bool _hasMore;
+    private int _currentPage = 1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(EntityId))
+        {
+            _logs.Clear();
+            _currentPage = 1;
+            _hasMore = false;
+            await LoadPageAsync();
+        }
+    }
+
+    private async Task LoadMoreAsync()
+    {
+        _currentPage++;
+        await LoadPageAsync();
+    }
+
+    private async Task LoadPageAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var paging = new PagingParameters(_currentPage, PageSize);
+            var result = await AuditLogService.GetEntityHistoryAsync(EntityType, EntityId, paging);
+            _logs.AddRange(result.Items);
+            _hasMore = _logs.Count < result.TotalCount;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string GetActionLabel(AuditAction action) => action switch
+    {
+        AuditAction.ContentCreated => "Created",
+        AuditAction.ContentUpdated => "Updated",
+        AuditAction.ContentDeleted => "Deleted",
+        AuditAction.ContentPublished => "Published",
+        AuditAction.ContentUnpublished => "Unpublished",
+        AuditAction.ContentScheduled => "Scheduled",
+        AuditAction.ContentScheduleUpdated => "Schedule updated",
+        AuditAction.ContentScheduleCancelled => "Schedule cancelled",
+        AuditAction.ContentOwnershipTransferred => "Ownership transferred",
+        _ => action.ToString()
+    };
+}

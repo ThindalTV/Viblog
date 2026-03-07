@@ -1,6 +1,6 @@
 using Viblog.Frontend.Facades;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -34,7 +34,8 @@ public class PageDetailFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(slug, result.Slug);
-        Assert.Equal(expectedPage.Live.Title, result.Live.Title);
+        Assert.NotNull(result.Live);
+        Assert.Equal(expectedPage?.Live?.Title, result.Live.Title);
         Assert.True(result.IsPublished);
     }
 
@@ -170,14 +171,14 @@ public class PageDetailFacadeTests
             GroupKey = "pages",
             Slug = slug,
             IsPublished = isPublished,
-            Live = new PageContent
+            Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",
                 Markdown = "# Live Content",
                 Content = "<h1>Live Content</h1>",
                 MetaDescription = "Live meta description",
                 ShowTitle = true
-            },
+            } : null,
             Draft = new PageContent
             {
                 Title = $"Draft Title for {slug}",
@@ -195,7 +196,7 @@ public class PageDetailFacadeTests
 
         if (hasScheduledPublish)
         {
-            page.PublishDate = DateTimeOffset.UtcNow.AddMinutes(-5); // Past date, ready to publish
+            page.Schedule.ScheduledPublishDate = DateTimeOffset.UtcNow.AddMinutes(-5); // Past date, ready to publish
         }
 
         return page;

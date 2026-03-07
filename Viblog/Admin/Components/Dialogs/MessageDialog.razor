@@ -1,0 +1,91 @@
+@using Viblog.Admin.Components.Dialogs
+@using Viblog.Admin.Services
+@inject IDialogService DialogService
+@implements IDisposable
+
+<DialogBase @ref="_dialogBase" IsModal="true" CssClass="standard-dialog" OnClose="HandleClose">
+    <Title>
+        @if (!string.IsNullOrWhiteSpace(_dialogInfo?.Title))
+        {
+            <h2 class="dialog-title">@_dialogInfo.Title</h2>
+        }
+    </Title>
+    <Content>
+        <p>@(_dialogInfo?.Message ?? string.Empty)</p>
+    </Content>
+    <ActionButtons>
+        @if (_dialogInfo?.ShowCancel == true)
+        {
+            <button type="button" class="btn-dialog-cancel" @onclick="HandleCancel">
+                @_dialogInfo.CancelText
+            </button>
+        }
+        @if (_dialogInfo?.ShowConfirm == true)
+        {
+            <button type="button" class="btn-dialog-confirm" @onclick="HandleConfirm">
+                @_dialogInfo.ConfirmText
+            </button>
+        }
+    </ActionButtons>
+</DialogBase>
+
+@code {
+    private DialogBase? _dialogBase;
+    private MessageDialogInfo? _dialogInfo;
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnDialogChanged += HandleDialogChangedAsync;
+    }
+
+    private async Task HandleDialogChangedAsync(DialogInfo? dialog)
+    {
+        if (dialog is not MessageDialogInfo messageDialog)
+        {
+            return;
+        }
+
+        _dialogInfo = messageDialog;
+        StateHasChanged();
+
+        await (_dialogBase?.ShowAsync() ?? Task.CompletedTask);
+    }
+
+    private async Task HandleConfirm()
+    {
+        if (_dialogInfo?.OnConfirmAsync != null)
+        {
+            await _dialogInfo.OnConfirmAsync.Invoke();
+        }
+        else
+        {
+            _dialogInfo?.OnConfirm?.Invoke();
+        }
+
+        DialogService.Close();
+    }
+
+    private async Task HandleCancel()
+    {
+        if (_dialogInfo?.OnCancelAsync != null)
+        {
+            await _dialogInfo.OnCancelAsync.Invoke();
+        }
+        else
+        {
+            _dialogInfo?.OnCancel?.Invoke();
+        }
+
+        DialogService.Close();
+    }
+
+    private void HandleClose()
+    {
+        DialogService.Close();
+    }
+
+    public void Dispose()
+    {
+        DialogService.OnDialogChanged -= HandleDialogChangedAsync;
+    }
+}

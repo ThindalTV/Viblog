@@ -1,5 +1,6 @@
 using Viblog.Admin.Models;
 using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
 
 namespace Viblog.Admin.Extensions;
 
@@ -8,6 +9,8 @@ namespace Viblog.Admin.Extensions;
 /// </summary>
 public static class PageExtensions
 {
+
+
     /// <summary>
     /// Convert Page entity to PageModel
     /// </summary>
@@ -25,8 +28,8 @@ public static class PageExtensions
                 PartitionKey = page.GroupKey,
                 Slug = page.Slug,
                 IsPublished = page.IsPublished,
-                PublishDate = page.PublishDate,
-                
+                PublishDate = page.Schedule.ScheduledPublishDate,
+
                 // Draft version
                 Draft = new PageContentModel
                 {
@@ -39,9 +42,9 @@ public static class PageExtensions
                     MetaKeywords = page.Draft.MetaKeywords,
                     ShowTitle = page.Draft.ShowTitle
                 },
-                
-                // Live version
-                Live = new PageContentModel
+
+                // Live version — null when page is not yet published
+                Live = page.Live is null ? null : new PageContentModel
                 {
                     Title = page.Live.Title,
                     Markdown = page.Live.Markdown,
@@ -52,7 +55,7 @@ public static class PageExtensions
                     MetaKeywords = page.Live.MetaKeywords,
                     ShowTitle = page.Live.ShowTitle
                 },
-                
+
                 // Common
                 AuthorName = page.AuthorName,
                 AuthorId = page.AuthorId,
@@ -75,9 +78,13 @@ public static class PageExtensions
             var page = new Page
             {
                 Slug = model.Slug,
-                IsPublished = model.IsPublished,
-                PublishDate = model.PublishDate,
-                
+                // IsPublished is NOT set here — it is computed from Live != null.
+                // Live content is managed exclusively by ContentSchedulingService.
+                Schedule = new ContentSchedule
+                {
+                    ScheduledPublishDate = model.PublishDate
+                },
+
                 // Draft version
                 Draft = new PageContent
                 {
@@ -90,20 +97,20 @@ public static class PageExtensions
                     MetaKeywords = model.Draft.MetaKeywords,
                     ShowTitle = model.Draft.ShowTitle
                 },
-                
-                // Live version
-                Live = new PageContent
+
+                // Live version — preserved from model (null if page was never published)
+                Live = model.Live is null ? null : new PageContent
                 {
                     Title = model.Live.Title,
                     Markdown = model.Live.Markdown,
-                    Content = model.Live.Content,
+                    Content = model.Live.Content ?? string.Empty,
                     FeaturedImageUrl = model.Live.FeaturedImageUrl,
                     FeaturedImageAlt = model.Live.FeaturedImageAlt,
                     MetaDescription = model.Live.MetaDescription,
                     MetaKeywords = model.Live.MetaKeywords,
                     ShowTitle = model.Live.ShowTitle
                 },
-                
+
                 // Common
                 AuthorName = model.AuthorName,
                 AuthorId = model.AuthorId,

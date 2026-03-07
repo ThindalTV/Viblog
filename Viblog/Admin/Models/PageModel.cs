@@ -22,9 +22,9 @@ public class PageModel
     public PageContentModel Draft { get; set; } = new();
 
     /// <summary>
-    /// Live version content (currently published - read-only in UI)
+    /// Live version content (currently published - null if not yet published, read-only in UI)
     /// </summary>
-    public PageContentModel Live { get; set; } = new();
+    public PageContentModel? Live { get; set; }
 
     // Common fields
     

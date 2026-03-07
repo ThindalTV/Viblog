@@ -36,8 +36,6 @@ public class BlogPostModel
 
     public string AuthorId { get; set; } = string.Empty;
 
-    public DateTimeOffset PublishedAt { get; set; } = DateTimeOffset.Now;
-    public bool IsPublished { get; set; }
     public bool IsFeatured { get; set; }
 
     public List<string> Tags { get; set; } = [];

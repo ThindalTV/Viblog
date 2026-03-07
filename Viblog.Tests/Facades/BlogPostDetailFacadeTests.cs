@@ -1,4 +1,8 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 
@@ -32,7 +36,7 @@ public class BlogPostDetailFacadeTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(slug, result.Slug);
-        Assert.Equal(expectedPost.Title, result.Title);
+        Assert.Equal(expectedPost.Live!.Title, result.Live!.Title);
     }
 
     [Fact]
@@ -189,18 +193,28 @@ public class BlogPostDetailFacadeTests
 
     private static BlogPost CreateTestPost(string slug, string[]? tags = null)
     {
-        return new BlogPost
+        var post = new BlogPost
         {
             Id = Guid.NewGuid().ToString(),
             GroupKey = "test",
-            Title = $"Post for {slug}",
             Slug = slug,
-            Content = "Test content",
-            IsPublished = true,
             PublishedAt = DateTimeOffset.UtcNow,
             Tags = tags?.ToList() ?? new List<string>(),
+            Draft = new BlogPostContent
+            {
+                Title = $"Post for {slug}",
+                Content = "Test content"
+            },
+            Live = new BlogPostContent
+            {
+                Title = $"Post for {slug}",
+                Content = "Test content"
+            },
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+        post.Draft.ComputeHash();
+        post.Live.ComputeHash();
+        return post;
     }
 }

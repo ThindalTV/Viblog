@@ -1,7 +1,9 @@
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Shared.Extensions;
 using Viblog.Infrastructure.Shared.Services;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Shared.Services;
 
@@ -29,9 +31,20 @@ public class BlogSearchService : IBlogSearchService
 
         var normalizedSearchTerm = searchTerm.ToLowerInvariant();
 
+        if (publishedOnly)
+        {
+            return await _repository.FindAsync(
+                p => p.Live != null && p.Live.SearchIndex.Contains(normalizedSearchTerm),
+                pagingParameters,
+                p => p.PublishedAt,
+                ascending: false,
+                includeDeleted: false,
+                cancellationToken);
+        }
+
         return await _repository.FindAsync(
-            p => p.SearchIndex.Contains(normalizedSearchTerm) &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+            p => p.Draft.SearchIndex.Contains(normalizedSearchTerm) ||
+                 (p.Live != null && p.Live.SearchIndex.Contains(normalizedSearchTerm)),
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
@@ -51,9 +64,20 @@ public class BlogSearchService : IBlogSearchService
 
         var normalizedTitleTerm = titleTerm.ToLowerInvariant();
 
+        if (publishedOnly)
+        {
+            return await _repository.FindAsync(
+                p => p.Live != null && p.Live.SearchIndex.Contains(normalizedTitleTerm),
+                pagingParameters,
+                p => p.PublishedAt,
+                ascending: false,
+                includeDeleted: false,
+                cancellationToken);
+        }
+
         return await _repository.FindAsync(
-            p => p.Title.ToLower().Contains(normalizedTitleTerm) &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+            p => p.Draft.SearchIndex.Contains(normalizedTitleTerm) ||
+                 (p.Live != null && p.Live.SearchIndex.Contains(normalizedTitleTerm)),
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
@@ -86,9 +110,21 @@ public class BlogSearchService : IBlogSearchService
             throw new ArgumentException("At least one non-empty search term is required", nameof(searchTerms));
         }
 
+        if (publishedOnly)
+        {
+            return await _repository.FindAsync(
+                p => p.Live != null && normalizedTerms.All(term => p.Live.SearchIndex.Contains(term)),
+                pagingParameters,
+                p => p.PublishedAt,
+                ascending: false,
+                includeDeleted: false,
+                cancellationToken);
+        }
+
         return await _repository.FindAsync(
-            p => normalizedTerms.All(term => p.SearchIndex.Contains(term)) &&
-                 (!publishedOnly || (p.IsPublished && p.PublishedAt <= DateTimeOffset.UtcNow)),
+            p => normalizedTerms.All(term =>
+                p.Draft.SearchIndex.Contains(term) ||
+                (p.Live != null && p.Live.SearchIndex.Contains(term))),
             pagingParameters,
             p => p.PublishedAt,
             ascending: false,
@@ -121,7 +157,7 @@ public class BlogSearchService : IBlogSearchService
         // Find posts with matching tags or categories
         var relatedPosts = await _repository.FindAsync(
             p => p.Id != postId &&
-                 p.IsPublished &&
+                 p.Live != null &&
                  p.PublishedAt <= DateTimeOffset.UtcNow &&
                  (p.Tags.Any(t => sourcePost.Tags.Contains(t)) ||
                   p.CategoryIds.Any(c => sourcePost.CategoryIds.Contains(c))),

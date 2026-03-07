@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Options;
-using Viblog.Shared.Configuration;
+using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Infrastructure.Shared.Models.Sitemap;
 using Viblog.Infrastructure.Shared.Services;
-using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Shared.Configuration;
+using Viblog.Shared.Extensions;
 
 namespace Viblog.Shared.Services;
 
@@ -66,8 +67,8 @@ public class SitemapService : ISitemapService
         // Blog posts
         foreach (var post in posts.Items)
         {
-            var url = $"{_siteMetadata.BaseUrl}/post/{post.PublishedAt.Year}/{post.Slug}";
-            var lastMod = post.UpdatedAt.UtcDateTime != default ? post.UpdatedAt.UtcDateTime : post.PublishedAt.UtcDateTime;
+            var url = $"{_siteMetadata.BaseUrl}/post/{post.PublishedAt!.Value.Year}/{post.Slug}";
+            var lastMod = post.UpdatedAt.UtcDateTime != default ? post.UpdatedAt.UtcDateTime : post.PublishedAt!.Value.UtcDateTime;
             var priority = post.IsFeatured ? "0.9" : "0.7";
 
             urlSet.Urls.Add(CreateUrl(url, lastMod, "monthly", priority));
@@ -100,7 +101,8 @@ public class SitemapService : ISitemapService
 
         // Get archive dates (year/month combinations)
         var archiveDates = posts.Items
-            .Select(p => new { Year = p.PublishedAt.Year, Month = p.PublishedAt.Month })
+            .Where(p => p.PublishedAt.HasValue)
+            .Select(p => new { Year = p.PublishedAt!.Value.Year, Month = p.PublishedAt!.Value.Month })
             .Distinct()
             .OrderByDescending(d => d.Year)
             .ThenByDescending(d => d.Month);
