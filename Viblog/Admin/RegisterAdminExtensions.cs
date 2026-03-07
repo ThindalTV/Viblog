@@ -179,8 +179,16 @@ public static class RegisterAdminExtensions
                             context.Response.Redirect("/viblog/access-denied");
                             context.HandleResponse();
                             return Task.CompletedTask;
-                        }
-                    };
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            var exception = context.Exception;
+                            var propString = String.Join(" ", context.Properties?.Items.Select(kv => $"{kv.Key}: {kv.Value}").ToList());
+                            throw new Exception($"Authentication failed during login callback. Exception: {exception.Message}. Props: {propString}");
+                            context.Response.Redirect("/viblog/login?error=authentication_failed");
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        };
                 }
 
 
