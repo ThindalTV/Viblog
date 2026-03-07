@@ -188,7 +188,8 @@ public static class RegisterAdminExtensions
                             context.Response.Redirect("/viblog/login?error=authentication_failed");
                             context.HandleResponse();
                             return Task.CompletedTask;
-                        };
+                        }
+                    };
                 }
 
 
