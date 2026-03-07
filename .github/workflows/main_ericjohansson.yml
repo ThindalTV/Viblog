@@ -30,9 +30,13 @@ jobs:
 
       - name: Build with dotnet
         run: dotnet build Viblog/Viblog.csproj --configuration Release
+        env:
+          TELERIK_LICENSE: ${{ secrets.TELERIK_LICENSE_KEY }}
 
       - name: dotnet publish
         run: dotnet publish Viblog/Viblog.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        env:
+          TELERIK_LICENSE: ${{ secrets.TELERIK_LICENSE_KEY }}
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

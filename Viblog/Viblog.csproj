@@ -9,12 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Admin\Components\Media\**" />
     <Compile Remove="Admin\Infrastructure\**" />
     <Compile Remove="Shared\Infrastructure\**" />
+    <Content Remove="Admin\Components\Media\**" />
     <Content Remove="Admin\Infrastructure\**" />
     <Content Remove="Shared\Infrastructure\**" />
+    <EmbeddedResource Remove="Admin\Components\Media\**" />
     <EmbeddedResource Remove="Admin\Infrastructure\**" />
     <EmbeddedResource Remove="Shared\Infrastructure\**" />
+    <None Remove="Admin\Components\Media\**" />
     <None Remove="Admin\Infrastructure\**" />
     <None Remove="Shared\Infrastructure\**" />
   </ItemGroup>
@@ -43,7 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Admin\Components\Media\" />
     <Folder Include="Admin\Authentication\" />
     <Folder Include="Admin\Pages\Media\" />
     <Folder Include="Services\" />
