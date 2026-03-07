@@ -179,7 +179,7 @@ public class ContentPublishingOptions
 {
     /// <summary>
     /// How often to check for scheduled content (in minutes).
-    /// Default: 1 minute.
+    /// Default: 5 minutes.
     /// </summary>
-    public int CheckIntervalMinutes { get; set; } = 1;
+    public int CheckIntervalMinutes { get; set; } = 5;
 }

@@ -176,13 +176,7 @@ public static class RegisterAdminExtensions
             }
             else
             {
-                // Auth0 not configured - add basic authentication for development
-                collection.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie(options =>
-                    {
-                        options.LoginPath = "/viblog/login";
-                        options.AccessDeniedPath = "/viblog/access-denied";
-                    });
+                throw new Exception("Auth0 configuration not valid. Please check your configuration settings for Auth0 integration.");
             }
 
             // Configure authorization policies based on claims
