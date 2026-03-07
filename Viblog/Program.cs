@@ -52,8 +52,7 @@ builder.Services.AddViblogAdmin();
 
 var app = builder.Build();
 
-// Seed database with sample data if empty
-await SeedDatabaseAsync(app);
+
 
 // Initialize admin system (creates default admin user in Auth0 if needed)
 await app.InitializeViblogAdminAsync();
@@ -61,6 +60,8 @@ await app.InitializeViblogAdminAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Seed database with sample data if empty
+    await SeedDatabaseAsync(app);
     app.UseMigrationsEndPoint();
 }
 else
