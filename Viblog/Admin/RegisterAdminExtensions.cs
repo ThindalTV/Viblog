@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Security.Claims;
 using Viblog.Admin.Authentication;
 using Viblog.Admin.Configuration;
@@ -248,6 +249,13 @@ public static class RegisterAdminExtensions
             {
                 MinimumSameSitePolicy = SameSiteMode.None,
                 Secure = CookieSecurePolicy.Always,
+            });
+
+            // Since appservice uses http internally and a https proxy, we need to forward the headers
+            // Necessary because of auth0 missing cookie.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
 
             using var scope = app.Services.CreateScope();
