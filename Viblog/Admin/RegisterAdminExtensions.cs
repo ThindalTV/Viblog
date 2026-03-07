@@ -244,6 +244,12 @@ public static class RegisterAdminExtensions
     {
         public async Task InitializeViblogAdminAsync()
         {
+            app.UseCookiePolicy(new CookiePolicyOptions
+            {
+                MinimumSameSitePolicy = SameSiteMode.None,
+                Secure = CookieSecurePolicy.Always,
+            });
+
             using var scope = app.Services.CreateScope();
             var syncService = scope.ServiceProvider.GetService<IIdentityProviderSyncService>();
             var userManagementService = scope.ServiceProvider.GetService<IUserManagementService>();
