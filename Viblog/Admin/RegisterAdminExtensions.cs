@@ -118,6 +118,12 @@ public static class RegisterAdminExtensions
                     options.SignedOutCallbackPath = "/viblog/signout-callback";
                     options.SignedOutRedirectUri = auth0Settings.LogoutRedirectUri;
 
+                    // Configure cookies so that we can handle state on Azure App Service
+                    options.NonceCookie.SameSite = SameSiteMode.None;
+                    options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.CorrelationCookie.SameSite = SameSiteMode.None;
+                    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+
                     // Request scopes
                     options.Scope.Clear();
                     options.Scope.Add("openid");
