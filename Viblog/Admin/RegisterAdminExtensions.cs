@@ -170,9 +170,21 @@ public static class RegisterAdminExtensions
                             context.HandleResponse();
 
                             return Task.CompletedTask;
+                        },
+                        OnAccessDenied = context =>
+                        {
+                            var propString = String.Join(" ", context.Properties?.Items.Select(kv => $"{kv.Key}: {kv.Value}").ToList());
+                            throw new Exception($"Access denied during login callback. Props: {propString}");
+
+                            context.Response.Redirect("/viblog/access-denied");
+                            context.HandleResponse();
+                            return Task.CompletedTask;
                         }
                     };
-                });
+                }
+
+
+                );
             }
             else
             {
