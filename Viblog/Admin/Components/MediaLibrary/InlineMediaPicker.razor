@@ -281,12 +281,13 @@
 
     private static string FormatFileSize(long bytes)
     {
-        return bytes switch
+        return bytes.ToString();
+        /*return bytes switch
         {
             < 1024 => $"{bytes} B",
             < 1024 * 1024 => $"{bytes / 1024} KB",
             _ => $"{bytes / 1024 / 1024} MB"
-        };
+        };*/
     }
 
     public ValueTask DisposeAsync()
