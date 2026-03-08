@@ -26,7 +26,10 @@
         <button type="button" class="btn-action btn-unpublish" @onclick="HandleUnpublishClick" disabled="@IsSaving">
             Unpublish
         </button>
+    }
 
+    @if (isEditMode)
+    {
         <button type="button" class="btn-action btn-delete" @onclick="HandleDeleteClick" disabled="@IsSaving">
             Delete
         </button>
@@ -39,7 +42,7 @@
         }
         else
         {
-            <span>@(isEditMode ? "Save Draft" : "Create")</span>
+            <span>Save Draft</span>
         }
     </button>
 }

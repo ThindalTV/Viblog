@@ -1,39 +1,41 @@
 @inject IFrontPageFacade FrontPageFacade
 @inject ILogger<FrontPostList> Logger
 
-<Section Title="Latest Posts">
-    @if (_isLoading)
-    {
-        <p class="loading-message">Loading posts...</p>
-    }
-    else if (_errorMessage != null)
-    {
-        <p class="error-message">@_errorMessage</p>
-    }
-    else if (!_posts.Any())
-    {
-        <article class="blog-post box">
-            <h3 class="post-title">No Posts Yet</h3>
-            <p class="post-excerpt">
-                Check back soon for new content!
-            </p>
-        </article>
-    }
-    else
-    {
-        <div class="posts-grid">
-            @foreach (var post in _posts)
-            {
-                <PostCard Post="post" IsGridCard="true" />
-            }
-        </div>
-        
-        <div class="view-all-posts">
-            <a href="/posts" class="view-all-link">View All Posts</a>
-        </div>
-    }
-</Section>
+@if (_posts.Any())
+{
+    <Section Title="Latest Posts">
+        @if (_isLoading)
+        {
+            <p class="loading-message">Loading posts...</p>
+        }
+        else if (_errorMessage != null)
+        {
+            <p class="error-message">@_errorMessage</p>
+        }
+        else if (!_posts.Any())
+        {
+            <article class="blog-post box">
+                <h3 class="post-title">No Posts Yet</h3>
+                <p class="post-excerpt">
+                    Check back soon for new content!
+                </p>
+            </article>
+        }
+        else
+        {
+            <div class="posts-grid">
+                @foreach (var post in _posts)
+                {
+                    <PostCard Post="post" IsGridCard="true" />
+                }
+            </div>
 
+            <div class="view-all-posts">
+                <a href="/posts" class="view-all-link">View All Posts</a>
+            </div>
+        }
+        </Section>
+}
 @code {
     private IEnumerable<BlogPost> _posts = Enumerable.Empty<BlogPost>();
     private bool _isLoading = true;

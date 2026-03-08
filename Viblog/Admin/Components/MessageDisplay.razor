@@ -1,6 +1,5 @@
 @using Viblog.Admin.Services
 @using Viblog.Shared.Utilities
-@inject IWebHostEnvironment Environment
 @inject IMessageService MessageService
 @implements IDisposable
 
@@ -17,10 +16,11 @@
         <div class="message-content">
             <p class="message-text">@msg.Message</p>
             
-            @if (Environment.IsDevelopment() && msg.Exception != null && msg.ShowDetails)
+            @* TODO: Reintroduce Environment.IsDevelopment() check once admin error visibility requirements are finalised *@
+            @if (msg.Exception != null && msg.ShowDetails)
             {
                 <details class="message-details">
-                    <summary>Debug Details (Development Only)</summary>
+                    <summary>Debug Details</summary>
                     <pre class="message-stack">@GetExceptionDetails(msg)</pre>
                 </details>
             }
