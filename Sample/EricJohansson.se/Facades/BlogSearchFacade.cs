@@ -1,11 +1,11 @@
+using EricJohansson.se.Infrastructure.Facades;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Services;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
 
 namespace EricJohansson.se.Facades;
 

@@ -1,7 +1,6 @@
-﻿using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Extensions;
+﻿using Viblog.Infrastructure.Data.Entities;
 
-namespace Viblog.Data.CosmosDb.Data.Entities;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Entities;
 
 internal static class PartitionKeyExtensions
 {

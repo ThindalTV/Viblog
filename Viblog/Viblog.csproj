@@ -44,6 +44,7 @@
   <ItemGroup>
     <Folder Include="Admin\Authentication\" />
     <Folder Include="Docs\intent\" />
+    <Folder Include="Shared\Data\Sources\CosmosDb\Data\Seeders\" />
   </ItemGroup>
 
 </Project>

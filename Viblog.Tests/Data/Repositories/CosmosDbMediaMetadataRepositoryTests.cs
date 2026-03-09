@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Viblog.Data.CosmosDb.Data;
 using Viblog.Data.CosmosDb.Data.Repositories;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Shared.Data.Sources.CosmosDb.Data;
 
 namespace Viblog.Tests.Data.Repositories;
 

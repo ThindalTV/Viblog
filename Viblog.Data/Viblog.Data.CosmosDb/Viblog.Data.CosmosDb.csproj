@@ -13,12 +13,4 @@
 		<PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.Cosmos" Version="*" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Data\Seeders\" />
-	</ItemGroup>
-
 </Project>

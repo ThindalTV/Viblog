@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Viblog.Data.CosmosDb.Data;
-using Viblog.Data.CosmosDb.Data.Repositories;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Data.Sources.CosmosDb.Data;
+using Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
-namespace Viblog.Data.CosmosDb;
+namespace Viblog.Shared.Data.Sources.CosmosDb;
 
 /// <summary>
 /// Extension methods for registering CosmosDB data access services

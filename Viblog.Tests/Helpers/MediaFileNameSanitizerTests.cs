@@ -1,4 +1,4 @@
-using Viblog.Infrastructure.Shared.Helpers;
+using Viblog.Helpers;
 
 namespace Viblog.Tests.Helpers;
 

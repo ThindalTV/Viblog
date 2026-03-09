@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Viblog.Data.AzureStorage.Storage;
 using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Shared.Data.Sources.AzureStorage.Storage;
 
-namespace Viblog.Data.AzureStorage;
+namespace Viblog.Shared.Data.Sources.AzureStorage;
 
 /// <summary>
 /// Extension methods for registering Azure Blob Storage services

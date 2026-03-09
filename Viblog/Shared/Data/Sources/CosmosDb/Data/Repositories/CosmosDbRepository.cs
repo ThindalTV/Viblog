@@ -1,10 +1,11 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Shared.Data.Sources.CosmosDb.Data;
 
-namespace Viblog.Data.CosmosDb.Data.Repositories;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
 /// <summary>
 /// CosmosDB-specific generic base repository implementation providing basic CRUD operations

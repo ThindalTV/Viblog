@@ -3,10 +3,10 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Helpers;
+using Viblog.Helpers;
+using Viblog.Infrastructure.Data.Repositories;
 
-namespace Viblog.Data.AzureStorage.Storage;
+namespace Viblog.Shared.Data.Sources.AzureStorage.Storage;
 
 /// <summary>
 /// Azure Blob Storage implementation of media storage repository

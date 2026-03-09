@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Viblog.Infrastructure.Shared.Helpers;
+namespace Viblog.Helpers;
 
 /// <summary>
 /// Sanitizes filenames so they are safe for blob storage and can be used directly

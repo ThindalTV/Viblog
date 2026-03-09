@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Helpers;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 
-namespace Viblog.Data.CosmosDb.Data.Repositories;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
 /// <summary>
 /// CosmosDB-specific repository implementation for media metadata operations

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 
-namespace Viblog.Data.CosmosDb.Data;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Data;
 
 /// <summary>
 /// Application database context configured for CosmosDB

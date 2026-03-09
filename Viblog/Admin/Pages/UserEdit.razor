@@ -2,8 +2,11 @@
 @page "/viblog/users/edit/{userId}"
 @attribute [Authorize(Policy = RequireUserWrite)]
 @layout AdminLayout
-@using Viblog.Infrastructure.Shared.Data.Entities
-@using Viblog.Infrastructure.Shared.Authentication
+@using Viblog.Admin.Services.Dialogs
+@using Viblog.Admin.Services.Messaging
+@using Viblog.Infrastructure.Authentication
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Facades
 @using Viblog.Admin.Services
 @inject IUserManagementFacade UserManagementFacade
 @inject IMessageService MessageService
@@ -188,7 +191,7 @@
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            (Viblog.Infrastructure.Shared.Data.Entities.AdminUser? user, UserValidationResult validationResult) result;
+            (AdminUser? user, UserValidationResult validationResult) result;
 
             if (IsNewUser)
             {

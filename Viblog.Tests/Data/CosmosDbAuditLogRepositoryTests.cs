@@ -1,7 +1,3 @@
-using Viblog.Infrastructure.Data.Common;
-using Viblog.Infrastructure.Data.Entities;
-using Viblog.Infrastructure.Data.Repositories;
-
 namespace Viblog.Tests.Data;
 
 /// <summary>

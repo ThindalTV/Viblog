@@ -1,8 +1,9 @@
 @page "/viblog/audit-logs"
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Facades
 @attribute [Authorize(Policy = AdminPolicies.Admin)]
 @layout AdminLayout
-@using Viblog.Infrastructure.Shared.Data.Common
-@using Viblog.Infrastructure.Shared.Data.Entities
 @inject IAuditLogFacade AuditLogFacade
 
 <PageTitle>Audit Logs - Viblog Admin</PageTitle>

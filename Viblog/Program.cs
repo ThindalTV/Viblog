@@ -2,9 +2,9 @@ using Viblog.Components;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
-using Viblog.Data.CosmosDb;
-using Viblog.Data.AzureStorage;
-using Viblog.Data.CosmosDb.Data;
+using Viblog.Shared.Data.Sources.CosmosDb.Data;
+using Viblog.Shared.Data.Sources.CosmosDb;
+using Viblog.Shared.Data.Sources.AzureStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 

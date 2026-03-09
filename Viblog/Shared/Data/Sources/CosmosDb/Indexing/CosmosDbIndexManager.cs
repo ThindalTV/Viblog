@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Indexing;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Indexing;
 
-namespace Viblog.Data.CosmosDb.Indexing;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Indexing;
 
 /// <summary>
 /// CosmosDB-based implementation of index manager

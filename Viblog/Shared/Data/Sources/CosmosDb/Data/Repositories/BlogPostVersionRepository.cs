@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 
-namespace Viblog.Data.CosmosDb.Data.Repositories;
+namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
 /// <summary>
 /// CosmosDB repository for BlogPost version history.
