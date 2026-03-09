@@ -1,8 +1,8 @@
+using EricJohansson.se.Infrastructure.Facades;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Viblog.Infrastructure.Frontend.Facades;
 using Viblog.Infrastructure.Shared.Data.Common;
 using Viblog.Infrastructure.Shared.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Repositories;

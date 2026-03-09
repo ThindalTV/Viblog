@@ -10,9 +10,13 @@
 
   <ItemGroup>
     <Compile Remove="Admin\Pages\Media\**" />
+    <Compile Remove="Services\**" />
     <Content Remove="Admin\Pages\Media\**" />
+    <Content Remove="Services\**" />
     <EmbeddedResource Remove="Admin\Pages\Media\**" />
+    <EmbeddedResource Remove="Services\**" />
     <None Remove="Admin\Pages\Media\**" />
+    <None Remove="Services\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,7 +45,6 @@
   <ItemGroup>
     <Folder Include="Admin\Authentication\" />
     <Folder Include="Docs\intent\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

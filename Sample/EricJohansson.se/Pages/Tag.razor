@@ -1,6 +1,7 @@
 @page "/tag/{tagName}"
 @page "/tag/{tagName}/{PageNumber:int}"
 @layout Viblog.Frontend.Layout.BlogLayout
+@using Microsoft.Extensions.Logging
 @using Viblog.Frontend.Components
 
 @inject ITagPostsFacade TagPostsFacade
