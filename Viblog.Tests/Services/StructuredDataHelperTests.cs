@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Configuration;
 

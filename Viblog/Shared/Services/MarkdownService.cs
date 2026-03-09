@@ -1,7 +1,7 @@
 using ColorCode;
 using ColorCode.Common;
 using Markdig;
-using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Services;
 
 namespace Viblog.Shared.Services;
 

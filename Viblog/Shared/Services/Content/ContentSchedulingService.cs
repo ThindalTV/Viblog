@@ -1,5 +1,5 @@
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Shared.Extensions;
 using Viblog.Shared.Extensions;
 

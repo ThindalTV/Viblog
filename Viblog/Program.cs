@@ -1,6 +1,4 @@
 using Viblog.Components;
-using Viblog.Frontend;
-using Viblog.Api;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Admin;
@@ -43,9 +41,6 @@ builder.Services.AddBlogServices();
 
 // Register media storage services
 builder.Services.AddAzureBlobStorageRepository();
-
-// Register Viblog Frontend services (statically rendered, no auth)
-builder.Services.AddViblogFrontend();
 
 // Register Viblog Admin services (interactive server, with auth)
 builder.Services.AddViblogAdmin();
@@ -96,8 +91,6 @@ if (!string.IsNullOrEmpty(mediaBasePath))
     }
 }
 
-app.UseViblogFrontend();
-
 // Authentication & Authorization middleware
 // Must be after UseRouting() and before MapRazorComponents()
 app.UseAuthentication();
@@ -109,9 +102,6 @@ app.MapStaticAssets();
 
 // Map admin endpoints
 app.MapViblogAdminEndpoints();
-
-// Map all blog API endpoints
-app.MapViblogApiEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

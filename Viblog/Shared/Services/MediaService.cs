@@ -1,10 +1,9 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Auditing;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Infrastructure.Services;
 using Viblog.Shared.Helpers;
 
 namespace Viblog.Shared.Services;

@@ -1,6 +1,6 @@
 using Markdig;
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Entities.Content;
 
 namespace Viblog.Shared.Services.Content;
 

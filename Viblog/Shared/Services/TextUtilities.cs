@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using Viblog.Infrastructure.Shared.Services;
+using Viblog.Infrastructure.Services;
 
 namespace Viblog.Shared.Services;
 

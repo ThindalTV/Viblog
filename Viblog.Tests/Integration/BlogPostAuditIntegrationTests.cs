@@ -3,8 +3,10 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services.Auditing;
-using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Auditing;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Repositories;
 
 namespace Viblog.Tests.Integration;
 

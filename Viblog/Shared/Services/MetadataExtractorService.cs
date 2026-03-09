@@ -1,6 +1,5 @@
 using SkiaSharp;
-using Viblog.Infrastructure.Shared.Services;
-
+using Viblog.Infrastructure.Services;
 
 namespace Viblog.Shared.Services;
 

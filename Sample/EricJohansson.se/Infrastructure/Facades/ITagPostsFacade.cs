@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
 
 namespace EricJohansson.se.Infrastructure.Facades;
 

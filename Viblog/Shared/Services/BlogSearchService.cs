@@ -1,9 +1,7 @@
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Extensions;
-using Viblog.Infrastructure.Shared.Services;
-using Viblog.Shared.Extensions;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Infrastructure.Services;
 
 namespace Viblog.Shared.Services;
 

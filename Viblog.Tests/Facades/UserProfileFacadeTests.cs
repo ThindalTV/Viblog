@@ -1,6 +1,6 @@
 using Viblog.Admin.Facades;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Authentication;
+using Viblog.Infrastructure.Data.Entities;
 
 namespace Viblog.Tests.Facades;
 

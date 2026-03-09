@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using EricJohansson.se.Infrastructure.Facades;
+using EricJohansson.se.Infrastructure.Models.Feeds;
 using EricJohansson.se.Models.Feed;
 using Microsoft.Extensions.Options;
 using Viblog.Infrastructure.Shared.Data.Common;

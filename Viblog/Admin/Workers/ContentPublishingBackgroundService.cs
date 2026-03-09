@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Auditing;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Services.Content;
 
 namespace Viblog.Admin.Workers;

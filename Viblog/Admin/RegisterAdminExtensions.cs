@@ -10,11 +10,12 @@ using Viblog.Admin.Configuration;
 using Viblog.Admin.Facades;
 using Viblog.Admin.Services;
 using Viblog.Admin.Services.Auditing;
-using Viblog.Infrastructure.Admin.Facades;
-using Viblog.Infrastructure.Admin.Services;
-using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Admin.Services.Dialogs;
+using Viblog.Admin.Services.Messaging;
+using Viblog.Infrastructure.Auditing;
+using Viblog.Infrastructure.Authentication;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Facades;
 
 namespace Viblog.Admin;
 

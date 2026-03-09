@@ -3,9 +3,9 @@ using Auth0.ManagementApi.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Viblog.Admin.Configuration;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Authentication;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 
 namespace Viblog.Admin.Authentication;
 

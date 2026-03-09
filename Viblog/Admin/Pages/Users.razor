@@ -1,8 +1,12 @@
 @page "/viblog/users"
 @attribute [Authorize(Policy = RequireUserRead)]
 @layout AdminLayout
-@using Viblog.Infrastructure.Shared.Data.Entities
-@using UserEntity = Viblog.Infrastructure.Shared.Data.Entities.AdminUser
+@using Viblog.Admin.Services.Dialogs
+@using Viblog.Admin.Services.Messaging
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Facades
+@using UserEntity = Viblog.Infrastructure.Data.Entities.AdminUser
 @inject IUserManagementFacade UserManagementFacade
 @inject IDialogService DialogService
 @inject IMessageService MessageService

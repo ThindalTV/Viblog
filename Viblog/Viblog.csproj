@@ -39,7 +39,6 @@
     <ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Viblog.Data\Viblog.Data.AzureStorage\Viblog.Data.AzureStorage.csproj" />
     <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
-    <ProjectReference Include="..\Viblog.Infrastructure\Viblog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

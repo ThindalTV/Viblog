@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Data.Entities;
 using Viblog.Shared.Configuration;
 
 namespace Viblog.Shared.Services;

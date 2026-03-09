@@ -2,13 +2,12 @@
 @attribute [Authorize(Policy = RequirePageWrite)]
 @layout AdminLayout
 @using Viblog.Admin.Components
-@using Viblog.Infrastructure.Admin.Facades
-@using Viblog.Infrastructure.Shared.Data.Common
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Facades
 @using Microsoft.AspNetCore.Authorization
 @using Viblog.Shared.Extensions
-@using Viblog.Infrastructure.Shared.Extensions
 
-@using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
+@using PageEntity = Viblog.Infrastructure.Data.Entities.Page
 @inject IPagesAdminFacade PagesAdminFacade
 @inject NavigationManager NavigationManager
 @inject ILogger<Pages> Logger

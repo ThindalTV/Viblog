@@ -1,6 +1,6 @@
-using Viblog.Infrastructure.Admin.Facades;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Authentication;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Facades;
 
 namespace Viblog.Admin.Facades;
 

@@ -1,4 +1,6 @@
 using Viblog.Frontend.Facades;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Extensions;
 

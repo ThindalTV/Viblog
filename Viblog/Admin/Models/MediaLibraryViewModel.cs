@@ -1,4 +1,4 @@
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Data.Entities;
 
 namespace Viblog.Admin.Models;
 

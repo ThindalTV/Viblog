@@ -1,5 +1,9 @@
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Infrastructure.Services;
 
 namespace Viblog.Tests.Facades;
 

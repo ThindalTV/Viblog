@@ -3,9 +3,8 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Viblog.Admin.Authentication;
 using Viblog.Admin.Configuration;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 using Xunit;
 
 namespace Viblog.Tests.Admin.Authentication;

@@ -1,10 +1,9 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Viblog.Admin.Authentication;
-using Viblog.Infrastructure.Shared.Authentication;
-using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Authentication;
+using Viblog.Infrastructure.Data.Entities;
 using Xunit;
 
 namespace Viblog.Tests.Admin.Authentication;

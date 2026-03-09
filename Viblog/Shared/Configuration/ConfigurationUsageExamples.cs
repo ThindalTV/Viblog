@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Options;
-using Viblog.Shared.Configuration;
 
-namespace Viblog.Shared.Examples;
+namespace Viblog.Shared.Configuration;
 
 /// <summary>
 /// Examples demonstrating how to use the Viblog configuration with the IOptions pattern

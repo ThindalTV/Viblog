@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Auditing;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Auditing;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 
 namespace Viblog.Admin.Services.Auditing;
 

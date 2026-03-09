@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Services.Content;
 
 namespace Viblog.Shared.Data.Seeders;

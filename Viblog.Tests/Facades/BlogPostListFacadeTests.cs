@@ -1,10 +1,8 @@
-using Viblog.Frontend.Facades;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Extensions;
 using Viblog.Infrastructure.Shared.Extensions;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 
 namespace Viblog.Tests.Facades;
 

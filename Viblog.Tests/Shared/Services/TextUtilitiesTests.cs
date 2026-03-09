@@ -1,3 +1,5 @@
+using Viblog.Infrastructure.Services;
+
 namespace Viblog.Tests.Shared.Services;
 
 /// <summary>

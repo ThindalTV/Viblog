@@ -1,0 +1,17 @@
+using System.Collections.Generic;
+using System.Xml.Serialization;
+
+namespace EricJohansson.se.Infrastructure.Models.Sitemap;
+
+/// <summary>
+/// Represents a sitemap URL set
+/// </summary>
+[XmlRoot("urlset", Namespace = "http://www.sitemaps.org/schemas/sitemap/0.9")]
+public class SitemapUrlSet
+{
+    /// <summary>
+    /// Collection of URLs in the sitemap
+    /// </summary>
+    [XmlElement("url")]
+    public List<SitemapUrl> Urls { get; set; } = [];
+}

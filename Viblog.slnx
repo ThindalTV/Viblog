@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/Pipelines/" />
   <Folder Name="/Sample/">
+    <Project Path="Sample/EricJohansson.se.Tests/EricJohansson.se.Tests.csproj" Id="453d33c2-d841-4826-a0b1-76a9b8c2df07" />
     <Project Path="Sample/EricJohansson.se/EricJohansson.se.csproj" Id="cde4e174-c7aa-490b-bba7-d153d9624f6f" />
   </Folder>
   <Folder Name="/Viblog.Data/">
