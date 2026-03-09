@@ -1,0 +1,206 @@
+@page "/tag/{tagName}"
+@page "/tag/{tagName}/{PageNumber:int}"
+@layout Viblog.Frontend.Layout.BlogLayout
+@using Viblog.Frontend.Components
+
+@inject ITagPostsFacade TagPostsFacade
+@inject NavigationManager Navigation
+@inject ILogger<Tag> Logger
+
+<PageTitle>Tag: @TagName</PageTitle>
+
+<Breadcrumb Items="_breadcrumbItems" />
+
+<section class="blog-section">
+    <h2 class="section-title">Tag: @TagName</h2>
+    
+    @if (_isLoading)
+    {
+        <p class="loading-message">Loading posts...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (_pagedResult == null || !_pagedResult.Items.Any())
+    {
+        <article class="blog-post">
+            <h3 class="post-title">No Posts with This Tag</h3>
+            <p class="post-excerpt">
+                There are no published posts with this tag yet.
+            </p>
+            <div class="back-navigation">
+                <a href="/posts" class="back-link">? View All Posts</a>
+            </div>
+        </article>
+    }
+    else
+    {
+        @foreach (var post in _pagedResult.Items)
+        {
+            <PostCard Post="post" />
+        }
+
+        @if (_pagedResult.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Tag posts pagination">
+                <div class="pagination-info">
+                    Page @_pagedResult.PageNumber of @_pagedResult.TotalPages (@_pagedResult.TotalCount total posts)
+                </div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" 
+                            @onclick="() => NavigateToPage(1)" 
+                            disabled="@(!_pagedResult.HasPreviousPage)"
+                            aria-label="First page">
+                        First
+                    </button>
+                    <button class="pagination-btn" 
+                            @onclick="() => NavigateToPage(_currentPage - 1)" 
+                            disabled="@(!_pagedResult.HasPreviousPage)"
+                            aria-label="Previous page">
+                        Previous
+                    </button>
+                    
+                    @foreach (var pageNum in GetPageNumbers())
+                    {
+                        <button class="pagination-btn @(pageNum == _currentPage ? "active" : "")" 
+                                @onclick="() => NavigateToPage(pageNum)"
+                                aria-label="Page @pageNum"
+                                aria-current="@(pageNum == _currentPage ? "page" : null)">
+                            @pageNum
+                        </button>
+                    }
+                    
+                    <button class="pagination-btn" 
+                            @onclick="() => NavigateToPage(_currentPage + 1)" 
+                            disabled="@(!_pagedResult.HasNextPage)"
+                            aria-label="Next page">
+                        Next
+                    </button>
+                    <button class="pagination-btn" 
+                            @onclick="() => NavigateToPage(_pagedResult.TotalPages)" 
+                            disabled="@(!_pagedResult.HasNextPage)"
+                            aria-label="Last page">
+                        Last
+                    </button>
+                </div>
+            </nav>
+        }
+
+        <div class="back-navigation">
+            <a href="/posts" class="back-link">? View All Posts</a>
+        </div>
+    }
+</section>
+
+@code {
+    private const int PostsPerPage = 5;
+    
+    private PagedResult<BlogPost>? _pagedResult;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private int _currentPage = 1;
+    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+
+    [Parameter]
+    public string TagName { get; set; } = string.Empty;
+
+    [Parameter]
+    public int? PageNumber { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentPage = PageNumber ?? 1;
+        BuildBreadcrumbs();
+        await LoadPostsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPage = PageNumber ?? 1;
+        if (newPage != _currentPage)
+        {
+            _currentPage = newPage;
+            await LoadPostsAsync();
+        }
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Label = "Posts", Url = "/posts" },
+            new() { Label = $"Tag: {TagName}", Url = $"/tag/{TagName}" }
+        };
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            var pagingParams = new PagingParameters(_currentPage, PostsPerPage);
+            _pagedResult = await TagPostsFacade.GetPostsByTagAsync(TagName, pagingParams);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load blog posts for this tag. Please try again later.";
+            Logger.LogError(ex, "Error loading posts for tag: {TagName}", TagName);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void NavigateToPage(int pageNumber)
+    {
+        if (pageNumber < 1 || (_pagedResult != null && pageNumber > _pagedResult.TotalPages))
+        {
+            return;
+        }
+
+        Navigation.NavigateTo($"/tag/{Uri.EscapeDataString(TagName)}/{pageNumber}");
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        if (_pagedResult == null)
+        {
+            yield break;
+        }
+
+        const int maxPagesToShow = 5;
+        var totalPages = _pagedResult.TotalPages;
+        var currentPage = _pagedResult.PageNumber;
+
+        if (totalPages <= maxPagesToShow)
+        {
+            for (int i = 1; i <= totalPages; i++)
+            {
+                yield return i;
+            }
+        }
+        else
+        {
+            var startPage = Math.Max(1, currentPage - 2);
+            var endPage = Math.Min(totalPages, currentPage + 2);
+
+            if (currentPage <= 3)
+            {
+                endPage = maxPagesToShow;
+            }
+            else if (currentPage >= totalPages - 2)
+            {
+                startPage = totalPages - maxPagesToShow + 1;
+            }
+
+            for (int i = startPage; i <= endPage; i++)
+            {
+                yield return i;
+            }
+        }
+    }
+}

@@ -41,5 +41,11 @@ builder.AddProject<Viblog>("Viblog")
     .WaitFor(cosmos)
     .WaitFor(blobStorage);
 
+builder.AddProject<EricJohansson_se>("EricJohansson")
+    .WithReference(cosmosStorage)
+    .WithReference(blobStorage)
+    .WaitFor(cosmos)
+    .WaitFor(blobStorage);
+
 
 builder.Build().Run();

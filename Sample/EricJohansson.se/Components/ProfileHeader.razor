@@ -1,0 +1,97 @@
+@using EricJohansson.se.Models
+
+@if (Show)
+{
+    <div class="header-content">
+        <section class="header-presentation box">
+            <h2>@Role</h2>
+            <div class="bio-content">
+                @Bio
+            </div>
+            <div class="presentation-footer">
+                @if (Awards != null && Awards.Any())
+                {
+                    <ul class="header-awards--inline">
+                        @foreach (var award in Awards)
+                        {
+                            <li>
+                                <a href="@award.Url"
+                                   target="_blank"
+                                   rel="nofollow noopener noreferrer"
+                                   title="@award.Title">
+                                    <img src="@award.ImageUrl" alt="@award.AltText" />
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (SocialLinks != null && SocialLinks.Any())
+                {
+                    <ul class="socials">
+                        @foreach (var link in SocialLinks)
+                        {
+                            <li>
+                                <a href="@link.Url"
+                                   target="_blank"
+                                   rel="nofollow noopener noreferrer"
+                                   aria-label="@link.Label">
+                                    <img src="@link.Icon" alt="@link.Label" />
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
+        <section class="header-photo box">
+            @if (Awards != null && Awards.Any())
+            {
+                <ul class="header-awards">
+                    @foreach (var award in Awards)
+                    {
+                        <li>
+                            <a href="@award.Url" 
+                               target="_blank" 
+                               rel="nofollow noopener noreferrer" 
+                               title="@award.Title">
+                                <img src="@award.ImageUrl" alt="@award.AltText" />
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Whether to show the profile header
+    /// </summary>
+    [Parameter]
+    public bool Show { get; set; } = true;
+
+    /// <summary>
+    /// Role or tagline
+    /// </summary>
+    [Parameter]
+    public string Role { get; set; } = "Developer Consultant Educator";
+
+    /// <summary>
+    /// Bio content (supports markup)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Bio { get; set; }
+
+    /// <summary>
+    /// Social media links
+    /// </summary>
+    [Parameter]
+    public List<SocialLink>? SocialLinks { get; set; }
+
+    /// <summary>
+    /// Award images to display
+    /// </summary>
+    [Parameter]
+    public List<Award>? Awards { get; set; }
+}

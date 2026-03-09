@@ -1,0 +1,158 @@
+@page "/search"
+@page "/search/{PageNumber:int}"
+@layout Viblog.Frontend.Layout.BlogLayout
+@using Microsoft.Extensions.Logging
+@using Viblog.Frontend.Components
+
+@inject IBlogSearchFacade BlogSearchFacade
+@inject NavigationManager Navigation
+@inject ILogger<Search> Logger
+
+<PageTitle>Search Results@(!string.IsNullOrWhiteSpace(_searchQuery) ? $": {_searchQuery}" : "")</PageTitle>
+
+<section class="blog-section">
+    @if (!string.IsNullOrWhiteSpace(_searchQuery))
+    {
+        <h2 class="section-title">Search Results for "@_searchQuery"</h2>
+    }
+    else
+    {
+        <h2 class="section-title">Search</h2>
+    }
+    
+    <div class="search-box">
+        <form action="/search" method="get" class="search-form">
+            <input type="text" 
+                   name="q" 
+                   value="@_searchQuery"
+                   placeholder="Search posts..." 
+                   class="search-input"
+                   aria-label="Search posts" 
+                   required />
+            <button type="submit" class="search-button">Search</button>
+        </form>
+    </div>
+
+    @if (_isLoading)
+    {
+        <p class="loading-message">Searching...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (string.IsNullOrWhiteSpace(_searchQuery))
+    {
+        <div class="search-prompt">
+            <p>Enter a search term above to find posts.</p>
+        </div>
+    }
+    else if (_pagedResult == null || !_pagedResult.Items.Any())
+    {
+        <article class="blog-post">
+            <h3 class="post-title">No Results Found</h3>
+            <p class="post-excerpt">
+                No posts found matching "@_searchQuery". Try different keywords or browse <a href="/posts">all posts</a>.
+            </p>
+        </article>
+    }
+    else
+    {
+        <div class="results-summary">
+            Found @_pagedResult.TotalCount @(_pagedResult.TotalCount == 1 ? "post" : "posts") matching "@_searchQuery"
+        </div>
+
+        @foreach (var post in _pagedResult.Items)
+        {
+            <PostCard Post="post" />
+        }
+
+        <Pagination PagedResult="@_pagedResult"
+                    GetPageUrl="@GetPageUrl"
+                    AriaLabel="Search results pagination"
+                    ItemName="results" />
+    }
+</section>
+
+@code {
+    private const int PostsPerPage = 5;
+    
+    private PagedResult<BlogPost>? _pagedResult;
+    private bool _isLoading = false;
+    private string? _errorMessage;
+    private string _searchQuery = string.Empty;
+
+    [Parameter]
+    public int? PageNumber { get; set; }
+
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? Query { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _searchQuery = Query ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            await LoadSearchResultsAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPage = PageNumber ?? 1;
+        var newQuery = Query ?? string.Empty;
+        var currentPage = PageNumber ?? 1;
+
+        if (newPage != currentPage || newQuery != _searchQuery)
+        {
+            _searchQuery = newQuery;
+
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                await LoadSearchResultsAsync();
+            }
+        }
+    }
+
+    private async Task LoadSearchResultsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            var currentPage = PageNumber ?? 1;
+            var pagingParams = new PagingParameters(currentPage, PostsPerPage);
+            _pagedResult = await BlogSearchFacade.SearchPostsAsync(_searchQuery, pagingParams);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to search blog posts. Please try again later.";
+            Logger.LogError(ex, "Error searching posts for: {SearchQuery}", _searchQuery);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetPageUrl(int pageNumber)
+    {
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+
+        if (_pagedResult != null && pageNumber > _pagedResult.TotalPages)
+        {
+            pageNumber = _pagedResult.TotalPages;
+        }
+
+        var url = pageNumber == 1 
+            ? $"/search?q={Uri.EscapeDataString(_searchQuery)}" 
+            : $"/search/{pageNumber}?q={Uri.EscapeDataString(_searchQuery)}";
+
+        return url;
+    }
+}

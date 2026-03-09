@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Admin\Pages\Media\**" />
+    <Content Remove="Admin\Pages\Media\**" />
+    <EmbeddedResource Remove="Admin\Pages\Media\**" />
+    <None Remove="Admin\Pages\Media\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
     <PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
@@ -33,7 +40,6 @@
 
   <ItemGroup>
     <Folder Include="Admin\Authentication\" />
-    <Folder Include="Admin\Pages\Media\" />
     <Folder Include="Docs\intent\" />
     <Folder Include="Services\" />
   </ItemGroup>

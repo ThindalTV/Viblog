@@ -1,0 +1,20 @@
+<section class="section">
+    <h2 class="section-title">@Title</h2>
+    <div class="section-content">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    /// <summary>
+    /// The title to display in the section header
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The content to render inside the section
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

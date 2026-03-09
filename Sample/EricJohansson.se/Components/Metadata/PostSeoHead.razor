@@ -1,0 +1,76 @@
+@using EricJohansson.se.Components.Metadata
+@using EricJohansson.se.Models
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using static EricJohansson.se.Components.Metadata.StructuredData
+
+<SeoHead Title="@Content.Title"
+         Description="@(Content.MetaDescription ?? Content.Short)"
+         CanonicalUrl="@CanonicalUrl"
+         Keywords="@Content.MetaKeywords"
+         Author="@Post.AuthorName"
+         ImageUrl="@Content.FeaturedImageUrl"
+         ImageAlt="@Content.FeaturedImageAlt"
+         OgType="article"
+         PublishedTime="@Post.PublishedAt"
+         ModifiedTime="@Post.UpdatedAt"
+         ArticleAuthor="@Post.AuthorName"
+         ArticleTags="@Post.Tags"
+         TwitterCardType="@(string.IsNullOrWhiteSpace(Content.FeaturedImageUrl) ? "summary" : "summary_large_image")"
+         TwitterMetadataItems="@GetTwitterMetadata()">
+    
+    <StructuredData Type="StructuredDataType.BlogPost" Post="@Post" Url="@CanonicalUrl" />
+    
+    @if (BreadcrumbItems != null && BreadcrumbItems.Any())
+    {
+        <StructuredData Type="StructuredDataType.Breadcrumb"
+                        BreadcrumbItems="@BreadcrumbItems.Select(b => (b.Label, b.Url)).ToList()" />
+    }
+</SeoHead>
+
+@code {
+    /// <summary>
+    /// The blog post to generate SEO metadata for
+    /// </summary>
+    [Parameter, EditorRequired]
+    public BlogPost Post { get; set; } = default!;
+
+    /// <summary>
+    /// The canonical URL for the post
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string CanonicalUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional breadcrumb items for navigation schema
+    /// </summary>
+    [Parameter]
+    public List<Breadcrumb.BreadcrumbItem>? BreadcrumbItems { get; set; }
+
+    private BlogPostContent Content => Post?.Live ?? new BlogPostContent();
+
+    /// <summary>
+    /// Get Twitter metadata items for the post
+    /// </summary>
+    private List<TwitterMetadata> GetTwitterMetadata()
+    {
+        var metadata = new List<TwitterMetadata>();
+
+        if (Post.ReadingTimeMinutes > 0)
+        {
+            metadata.Add(new TwitterMetadata(TwitterMetadata.Labels.ReadingTime, $"{Post.ReadingTimeMinutes} min read"));
+        }
+
+        // Add more metadata items as needed, e.g.:
+        // if (Post.CategoryNames.Any())
+        // {
+        //     metadata.Add(new TwitterMetadata(TwitterMetadata.Labels.Category, Post.CategoryNames.First()));
+        // }
+        //
+        // if (Post.ViewCount > 100)
+        // {
+        //     metadata.Add(new TwitterMetadata(TwitterMetadata.Labels.Views, $"{Post.ViewCount:N0}"));
+        // }
+
+        return metadata;
+    }
+}

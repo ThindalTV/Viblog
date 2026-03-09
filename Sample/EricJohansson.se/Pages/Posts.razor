@@ -1,0 +1,135 @@
+@page "/posts"
+@page "/posts/{PageNumber:int}"
+@layout EricJohansson.se.Layout.BlogLayout
+@using EricJohansson.se.Components
+@using Microsoft.Extensions.Logging
+
+@inject IBlogPostListFacade BlogPostListFacade
+@inject IBlogSearchFacade BlogSearchFacade
+@inject NavigationManager Navigation
+@inject ILogger<Posts> Logger
+
+<PageTitle>@(IsSearchActive ? $"Search: {SearchTerm}" : "All Posts")</PageTitle>
+
+<section class="blog-section">
+    <div class="section-header">
+        <h2 class="section-title">@(IsSearchActive ? $"Search Results for \"{SearchTerm}\"" : "All Blog Posts")</h2>
+        <form class="search-form" method="get" action="/posts">
+            <input class="search-input"
+                   type="search"
+                   name="s"
+                   value="@SearchTerm"
+                   placeholder="Search posts..."
+                   aria-label="Search posts" />
+            <button class="search-btn" type="submit">Search</button>
+        </form>
+    </div>
+    
+    @if (_isLoading)
+    {
+        <p class="loading-message">Loading posts...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (_pagedResult == null || !_pagedResult.Items.Any())
+    {
+        <article class="blog-post">
+            <h3 class="post-title">@(IsSearchActive ? "No posts found" : "No Posts Yet")</h3>
+            <p class="post-excerpt">
+                @if (IsSearchActive)
+                {
+                    @($"No posts match \"{SearchTerm}\". Try a different search term.")
+                }
+                else
+                {
+                    @("Check back soon for new content!")
+                }
+            </p>
+        </article>
+    }
+    else
+    {
+        @foreach (var post in _pagedResult.Items)
+        {
+            <PostCard Post="post" />
+        }
+
+        <Pagination PagedResult="@_pagedResult"
+                    GetPageUrl="@GetPageUrl"
+                    AriaLabel="Blog posts pagination"
+                    ItemName="posts" />
+    }
+</section>
+
+@code {
+    private const int PostsPerPage = 5;
+    private const int MinSearchLength = 3;
+
+    private PagedResult<BlogPost>? _pagedResult;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
+    [Parameter]
+    public int? PageNumber { get; set; }
+
+    [SupplyParameterFromQuery(Name = "s")]
+    public string? SearchTerm { get; set; }
+
+    private bool IsSearchActive => !string.IsNullOrWhiteSpace(SearchTerm) && SearchTerm.Length >= MinSearchLength;
+
+    private int CurrentPage => PageNumber ?? 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPostsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPage = PageNumber ?? 1;
+        if (newPage != (PageNumber ?? 1))
+        {
+            await LoadPostsAsync();
+        }
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+
+            var pagingParams = new PagingParameters(CurrentPage, PostsPerPage);
+            _pagedResult = IsSearchActive
+                ? await BlogSearchFacade.SearchPostsAsync(SearchTerm!, pagingParams)
+                : await BlogPostListFacade.GetPaginatedPostsAsync(pagingParams);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load blog posts. Please try again later.";
+            Logger.LogError(ex, "Error loading paginated posts");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetPageUrl(int pageNumber)
+    {
+        if (pageNumber < 1)
+            pageNumber = 1;
+
+        if (_pagedResult != null && pageNumber > _pagedResult.TotalPages)
+            pageNumber = _pagedResult.TotalPages;
+
+        var basePath = pageNumber == 1 ? "/posts" : $"/posts/{pageNumber}";
+
+        return IsSearchActive
+            ? $"{basePath}?s={Uri.EscapeDataString(SearchTerm!)}"
+            : basePath;
+    }
+}

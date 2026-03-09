@@ -1,0 +1,144 @@
+@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@if (HasLongFormContent)
+{
+    <a href="/post/@(Post.PublishedAt?.Year)/@Post.Slug" class="post-card-link">
+        <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
+            @if (Post.IsFeatured && ShowFeaturedBadge)
+            {
+                <span class="featured-badge">Featured</span>
+            }
+            <h3 class="post-title">@Content?.Title</h3>
+            <div class="post-meta">
+                <span class="post-date">@Post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
+                @if (Post.ReadingTimeMinutes > 0)
+                {
+                    <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
+                }
+            </div>
+            @if (Post.CategoryNames.Any() == true && ShowCategories)
+            {
+                <div class="post-categories">
+                    @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
+                    {
+                        <span class="category-link">@category</span>
+                    }
+                </div>
+            }
+            <p class="post-excerpt">@BlogContent?.Short</p>
+            @if (Post.Tags.Any() && ShowTags && !IsGridCard)
+            {
+                <div class="post-tags">
+                    @foreach (var tag in Post.Tags.Take(MaxTagsToShow))
+                    {
+                        <span class="tag-link">@tag</span>
+                    }
+                </div>
+            }
+            @if (ShowReadMore)
+            {
+                <div class="post-read-more">
+                    <span class="read-more-text">Read more »</span>
+                </div>
+            }
+        </article>
+    </a>
+}
+else
+{
+    <article class="blog-post box @(IsGridCard ? "grid-card" : "")">
+        @if (Post.IsFeatured && ShowFeaturedBadge)
+        {
+            <span class="featured-badge">Featured</span>
+        }
+        <h3 class="post-title">@Content?.Title</h3>
+        <div class="post-meta">
+            <span class="post-date">@Post.PublishedAt?.ToString("MMMM dd, yyyy")</span>
+            @if (Post.ReadingTimeMinutes > 0)
+            {
+                <span class="reading-time">@Post.ReadingTimeMinutes min read</span>
+            }
+        </div>
+        @if (Post.CategoryNames.Any() && ShowCategories)
+        {
+            <div class="post-categories">
+                @foreach (var category in Post.CategoryNames.Take(MaxCategoriesToShow))
+                {
+                    <a href="/category/@Uri.EscapeDataString(category)" class="category-link">@category</a>
+                }
+            </div>
+        }
+        <p class="post-excerpt">@BlogContent?.Short</p>
+        @if (Post.Tags.Any() && ShowTags)
+        {
+            <div class="post-tags">
+                @foreach (var tag in Post.Tags.Take(MaxTagsToShow))
+                {
+                    <a href="/tag/@Uri.EscapeDataString(tag)" class="tag-link">@tag</a>
+                }
+            </div>
+        }
+    </article>
+}
+
+@code {
+    /// <summary>
+    /// The blog post to display
+    /// </summary>
+    [Parameter]
+    public required BlogPost Post { get; set; }
+
+    /// <summary>
+    /// Whether to show the featured badge if the post is featured
+    /// </summary>
+    [Parameter]
+    public bool ShowFeaturedBadge { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show categories
+    /// </summary>
+    [Parameter]
+    public bool ShowCategories { get; set; } = true;
+
+    /// <summary>
+    /// Maximum number of categories to display
+    /// </summary>
+    [Parameter]
+    public int MaxCategoriesToShow { get; set; } = 3;
+
+    /// <summary>
+    /// Whether to show tags
+    /// </summary>
+    [Parameter]
+    public bool ShowTags { get; set; } = true;
+
+    /// <summary>
+    /// Maximum number of tags to display
+    /// </summary>
+    [Parameter]
+    public int MaxTagsToShow { get; set; } = 3;
+
+    /// <summary>
+    /// Whether to show the "Read more" link for posts with long-form content
+    /// </summary>
+    [Parameter]
+    public bool ShowReadMore { get; set; } = true;
+
+    /// <summary>
+    /// Whether this card is being displayed in a grid layout (affects styling and behavior)
+    /// </summary>
+    [Parameter]
+    public bool IsGridCard { get; set; } = false;
+
+    private BaseContent? Content => Post?.Live;
+
+    private BlogPostContent? BlogContent => Content as BlogPostContent;
+
+    /// <summary>
+    /// Determines if the post has long-form content (Content or Markdown)
+    /// </summary>
+    private bool HasLongFormContent => 
+        !string.IsNullOrWhiteSpace(Content?.Content) ||
+        !string.IsNullOrWhiteSpace(Content?.Markdown);
+
+
+}

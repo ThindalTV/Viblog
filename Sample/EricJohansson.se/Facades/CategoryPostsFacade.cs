@@ -1,0 +1,50 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Viblog.Infrastructure.Frontend.Facades;
+using Viblog.Infrastructure.Shared.Data.Common;
+using Viblog.Infrastructure.Shared.Data.Entities;
+using Viblog.Infrastructure.Shared.Data.Repositories;
+
+namespace EricJohansson.se.Facades;
+
+/// <summary>
+/// Facade implementation for category-filtered blog post operations
+/// </summary>
+public class CategoryPostsFacade : ICategoryPostsFacade
+{
+    private readonly IBlogPostRepository _blogPostRepository;
+
+    public CategoryPostsFacade(IBlogPostRepository blogPostRepository)
+    {
+        _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<PagedResult<BlogPost>> GetPostsByCategoryAsync(
+        string categoryId,
+        PagingParameters pagingParameters,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pagingParameters);
+
+        // Return empty result for invalid category ID
+        if (string.IsNullOrWhiteSpace(categoryId))
+        {
+            return new PagedResult<BlogPost>
+            {
+                Items = new List<BlogPost>(),
+                TotalCount = 0,
+                PageNumber = pagingParameters.PageNumber,
+                PageSize = pagingParameters.PageSize
+            };
+        }
+
+        return await _blogPostRepository.GetPostsByCategoryAsync(
+            categoryId,
+            pagingParameters,
+            publishedOnly: true,
+            cancellationToken);
+    }
+}

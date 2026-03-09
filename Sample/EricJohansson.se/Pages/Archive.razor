@@ -1,0 +1,147 @@
+@page "/archive/{Year:int}/{Month:int}"
+@page "/archive/{Year:int}/{Month:int}/{PageNumber:int}"
+@layout EricJohansson.se.Layout.BlogLayout
+@using System.Globalization
+@using EricJohansson.se.Components
+
+@inject IArchiveFacade ArchiveFacade
+@inject NavigationManager Navigation
+@inject ILogger<Archive> Logger
+
+<PageTitle>Archive: @GetMonthName() @Year</PageTitle>
+
+<Breadcrumb Items="_breadcrumbItems" />
+
+<section class="blog-section">
+    <h2 class="section-title">Archive: @GetMonthName() @Year</h2>
+    
+    @if (_isLoading)
+    {
+        <p class="loading-message">Loading posts...</p>
+    }
+    else if (_errorMessage != null)
+    {
+        <p class="error-message">@_errorMessage</p>
+    }
+    else if (_pagedResult == null || !_pagedResult.Items.Any())
+    {
+        <article class="blog-post">
+            <h3 class="post-title">No Posts from @GetMonthName() @Year</h3>
+            <p class="post-excerpt">
+                There are no published posts from this month yet.
+            </p>
+            <div class="back-navigation">
+                <a href="/posts" class="back-link">? View All Posts</a>
+            </div>
+        </article>
+    }
+    else
+    {
+        @foreach (var post in _pagedResult.Items)
+        {
+            <PostCard Post="post" />
+        }
+
+        <Pagination PagedResult="@_pagedResult"
+                    GetPageUrl="@GetPageUrl"
+                    AriaLabel="Archive posts pagination"
+                    ItemName="posts" />
+
+        <div class="back-navigation">
+            <a href="/posts" class="back-link">? View All Posts</a>
+        </div>
+    }
+</section>
+
+@code {
+    private const int PostsPerPage = 5;
+    
+    private PagedResult<BlogPost>? _pagedResult;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+
+    [Parameter]
+    public int Year { get; set; }
+
+    [Parameter]
+    public int Month { get; set; }
+
+    [Parameter]
+    public int? PageNumber { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        BuildBreadcrumbs();
+        await LoadPostsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPage = PageNumber ?? 1;
+        if (newPage != (PageNumber ?? 1))
+        {
+            await LoadPostsAsync();
+        }
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Label = "Posts", Url = "/posts" },
+            new() { Label = $"{GetMonthName()} {Year}", Url = $"/archive/{Year}/{Month}" }
+        };
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            
+            var currentPage = PageNumber ?? 1;
+            var pagingParams = new PagingParameters(currentPage, PostsPerPage);
+            _pagedResult = await ArchiveFacade.GetPostsByMonthAsync(Year, Month, pagingParams);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Unable to load blog posts for this archive. Please try again later.";
+            Logger.LogError(ex, "Error loading archive for: {Year}/{Month}", Year, Month);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetPageUrl(int pageNumber)
+    {
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+
+        if (_pagedResult != null && pageNumber > _pagedResult.TotalPages)
+        {
+            pageNumber = _pagedResult.TotalPages;
+        }
+
+        return pageNumber == 1 
+            ? $"/archive/{Year}/{Month}" 
+            : $"/archive/{Year}/{Month}/{pageNumber}";
+    }
+
+    private string GetMonthName()
+    {
+        try
+        {
+            return CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Month);
+        }
+        catch
+        {
+            return Month.ToString();
+        }
+    }
+}
