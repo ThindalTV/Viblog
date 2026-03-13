@@ -1,3 +1,7 @@
+using EricJohansson.se.Infrastructure.Facades;
+using EricJohansson.se.Models.Feed;
+using Moq;
+
 namespace Viblog.Tests.Api.Endpoints;
 
 /// <summary>

@@ -1,6 +1,6 @@
 using Viblog.Admin.Models;
 using Viblog.Infrastructure.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
+using Viblog.Infrastructure.Data.Entities.Content;
 
 namespace Viblog.Admin.Extensions;
 

@@ -1,5 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Data.Sources.AzureStorage.Storage;
 
 namespace Viblog.Shared.Data.Sources.AzureStorage;

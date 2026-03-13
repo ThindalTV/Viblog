@@ -2,7 +2,6 @@
 using EricJohansson.se.Infrastructure.Facades;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Viblog.Infrastructure.Frontend.Facades;
 
 namespace EricJohansson.se;
 

@@ -1,7 +1,7 @@
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Services;

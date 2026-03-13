@@ -1,31 +1,43 @@
+using EricJohansson.se;
+using EricJohansson.se.Api;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components.Server;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Viblog;
+using Viblog.Infrastructure.Shared.Services;
+using Viblog.Shared.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.AddServiceDefaults();
 
-//builder.Services.AddViblog(); // TODO: Options?
+builder.Services.AddViblogServices();
+builder.UseViblog();
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddViblogFrontend();
+builder.Services.AddScoped<ISitemapService, SitemapService>();
+
+builder.Services.Configure<CircuitOptions>(options =>
+{
+    if (builder.Environment.IsDevelopment())
+        options.DetailedErrors = true;
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-// app.UseViblog(); // TODO: Options?
-
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+await app.UseViblogAsync();
 
-app.UseRouting();
+app.MapViblogApiEndpoints();
 
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.UseAntiforgery();
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(ViblogStartupExtensions).Assembly);
+
 
 app.Run();

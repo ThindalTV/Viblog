@@ -1,11 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Moq;
 using Viblog.Admin.Authentication;
 using Viblog.Infrastructure.Authentication;
-using Viblog.Infrastructure.Data.Common;
-using Viblog.Infrastructure.Data.Entities;
-using Viblog.Infrastructure.Data.Repositories;
-using Xunit;
 
 namespace Viblog.Tests.Admin.Authentication;
 

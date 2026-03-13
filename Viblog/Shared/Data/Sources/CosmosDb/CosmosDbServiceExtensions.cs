@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Shared.Data.Repositories;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Data.Sources.CosmosDb.Data;
 using Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
@@ -131,4 +130,3 @@ public static class CosmosDbServiceExtensions
         }
     }
 }
-

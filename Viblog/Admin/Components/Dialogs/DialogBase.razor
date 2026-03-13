@@ -80,7 +80,7 @@
         if (firstRender)
         {
             _isRendered = true;
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/dialogBase.js");
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/_content/Viblog/js/dialogBase.js");
         }
     }
 

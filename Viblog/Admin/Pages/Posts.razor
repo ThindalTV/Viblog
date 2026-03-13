@@ -1,8 +1,10 @@
 @page "/viblog/posts"
 @using Viblog.Admin.Components
-@using Viblog.Infrastructure.Shared.Data.Entities.Content
 @using Viblog.Admin.Extensions;
-@using Viblog.Infrastructure.Shared.Extensions
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Data.Entities.Content
+@using Viblog.Infrastructure.Facades
 
 @attribute [Authorize(Policy = RequirePostWrite)]
 @layout AdminLayout

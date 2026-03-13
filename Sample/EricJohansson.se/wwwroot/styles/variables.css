@@ -1,0 +1,142 @@
+/* Viblog - CSS Variables */
+/* Root variables available throughout the application */
+
+:root {
+    /* Colors */
+    --color-primary: #006bb7;
+    --color-primary-bg: #1b6ec2;
+    --color-primary-border: #1861ac;
+    --color-focus-shadow: #258cfb;
+    --color-valid: #26b050;
+    --color-invalid: #e50000;
+    --color-error-bg: #b32121;
+    --color-warning-bg: #FFE500;
+
+    /* Neutrals */
+    --color-white: #ffffff;
+    --color-black: #1a1a1a;
+    --color-gray-lightest: #f8f8f8;
+    --color-gray-lighter: #f7f7f7;
+    --color-gray-light: #d7d7d7;
+    --color-gray: #929292;
+    --color-gray-medium: #555555;
+    --color-gray-dark: #333333;
+    --color-border-light: #e0e0e0;
+    --color-border: #d6d5d5;
+
+    /* Typography */
+    --font-family-base: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-family-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+    /* Spacing */
+    --spacing-unit: 1rem;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+
+    /* Layout */
+    --max-width-container: 1600px;
+    --max-width-content: 1200px;
+    --sidebar-width: 250px;
+
+    /* Profile Header */
+    --profile-side-margin: 10rem;
+    --profile-top-overlap: -100px;
+    --profile-bottom-space: 100px;
+    --profile-column-gap: 6rem;
+    --profile-award-height: 143px;
+    --profile-award-bottom: -95px;
+    --profile-award-right: 50px;
+    --profile-award-gap: 2.25rem;
+
+    /* Components */
+    --border-radius: 4px;
+    --border-radius-sm: 0.25rem;
+    --border-radius-lg: 0.5rem;
+
+    /* Breakpoints (documentation only — cannot be used inside @media conditions) */
+    --bp-xs: 640px;     /* small mobile */
+    --bp-sm: 768px;     /* mobile / small tablet */
+    --bp-md: 1100px;    /* tablet */
+    --bp-lg: 1600px;    /* desktop */
+
+    /* Z-index */
+    --z-index-dropdown: 1000;
+    --z-index-modal: 1050;
+    --z-index-tooltip: 1070;
+
+    /* Admin Color Palette */
+    --admin-primary: #667eea;
+    --admin-primary-dark: #5568d3;
+    --admin-primary-darker: #764ba2;
+    --admin-bg: #f5f5f5;
+    --admin-content-bg: #ffffff;
+    --admin-text: #333;
+    --admin-text-light: #666;
+    --admin-border: #e0e0e0;
+    --admin-error: #dc3545;
+    --admin-success: #28a745;
+
+    /* Code Block Colors - Light Theme */
+    --code-inline-bg: #f4f4f4;
+    --code-inline-border: #ddd;
+    --code-inline-color: #c7254e;
+    --code-block-bg: #f8f8f8;
+    --code-block-border: #ddd;
+    --code-keyword: #0000ff;
+    --code-string: #a31515;
+    --code-comment: #008000;
+    --code-type: #2b91af;
+    --code-method: #74531f;
+    --code-number: #098658;
+    --code-operator: #000000;
+    --code-preprocessor: #808080;
+    --code-tag: #800000;
+    --code-attribute-name: #ff0000;
+    --code-attribute-value: #0000ff;
+    --code-identifier: #000000;
+    --code-plain-text: #000000;
+    --code-sql-function: #ff00ff;
+
+    /* Code Block Typography */
+    --code-font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    --code-font-size: 0.9em;
+    --code-block-font-size: 0.875em;
+    --code-line-height: 1.45;
+
+    /* Code Block Spacing */
+    --code-inline-padding: 2px 6px;
+    --code-block-padding: 16px;
+    --code-border-radius: 3px;
+    --code-block-border-radius: 4px;
+}
+
+/* Dark theme support disabled - using light theme only for now */
+/*
+@media (prefers-color-scheme: dark) {
+    :root {
+        --code-inline-bg: #2d2d2d;
+        --code-inline-border: #404040;
+        --code-inline-color: #f8c555;
+        --code-block-bg: #1e1e1e;
+        --code-block-border: #404040;
+        --code-keyword: #569cd6;
+        --code-string: #ce9178;
+        --code-comment: #6a9955;
+        --code-type: #4ec9b0;
+        --code-method: #dcdcaa;
+        --code-number: #b5cea8;
+        --code-operator: #d4d4d4;
+        --code-preprocessor: #9b9b9b;
+        --code-tag: #569cd6;
+        --code-attribute-name: #9cdcfe;
+        --code-attribute-value: #ce9178;
+        --code-identifier: #d4d4d4;
+        --code-plain-text: #d4d4d4;
+    }
+}
+*/
+

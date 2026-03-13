@@ -1,8 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
-using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Services.Content;
 
 namespace Viblog.Tests.Services;

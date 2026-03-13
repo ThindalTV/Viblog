@@ -1,14 +1,13 @@
 @page "/{slug}"
 @layout EricJohansson.se.Layout.BlogLayout
 @using EricJohansson.se.Components.Metadata
+@using EricJohansson.se.Infrastructure.Facades
 @using Microsoft.Extensions.Logging
-@using Viblog.Infrastructure.Frontend.Facades
-@using Viblog.Infrastructure.Shared.Data.Entities
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.WebUtilities
+@using Viblog.Infrastructure.Data.Entities.Content
 @using Viblog.Shared.Extensions
-@using Viblog.Infrastructure.Shared.Extensions
-@using PageEntity = Viblog.Infrastructure.Shared.Data.Entities.Page
+@using PageEntity = Viblog.Infrastructure.Data.Entities.Page
 
 @inject IPageDetailFacade PageDetailFacade
 @inject NavigationManager Navigation
@@ -114,7 +113,7 @@ public string Slug { get; set; } = string.Empty;
 /// <summary>
 /// Gets the current content to display based on admin preview mode
 /// </summary>
-private Viblog.Infrastructure.Shared.Data.Entities.Content.PageContent? CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
+private PageContent? CurrentContent => _showDraft && _isAdmin ? _page!.Draft : _page!.Live;
 
 protected override async Task OnInitializedAsync()
 {

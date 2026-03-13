@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using EricJohansson.se.Infrastructure.Facades;
-using EricJohansson.se.Infrastructure.Models.Feeds;
 using EricJohansson.se.Models.Feed;
 using Microsoft.Extensions.Options;
-using Viblog.Infrastructure.Shared.Data.Common;
-using Viblog.Infrastructure.Shared.Data.Entities;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Infrastructure.Shared.Models.Feeds;
+using Viblog.Infrastructure.Data.Common;
+using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Configuration;
 
 namespace EricJohansson.se.Facades;

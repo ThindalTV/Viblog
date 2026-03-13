@@ -1,6 +1,7 @@
 using EricJohansson.se.Models.Sitemap;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Viblog.Infrastructure.Data.Common;

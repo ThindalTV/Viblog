@@ -1,8 +1,10 @@
 @page "/search"
 @page "/search/{PageNumber:int}"
-@layout Viblog.Frontend.Layout.BlogLayout
+@using EricJohansson.se.Components
+@using EricJohansson.se.Infrastructure.Facades
 @using Microsoft.Extensions.Logging
-@using Viblog.Frontend.Components
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Data.Entities
 
 @inject IBlogSearchFacade BlogSearchFacade
 @inject NavigationManager Navigation

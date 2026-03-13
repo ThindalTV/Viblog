@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Viblog.Admin.Facades;
-using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
-using Viblog.Infrastructure.Data.Repositories;
 using Viblog.Shared.Services.Content;
 
 namespace Viblog.Tests.Facades;

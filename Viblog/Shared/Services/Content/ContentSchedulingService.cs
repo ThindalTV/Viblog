@@ -1,6 +1,6 @@
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Extensions;
+using Viblog.Infrastructure.Extensions;
 using Viblog.Shared.Extensions;
 
 namespace Viblog.Shared.Services.Content;

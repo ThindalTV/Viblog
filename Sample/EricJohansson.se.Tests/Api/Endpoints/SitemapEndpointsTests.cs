@@ -1,4 +1,7 @@
+using EricJohansson.se.Models.Sitemap;
 using Microsoft.Extensions.Options;
+using Moq;
+using Viblog.Infrastructure.Shared.Services;
 using Viblog.Shared.Configuration;
 
 namespace Viblog.Tests.Api.Endpoints;

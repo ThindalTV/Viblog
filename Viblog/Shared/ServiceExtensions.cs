@@ -1,6 +1,5 @@
 using Viblog.Infrastructure.Facades;
 using Viblog.Infrastructure.Services;
-using Viblog.Infrastructure.Shared.Data.Repositories;
 using Viblog.Shared.Facades;
 using Viblog.Shared.Services;
 
@@ -23,7 +22,6 @@ public static class ServiceExtensions
 
         // Register SEO services
         services.AddScoped<StructuredDataHelper>();
-        services.AddScoped<ISitemapService, SitemapService>();
 
         // Register text utilities
         services.AddScoped<ITextUtilities, TextUtilities>();

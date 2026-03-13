@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Shared.Data.Sources.CosmosDb.Data.Entities;
 
 namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 

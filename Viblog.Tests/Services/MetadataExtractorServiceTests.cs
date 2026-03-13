@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
-using Viblog.Infrastructure.Shared.Services;
-using Viblog.Shared.Services;
 
 namespace Viblog.Tests.Services;
 

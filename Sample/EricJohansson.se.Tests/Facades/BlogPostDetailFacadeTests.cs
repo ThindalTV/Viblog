@@ -1,6 +1,7 @@
 using EricJohansson.se.Facades;
 using Moq;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
 
 namespace EricJohansson.se.Tests.Facades;

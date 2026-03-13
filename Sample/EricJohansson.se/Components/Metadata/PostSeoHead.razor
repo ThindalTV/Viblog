@@ -1,6 +1,8 @@
 @using EricJohansson.se.Components.Metadata
 @using EricJohansson.se.Models
-@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using Telerik.Blazor.Components.Breadcrumb
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Data.Entities.Content
 @using static EricJohansson.se.Components.Metadata.StructuredData
 
 <SeoHead Title="@Content.Title"
@@ -44,7 +46,7 @@
     /// Optional breadcrumb items for navigation schema
     /// </summary>
     [Parameter]
-    public List<Breadcrumb.BreadcrumbItem>? BreadcrumbItems { get; set; }
+    public List<BreadCrumbItem>? BreadcrumbItems { get; set; }
 
     private BlogPostContent Content => Post?.Live ?? new BlogPostContent();
 

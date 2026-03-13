@@ -1,12 +1,11 @@
-using Viblog.Frontend.Facades;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Infrastructure.Shared.Data.Repositories;
-using Viblog.Shared.Services;
+using EricJohansson.se.Facades;
+using Moq;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Services;
 
-namespace Viblog.Tests.Facades;
+namespace EricJohansson.se.Tests.Facades;
 
 /// <summary>
 /// Unit tests for BlogSearchFacade

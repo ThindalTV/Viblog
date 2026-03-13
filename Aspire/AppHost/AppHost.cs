@@ -35,11 +35,11 @@ var storage = builder.AddAzureStorage("storage")
 
 var blobStorage = storage.AddBlobs("blogStorage");
 
-builder.AddProject<Viblog>("Viblog")
+/*builder.AddProject<Viblog>("Viblog")
     .WithReference(cosmosStorage)
     .WithReference(blobStorage)
     .WaitFor(cosmos)
-    .WaitFor(blobStorage);
+    .WaitFor(blobStorage);*/
 
 builder.AddProject<EricJohansson_se>("EricJohansson")
     .WithReference(cosmosStorage)

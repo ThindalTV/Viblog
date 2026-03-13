@@ -1,4 +1,6 @@
-using Viblog.Infrastructure.Shared.Models.Sitemap;
+using EricJohansson.se.Models.Sitemap;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Viblog.Infrastructure.Shared.Services;
 

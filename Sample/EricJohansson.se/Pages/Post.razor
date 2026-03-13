@@ -2,8 +2,11 @@
 @layout EricJohansson.se.Layout.BlogLayout
 @using EricJohansson.se.Components
 @using EricJohansson.se.Components.Metadata
+@using EricJohansson.se.Infrastructure.Facades
+@using EricJohansson.se.Models
 @using Microsoft.Extensions.Logging
-@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Data.Entities.Content
 
 @inject IBlogPostDetailFacade BlogPostDetailFacade
 @inject NavigationManager Navigation
@@ -137,7 +140,7 @@ else
     private BlogPost? _nextPost;
     private bool _isLoading = true;
     private string? _errorMessage;
-    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+    private List<BreadCrumbItem> _breadcrumbItems = new();
     private List<BlogPost> _relatedPosts = new();
 
     [Parameter]
@@ -214,7 +217,7 @@ else
 
     private void BuildBreadcrumbs()
     {
-        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        _breadcrumbItems = new List<BreadCrumbItem>
         {
             new() { Label = "Posts", Url = "/posts" },
             new() { Label = _post!.Live?.Title ?? _post!.Draft.Title, Url = $"/post/{Slug}" }

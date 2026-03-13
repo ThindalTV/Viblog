@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
-using Viblog.Api.Endpoints;
+using Microsoft.AspNetCore.Http;
+using Viblog.Admin.API;
 
 namespace EricJohansson.se.Api;
 

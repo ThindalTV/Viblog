@@ -1,3 +1,4 @@
+@using EricJohansson.se.Models
 @using Microsoft.AspNetCore.Components
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -23,11 +24,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public List<BreadcrumbItem> Items { get; set; } = new();
+    public List<BreadCrumbItem> Items { get; set; } = new();
 
-    public class BreadcrumbItem
-    {
-        public string Label { get; set; } = string.Empty;
-        public string Url { get; set; } = string.Empty;
-    }
+
 }

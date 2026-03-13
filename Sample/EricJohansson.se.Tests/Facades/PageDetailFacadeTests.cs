@@ -1,8 +1,8 @@
-using Viblog.Frontend.Facades;
+using EricJohansson.se.Facades;
+using Moq;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
-using Viblog.Shared.Extensions;
 
 namespace Viblog.Tests.Facades;
 

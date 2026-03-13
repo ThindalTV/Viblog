@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Viblog.Admin.Facades;
-using Viblog.Infrastructure.Data.Entities;
-using Viblog.Infrastructure.Data.Repositories;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Facades;
 
 namespace Viblog.Tests.Facades;

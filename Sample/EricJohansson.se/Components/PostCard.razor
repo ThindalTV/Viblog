@@ -1,4 +1,5 @@
-@using Viblog.Infrastructure.Shared.Data.Entities.Content
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Data.Entities.Content
 @if (HasLongFormContent)
 {
     <a href="/post/@(Post.PublishedAt?.Year)/@Post.Slug" class="post-card-link">

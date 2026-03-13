@@ -3,7 +3,11 @@
 @layout EricJohansson.se.Layout.BlogLayout
 @using System.Globalization
 @using EricJohansson.se.Components
+@using EricJohansson.se.Infrastructure.Facades
+@using EricJohansson.se.Models
 @using Microsoft.Extensions.Logging
+@using Viblog.Infrastructure.Data.Common
+@using Viblog.Infrastructure.Data.Entities
 
 @inject IArchiveFacade ArchiveFacade
 @inject NavigationManager Navigation
@@ -60,7 +64,7 @@
     private PagedResult<BlogPost>? _pagedResult;
     private bool _isLoading = true;
     private string? _errorMessage;
-    private List<Breadcrumb.BreadcrumbItem> _breadcrumbItems = new();
+    private List<BreadCrumbItem> _breadcrumbItems = new();
 
     [Parameter]
     public int Year { get; set; }
@@ -88,7 +92,7 @@
 
     private void BuildBreadcrumbs()
     {
-        _breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        _breadcrumbItems = new List<BreadCrumbItem>
         {
             new() { Label = "Posts", Url = "/posts" },
             new() { Label = $"{GetMonthName()} {Year}", Url = $"/archive/{Year}/{Month}" }

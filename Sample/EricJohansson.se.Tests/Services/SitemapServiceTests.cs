@@ -1,13 +1,14 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
+using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Infrastructure.Shared.Data.Entities.Content;
 using Viblog.Shared.Configuration;
 using Viblog.Shared.Services;
 
-namespace Viblog.Tests.Services;
+namespace EricJohansson.se.Tests.Services;
 
 public class SitemapServiceTests
 {
