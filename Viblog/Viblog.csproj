@@ -1,50 +1,51 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-	<ImplicitUsings>enable</ImplicitUsings>
-	<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+	</PropertyGroup>
 
-  <!-- ASP.NET Core -->
-  <ItemGroup>
-	<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
-	<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
-  </ItemGroup>
+	<!-- ASP.NET Core -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
+	</ItemGroup>
 
-  <!-- Data -->
-  <ItemGroup>
-	<PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.Cosmos" Version="*" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.3" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	</PackageReference>
-  </ItemGroup>
+	<!-- Data -->
+	<ItemGroup>
+		<PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.Cosmos" Version="*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
-  <!-- Authentication -->
-  <ItemGroup>
-	<PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
-	<PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
-  </ItemGroup>
+	<!-- Authentication -->
+	<ItemGroup>
+		<PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
+		<PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
+	</ItemGroup>
 
-  <!-- Azure -->
-  <ItemGroup>
-	<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
-  </ItemGroup>
+	<!-- Azure -->
+	<ItemGroup>
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
+	</ItemGroup>
 
-  <!-- UI -->
-  <ItemGroup>
-	<PackageReference Include="Telerik.UI.for.Blazor" Version="13.0.0" />
-  </ItemGroup>
+	<!-- UI -->
+	<ItemGroup>
+		<PackageReference Include="Telerik.UI.for.Blazor" Version="13.0.0" />
+	</ItemGroup>
 
-  <!-- Content -->
-  <ItemGroup>
-	<PackageReference Include="ColorCode.HTML" Version="2.0.15" />
-	<PackageReference Include="Markdig" Version="1.0.0" />
-	<PackageReference Include="SkiaSharp" Version="3.119.2" />
-  </ItemGroup>
+	<!-- Content -->
+	<ItemGroup>
+		<PackageReference Include="ColorCode.HTML" Version="2.0.15" />
+		<PackageReference Include="Markdig" Version="1.0.0" />
+		<PackageReference Include="SkiaSharp" Version="3.119.2" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
