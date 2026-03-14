@@ -106,6 +106,7 @@ public static class ViblogStartupExtensions
         {
             // Add facades for UI operations
             services.AddScoped<IPostsAdminFacade, PostsAdminFacade>();
+            services.AddScoped<IDashboardFacade, DashboardFacade>();
             services.AddScoped<IPagesAdminFacade, PagesAdminFacade>();
             services.AddScoped<IUserManagementFacade, UserManagementFacade>();
             services.AddScoped<IUserProfileFacade, UserProfileFacade>();

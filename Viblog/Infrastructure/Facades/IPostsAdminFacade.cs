@@ -101,5 +101,6 @@ public enum PostSortField
     CreatedAt,
     PublishedAt,
     IsFeatured,
-    IsPublished
+    IsPublished,
+    ViewCount
 }

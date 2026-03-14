@@ -1,6 +1,12 @@
 @page "/viblog"
+@using System.Security.Claims
+@using Viblog.Admin.Components.Dashboard
+@using Viblog.Infrastructure.Data.Entities
+@using Viblog.Infrastructure.Facades
 @attribute [Authorize(Policy = Admin)]
 @layout AdminLayout
+@inject IDashboardFacade DashboardFacade
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Dashboard - Viblog Admin</PageTitle>
 
@@ -8,119 +14,211 @@
     <h1 class="welcome-title">Welcome back, @_userName!</h1>
 
     <div class="dashboard-grid">
-        <!-- Performance Chart -->
-        <div class="grid-item chart-area">
-            <div class="card">
-                <h2 class="card-title">Performance</h2>
-                <div class="chart-placeholder">
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span class="legend-dot google"></span> Google
-                        </span>
-                        <span class="legend-item">
-                            <span class="legend-dot bing"></span> Bing
-                        </span>
-                        <span class="legend-item">
-                            <span class="legend-dot twitter"></span> Twitter
-                        </span>
-                    </div>
-                    <div class="chart-visual">
-                        <span class="chart-label">Chart Placeholder</span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Stat Cards -->
-        <div class="grid-item stat-card-1">
-            <div class="card stat-card">
-                <div class="stat-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.FileAdd" Size="@ThemeConstants.SvgIcon.Size.Large" />
+        <div class="grid-item stat-card-area published">
+            <StatCard Icon="@SvgIcon.Check" Value="@_stats.PublishedCount.ToString()" Label="Published" />
+        </div>
+        <div class="grid-item stat-card-area drafts">
+            <StatCard Icon="@SvgIcon.Pencil" Value="@_stats.DraftCount.ToString()" Label="Drafts" />
+        </div>
+        <div class="grid-item stat-card-area scheduled">
+            <StatCard Icon="@SvgIcon.Clock" Value="@_stats.ScheduledCount.ToString()" Label="Scheduled" />
+        </div>
+        <div class="grid-item stat-card-area views">
+            <StatCard Icon="@SvgIcon.Eye" Value="@_stats.TotalViews.ToString("N0")" Label="Total Views" />
+        </div>
+
+        <!-- Top Posts by Views -->
+        <div class="grid-item top-posts-area">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Top Posts by Views</h2>
+                    <TelerikDropDownList Data="@_dateFilters"
+                                         @bind-Value="@_selectedFilter"
+                                         TextField="@nameof(DateFilterOption.Label)"
+                                         ValueField="@nameof(DateFilterOption.Value)"
+                                         Width="160px"
+                                         OnChange="@OnFilterChangedAsync" />
                 </div>
-                <div class="stat-change negative">
-                    <TelerikSvgIcon Icon="@SvgIcon.ArrowDown" />
-                    15.7%
-                </div>
-                <div class="stat-number">6,794</div>
-                <div class="stat-label">Tickets Answered</div>
+
+                <TelerikGrid Data="@_topPosts"
+                             Pageable="false"
+                             Sortable="false"
+                             Height="auto">
+                    <GridColumns>
+                        <GridColumn Field="@nameof(BlogPost.Draft)" Title="Title">
+                            <Template>
+                                @{
+                                    var post = (BlogPost)context;
+                                }
+                                <a href="/viblog/posts/edit/@post.Id">@post.Draft.Title</a>
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(BlogPost.PublishedAt)" Title="Published" Width="140px">
+                            <Template>
+                                @{
+                                    var post = (BlogPost)context;
+                                }
+                                @(post.PublishedAt?.ToString("MMM d, yyyy") ?? "-")
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(BlogPost.ViewCount)" Title="Views" Width="90px" />
+                    </GridColumns>
+                </TelerikGrid>
             </div>
         </div>
 
-        <div class="grid-item stat-card-2">
-            <div class="card stat-card">
-                <div class="stat-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.User" Size="@ThemeConstants.SvgIcon.Size.Large" />
-                </div>
-                <div class="stat-change positive">
-                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
-                    20.2%
-                </div>
-                <div class="stat-number">457</div>
-                <div class="stat-label">New Visitors</div>
+        <!-- Views by Published Month Chart -->
+        <div class="grid-item chart-area">
+            <div class="card">
+                <h2 class="card-title">Views by Published Month</h2>
+                <TelerikChart Height="360px">
+                    <ChartSeriesItems>
+                        <ChartSeries Type="ChartSeriesType.Column"
+                                     Data="@_viewsByMonth"
+                                     Field="@nameof(ViewsByMonthData.TotalViews)"
+                                     CategoryField="@nameof(ViewsByMonthData.Month)"
+                                     Name="Views">
+                            <ChartSeriesLabels Visible="false" />
+                        </ChartSeries>
+                    </ChartSeriesItems>
+                    <ChartCategoryAxes>
+                        <ChartCategoryAxis>
+                            <ChartCategoryAxisLabels />
+                        </ChartCategoryAxis>
+                    </ChartCategoryAxes>
+                    <ChartValueAxes>
+                        <ChartValueAxis>
+                            <ChartValueAxisLabels Format="{0:N0}" />
+                        </ChartValueAxis>
+                    </ChartValueAxes>
+                    <ChartLegend Visible="false" />
+                </TelerikChart>
             </div>
         </div>
 
-        <div class="grid-item stat-card-3">
-            <div class="card stat-card">
-                <div class="stat-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.InfoCircle" Size="@ThemeConstants.SvgIcon.Size.Large" />
-                </div>
-                <div class="stat-change positive">
-                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
-                    5.7%
-                </div>
-                <div class="stat-number">1,678</div>
-                <div class="stat-label">Projects Launched</div>
+        <!-- Upcoming Scheduled Posts -->
+        <div class="grid-item scheduled-area">
+            <div class="card">
+                <h2 class="card-title">Upcoming Scheduled Posts</h2>
+                @if (_scheduledPosts.Count == 0)
+                {
+                    <p class="empty-state">No posts scheduled.</p>
+                }
+                else
+                {
+                    <ul class="scheduled-list">
+                        @foreach (var post in _scheduledPosts)
+                        {
+                            <li class="scheduled-item">
+                                <a href="/viblog/posts/edit/@post.Id" class="scheduled-title">@post.Draft.Title</a>
+                                <span class="scheduled-date">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Clock" />
+                                    @(post.Schedule.ScheduledPublishDate?.ToString("MMM d, yyyy HH:mm") ?? "-")
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
 
-        <div class="grid-item stat-card-4">
-            <div class="card stat-card">
-                <div class="stat-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.Cart" Size="@ThemeConstants.SvgIcon.Size.Large" />
-                </div>
-                <div class="stat-change positive">
-                    <TelerikSvgIcon Icon="@SvgIcon.ArrowUp" />
-                    5.3%
-                </div>
-                <div class="stat-number">5,627</div>
-                <div class="stat-label">Orders</div>
+        <!-- Recent Activity -->
+        <div class="grid-item activity-area">
+            <div class="card">
+                <h2 class="card-title">Recent Activity</h2>
+                @if (_recentActivity.Count == 0)
+                {
+                    <p class="empty-state">No activity recorded yet.</p>
+                }
+                else
+                {
+                    <ul class="activity-list">
+                        @foreach (var entry in _recentActivity)
+                        {
+                            <li class="activity-item">
+                                <span class="activity-description">@entry.Description</span>
+                                <span class="activity-meta">
+                                    <span class="activity-user">@entry.UserName</span>
+                                    <span class="activity-time">@FormatTimestamp(entry.Timestamp)</span>
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
 
-        <!-- Additional Cards -->
-        <div class="grid-item info-card-1">
-            <div class="card info-card">
-                <div class="info-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.ChartLineMarkers" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
-                </div>
-                <h3>Sales Statistics</h3>
-                <p>View detailed sales reports and analytics</p>
-            </div>
-        </div>
-
-        <div class="grid-item info-card-2">
-            <div class="card info-card">
-                <div class="info-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.Grid" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
-                </div>
-                <h3>Recent Activity</h3>
-                <p>Monitor latest updates and changes</p>
-            </div>
-        </div>
-
-        <div class="grid-item info-card-3">
-            <div class="card info-card">
-                <div class="info-icon">
-                    <TelerikSvgIcon Icon="@SvgIcon.InfoCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
-                </div>
-                <h3>Performance Metrics</h3>
-                <p>Track key performance indicators</p>
-            </div>
-        </div>
     </div>
 </div>
 
 @code {
-    private string _userName = "Douglas";
+    private string _userName = string.Empty;
+
+    private PostStats _stats = new(0, 0, 0, 0);
+    private IReadOnlyList<BlogPost> _topPosts = [];
+    private IReadOnlyList<ViewsByMonthData> _viewsByMonth = [];
+    private IReadOnlyList<BlogPost> _scheduledPosts = [];
+    private IReadOnlyList<AuditLog> _recentActivity = [];
+
+    private DashboardDateFilter _selectedFilter = DashboardDateFilter.Ever;
+
+    private readonly List<DateFilterOption> _dateFilters =
+    [
+        new("Ever",       DashboardDateFilter.Ever),
+        new("Last Year",  DashboardDateFilter.LastYear),
+        new("Last Month", DashboardDateFilter.LastMonth),
+        new("Last Week",  DashboardDateFilter.LastWeek),
+        new("Last Day",   DashboardDateFilter.LastDay),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _userName = authState.User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+
+        await LoadDataAsync();
+    }
+
+    private async Task OnFilterChangedAsync(object _)
+    {
+        await LoadTopPostsAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await LoadStatsAsync();
+        await LoadTopPostsAsync();
+        await LoadViewsByMonthAsync();
+        await LoadScheduledPostsAsync();
+        await LoadRecentActivityAsync();
+    }
+
+    private async Task LoadStatsAsync()
+        => _stats = await DashboardFacade.GetPostStatsAsync();
+
+    private async Task LoadTopPostsAsync()
+        => _topPosts = await DashboardFacade.GetTopPostsByViewsAsync(_selectedFilter);
+
+    private async Task LoadViewsByMonthAsync()
+        => _viewsByMonth = await DashboardFacade.GetViewsByPublishedMonthAsync();
+
+    private async Task LoadScheduledPostsAsync()
+        => _scheduledPosts = await DashboardFacade.GetScheduledPostsAsync();
+
+    private async Task LoadRecentActivityAsync()
+        => _recentActivity = await DashboardFacade.GetRecentActivityAsync();
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+    {
+        var diff = DateTimeOffset.UtcNow - timestamp;
+        return diff.TotalMinutes < 1   ? "just now"
+             : diff.TotalHours   < 1   ? $"{(int)diff.TotalMinutes}m ago"
+             : diff.TotalDays    < 1   ? $"{(int)diff.TotalHours}h ago"
+             : diff.TotalDays    < 7   ? $"{(int)diff.TotalDays}d ago"
+             : timestamp.ToString("MMM d, yyyy");
+    }
+
+    private record DateFilterOption(string Label, DashboardDateFilter Value);
 }

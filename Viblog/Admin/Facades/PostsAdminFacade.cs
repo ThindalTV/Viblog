@@ -68,6 +68,9 @@ public class PostsAdminFacade : IPostsAdminFacade
             PostSortField.IsPublished => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
 
+            PostSortField.ViewCount => await _blogPostRepository.FindAsync(
+                predicate, pagingParameters, p => p.ViewCount, ascending, false, cancellationToken),
+
             PostSortField.CreatedAt or _ => await _blogPostRepository.FindAsync(
                 predicate, pagingParameters, p => p.CreatedAt, ascending, false, cancellationToken)
         };

@@ -136,7 +136,7 @@
     {
         // Determine sort field and direction from grid state
         var sortDescriptor = args.Request.Sorts.FirstOrDefault();
-        var sortField = PostSortField.CreatedAt;
+        var sortField = PostSortField.PublishedAt;
         var sortAscending = false;
 
         if (sortDescriptor != null)
@@ -149,7 +149,7 @@
                 nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,
                 nameof(BlogPost.IsPublished) => PostSortField.IsPublished,
                 nameof(BlogPost.CreatedAt) => PostSortField.CreatedAt,
-                _ => PostSortField.CreatedAt
+                _ => PostSortField.PublishedAt
             };
             sortAscending = sortDescriptor.SortDirection == Telerik.DataSource.ListSortDirection.Ascending;
         }

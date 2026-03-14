@@ -1,74 +1,9 @@
-/* Admin Dashboard Isolated Styles */
-/* These styles are automatically scoped to Index.razor component */
+/* Dashboard isolated styles */
 
 .dashboard {
     max-width: 1600px;
 }
 
-.dashboard h1 {
-    margin-bottom: 2rem;
-    color: var(--admin-text);
-}
-
-.stat-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-}
-
-.stat-card-1 { grid-area: stat1; }
-.stat-card-2 { grid-area: stat2; }
-.stat-card-3 { grid-area: stat3; }
-.stat-card-4 { grid-area: stat4; }
-
-.stat-number {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--admin-primary);
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    font-size: 1rem;
-    color: var(--admin-text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.activity-section {
-    padding: 1.5rem;
-}
-
-.welcome-message {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--admin-text);
-}
-
-.quick-actions {
-    list-style-type: none;
-    padding: 0;
-}
-
-.quick-actions li {
-    padding: 0.5rem 0;
-    padding-left: 1.5rem;
-    position: relative;
-}
-
-.quick-actions li::before {
-    content: "�";
-    position: absolute;
-    left: 0;
-    color: var(--admin-primary);
-    font-weight: bold;
-}
-
-/* New styles for CSS Grid layout with named areas */
 .welcome-title {
     font-size: 2rem;
     font-weight: 300;
@@ -76,213 +11,170 @@
     margin-bottom: 2rem;
 }
 
-/* CSS Grid Layout with Named Areas */
+/* ─── Grid layout ─────────────────────────────────────────── */
+
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: auto auto auto;
     gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
     grid-template-areas:
-        "chart chart chart chart"
-        "stat1 stat2 stat3 stat4"
-        "info1 info2 info3 info3";
+        "published drafts scheduled views"
+        "top-posts top-posts chart    chart"
+        "scheduled-posts scheduled-posts activity activity";
 }
 
-.chart-area { grid-area: chart; }
-.info-card-1 { grid-area: info1; }
-.info-card-2 { grid-area: info2; }
-.info-card-3 { grid-area: info3; }
+.stat-card-area.published       { grid-area: published; }
+.stat-card-area.drafts          { grid-area: drafts; }
+.stat-card-area.scheduled       { grid-area: scheduled; }
+.stat-card-area.views           { grid-area: views; }
+.top-posts-area                 { grid-area: top-posts; }
+.chart-area                     { grid-area: chart; }
+.scheduled-area                 { grid-area: scheduled-posts; }
+.activity-area                  { grid-area: activity; }
 
-/* Card Styles */
+/* ─── Card base ───────────────────────────────────────────── */
+
 .card {
     background-color: #ffffff;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     height: 100%;
+    box-sizing: border-box;
 }
 
 .card-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: #37474f;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
-/* Chart Placeholder */
-.chart-placeholder {
-    height: 400px;
-    position: relative;
-}
-
-.chart-legend {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.legend-item {
+.card-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #546e7a;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
 }
 
-.legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
+.card-header .card-title {
+    margin-bottom: 0;
 }
 
-.legend-dot.google {
-    background-color: #ffa726;
+/* ─── Scheduled posts list ────────────────────────────────── */
+
+.scheduled-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.legend-dot.bing {
-    background-color: #26c6da;
-}
-
-.legend-dot.twitter {
-    background-color: #546e7a;
-}
-
-.chart-visual {
-    height: calc(100% - 40px);
-    background: linear-gradient(135deg, 
-        rgba(255, 167, 38, 0.1) 0%,
-        rgba(38, 198, 218, 0.15) 50%,
-        rgba(84, 110, 122, 0.2) 100%);
-    border-radius: 4px;
+.scheduled-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    position: relative;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.scheduled-item:last-child {
+    border-bottom: none;
+}
+
+.scheduled-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    color: #37474f;
+    text-decoration: none;
 }
 
-.chart-visual::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60%;
-    background: linear-gradient(to top,
-        rgba(84, 110, 122, 0.3) 0%,
-        rgba(38, 198, 218, 0.25) 30%,
-        rgba(255, 167, 38, 0.2) 60%,
-        transparent 100%);
-    border-radius: 4px;
+.scheduled-title:hover {
+    text-decoration: underline;
 }
 
-.chart-label {
-    font-size: 1rem;
-    color: #90a4ae;
-    font-weight: 500;
-    z-index: 1;
-}
-
-/* Stat Cards */
-.stat-card {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1.5rem;
-}
-
-.stat-icon {
-    color: #90a4ae;
-    margin-bottom: 0.5rem;
-}
-
-.stat-change {
+.scheduled-date {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.3rem;
+    white-space: nowrap;
     font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.stat-change.positive {
-    color: #66bb6a;
-}
-
-.stat-change.negative {
-    color: #ef5350;
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 300;
-    color: #37474f;
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    font-size: 0.9rem;
     color: #90a4ae;
-    text-transform: capitalize;
 }
 
-/* Info Cards */
-.info-card {
-    text-align: center;
+/* ─── Recent activity list ────────────────────────────────── */
+
+.activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
+    gap: 0;
 }
 
-.info-icon {
-    color: #4dd0e1;
-    margin-bottom: 1rem;
+.activity-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.info-card h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #37474f;
-    margin-bottom: 0.5rem;
+.activity-item:last-child {
+    border-bottom: none;
 }
 
-.info-card p {
+.activity-description {
     font-size: 0.9rem;
+    color: #37474f;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
     color: #90a4ae;
+}
+
+/* ─── Empty state ─────────────────────────────────────────── */
+
+.empty-state {
+    color: #90a4ae;
+    font-size: 0.9rem;
     margin: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
+/* ─── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
     .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
         grid-template-areas:
-            "chart chart"
-            "stat1 stat2"
-            "stat3 stat4"
-            "info1 info2"
-            "info3 info3";
+            "published  drafts"
+            "scheduled  views"
+            "top-posts  chart"
+            "scheduled-posts activity";
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
+            "published"
+            "drafts"
+            "scheduled"
+            "views"
+            "top-posts"
             "chart"
-            "stat1"
-            "stat2"
-            "stat3"
-            "stat4"
-            "info1"
-            "info2"
-            "info3";
-    }
-    
-    .welcome-title {
-        font-size: 1.5rem;
+            "scheduled-posts"
+            "activity";
     }
 }
