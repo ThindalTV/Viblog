@@ -29,12 +29,12 @@ jobs:
         run: dotnet nuget add source 'https://nuget.telerik.com/v3/index.json' --name 'TelerikOnlineFeed' --username 'api-key' --password '${{secrets.TELERIK_NUGET_KEY}}' --store-password-in-clear-text
 
       - name: Build with dotnet
-        run: dotnet build EricJohansson.se/EricJohansson.se.csproj --configuration Release
+        run: dotnet build Sample/EricJohansson.se/EricJohansson.se.csproj --configuration Release
         env:
           TELERIK_LICENSE: ${{ secrets.TELERIK_LICENSE_KEY }}
 
       - name: dotnet publish
-        run: dotnet publish EricJohansson.se/EricJohansson.se.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish Sample/EricJohansson.se/EricJohansson.se.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
         env:
           TELERIK_LICENSE: ${{ secrets.TELERIK_LICENSE_KEY }}
 
