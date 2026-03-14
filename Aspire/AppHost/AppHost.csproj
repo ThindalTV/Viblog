@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Sample\EricJohansson.se\EricJohansson.se.csproj" />
-    <ProjectReference Include="..\..\Viblog\Viblog.csproj" />
   </ItemGroup>
 
 </Project>
