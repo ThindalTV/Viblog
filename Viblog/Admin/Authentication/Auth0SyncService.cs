@@ -338,10 +338,6 @@ public class Auth0SyncService : IIdentityProviderSyncService
 
             await _userRepository.AddAsync(adminUser, cancellationToken);
 
-            _logger.LogWarning(
-                "Default admin user created. Email: {Email}, Password: {Password} - CHANGE THIS PASSWORD IMMEDIATELY!",
-                defaultAdminEmail, defaultAdminPassword);
-
             return adminUser;
         }
         catch (Exception ex)
