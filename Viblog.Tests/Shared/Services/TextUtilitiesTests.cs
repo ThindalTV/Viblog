@@ -148,7 +148,7 @@ public class TextUtilitiesTests
     public void Slugify_WithUnicodeCharacters_ConvertsToAsciiEquivalents()
     {
         // Arrange
-        var text = "Héllo Wörld Tëst";
+        var text = "HÃ©llo WÃ¶rld TÃ«st";
 
         // Act
         var result = _textUtilities.Slugify(text);
@@ -199,16 +199,16 @@ public class TextUtilitiesTests
     }
 
     [Theory]
-    [InlineData("Café", "cafe")]
-    [InlineData("naïve", "naive")]
-    [InlineData("Zürich", "zurich")]
-    [InlineData("São Paulo", "sao-paulo")]
-    [InlineData("Montréal", "montreal")]
-    [InlineData("François", "francois")]
-    [InlineData("Ångström", "angstrom")]
-    [InlineData("\u0141\u00F3d\u017A", "lodz")]  // ?ód? using Unicode escapes
-    [InlineData("Kraków", "krakow")]
-    [InlineData("Malmö", "malmo")]
+    [InlineData("CafÃ©", "cafe")]
+    [InlineData("naÃ¯ve", "naive")]
+    [InlineData("ZÃ¼rich", "zurich")]
+    [InlineData("SÃ£o Paulo", "sao-paulo")]
+    [InlineData("MontrÃ©al", "montreal")]
+    [InlineData("FranÃ§ois", "francois")]
+    [InlineData("Ã…ngstrÃ¶m", "angstrom")]
+    [InlineData("\u0141\u00F3d\u017A", "lodz")]  // ?Ã³d? using Unicode escapes
+    [InlineData("KrakÃ³w", "krakow")]
+    [InlineData("MalmÃ¶", "malmo")]
     public void Slugify_WithInternationalCharacters_ConvertsToAscii(string input, string expected)
     {
         // Act

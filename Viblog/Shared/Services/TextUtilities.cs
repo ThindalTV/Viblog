@@ -102,23 +102,23 @@ public class TextUtilities : ITextUtilities
             '\u0142' => "l",  // ? - l with stroke (lowercase)
             
             // Scandinavian
-            '\u00D8' => "O",  // Ø - O with stroke (uppercase)
-            '\u00F8' => "o",  // ø - o with stroke (lowercase)
-            '\u00C5' => "A",  // Å - A with ring above (uppercase)
-            '\u00E5' => "a",  // å - a with ring above (lowercase)
-            '\u00C6' => "AE", // Æ - AE ligature (uppercase)
-            '\u00E6' => "ae", // æ - ae ligature (lowercase)
+            '\u00D8' => "O",  // Ã˜ - O with stroke (uppercase)
+            '\u00F8' => "o",  // Ã¸ - o with stroke (lowercase)
+            '\u00C5' => "A",  // Ã… - A with ring above (uppercase)
+            '\u00E5' => "a",  // Ã¥ - a with ring above (lowercase)
+            '\u00C6' => "AE", // Ã† - AE ligature (uppercase)
+            '\u00E6' => "ae", // Ã¦ - ae ligature (lowercase)
             
             // German
-            '\u00DF' => "ss", // ß - sharp s
+            '\u00DF' => "ss", // ÃŸ - sharp s
             
             // Other common characters
-            '\u0152' => "OE", // Œ - OE ligature (uppercase)
-            '\u0153' => "oe", // œ - oe ligature (lowercase)
-            '\u00D0' => "D",  // Ð - Eth (uppercase)
-            '\u00F0' => "d",  // ð - eth (lowercase)
-            '\u00DE' => "TH", // Þ - Thorn (uppercase)
-            '\u00FE' => "th", // þ - thorn (lowercase)
+            '\u0152' => "OE", // Å’ - OE ligature (uppercase)
+            '\u0153' => "oe", // Å“ - oe ligature (lowercase)
+            '\u00D0' => "D",  // Ã - Eth (uppercase)
+            '\u00F0' => "d",  // Ã° - eth (lowercase)
+            '\u00DE' => "TH", // Ãž - Thorn (uppercase)
+            '\u00FE' => "th", // Ã¾ - thorn (lowercase)
             
             _ => null
         };
