@@ -6,6 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<OutputType>Library</OutputType>
 		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
 	</PropertyGroup>
 
 	<!-- ASP.NET Core -->

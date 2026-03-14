@@ -1,7 +1,4 @@
 <Solution>
-  <Folder Name="/.github/">
-    <File Path=".github/copilot-instructions.md" />
-  </Folder>
   <Folder Name="/Aspire/">
     <Project Path="Aspire/AppHost.ServiceDefaults/AppHost.ServiceDefaults.csproj" Id="64c91f26-9620-4789-9801-127b0a474441" />
     <Project Path="Aspire/AppHost/AppHost.csproj" Id="e6930de0-f6db-492a-8984-a3471dbbea1c" />
