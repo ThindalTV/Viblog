@@ -8,6 +8,10 @@
 		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
 	<!-- ASP.NET Core -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
@@ -47,7 +51,4 @@
 		<PackageReference Include="SkiaSharp" Version="3.119.2" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
-	</ItemGroup>
 </Project>
