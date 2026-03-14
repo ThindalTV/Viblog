@@ -26,11 +26,6 @@ jobs:
       - name: Add NuGet source
         run: dotnet nuget add source 'https://nuget.telerik.com/v3/index.json' --name 'TelerikOnlineFeed' --username 'api-key' --password '${{secrets.TELERIK_NUGET_KEY}}' --store-password-in-clear-text
 
-      - name: Restore
-        run: dotnet restore Viblog.slnx
-        env:
-          TELERIK_LICENSE: ${{ secrets.TELERIK_LICENSE_KEY }}
-
       - name: Run Viblog tests
         run: dotnet test Viblog.Tests/Viblog.Tests.csproj --configuration Release --no-restore
         env:
