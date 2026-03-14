@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Viblog.Infrastructure.Data.Repositories;
 
-namespace EricJohansson.se.Api.Endpoints;
+namespace Viblog.Api.Endpoints;
 
 /// <summary>
 /// Endpoint that streams media files through the application at /media/{storagePath}

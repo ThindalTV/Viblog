@@ -12,7 +12,7 @@ public static class RegisterFrontendExtensions
     /// </summary>
     extension(IServiceCollection collection)
     {
-        public IServiceCollection AddViblogFrontend()
+        public IServiceCollection AddEJFacades()
         {
             // Register facades
             collection.AddScoped<IFrontPageFacade, FrontPageFacade>();

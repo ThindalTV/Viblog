@@ -1,5 +1,5 @@
 using EricJohansson.se;
-using EricJohansson.se.Api;
+using EricJohansson.se.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,11 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddViblogServices();
-builder.UseViblog();
-
-builder.Services.AddViblogFrontend();
+// Register ericjohansson.se services
+builder.Services.AddEJFacades();
 builder.Services.AddScoped<ISitemapService, SitemapService>();
+// Helpers
+builder.Services.AddScoped<StructuredDataHelper>();
 
 builder.Services.Configure<CircuitOptions>(options =>
 {
@@ -24,14 +24,14 @@ builder.Services.Configure<CircuitOptions>(options =>
         options.DetailedErrors = true;
 });
 
+// Add backend
+builder.AddViblog();
+
 var app = builder.Build();
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-await app.UseViblogAsync();
-
-app.MapViblogApiEndpoints();
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
 app.UseAntiforgery();
 app.MapStaticAssets();
@@ -39,5 +39,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(ViblogStartupExtensions).Assembly);
 
+// Use backend
+await app.UseViblogAsync();
 
 app.Run();

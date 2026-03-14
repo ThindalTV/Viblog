@@ -1,9 +1,11 @@
 using System.Text.Json;
+using EricJohansson.se.Helpers;
 using Microsoft.Extensions.Options;
+using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Shared.Configuration;
 
-namespace Viblog.Tests.Services;
+namespace EricJohansson.se.Tests.Helpers;
 
 public class StructuredDataHelperTests
 {

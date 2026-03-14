@@ -23,17 +23,12 @@ public class BlogPostListFacade : IBlogPostListFacade
     /// <inheritdoc/>
     public virtual async Task<PagedResult<BlogPost>> GetPaginatedPostsAsync(
         PagingParameters pagingParameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
 
         return await _blogPostRepository.GetPublishedPostsAsync(
             pagingParameters,
             cancellationToken);
-    }
-
-    Task<PagedResult<BlogPost>> IBlogPostListFacade.GetPaginatedPostsAsync(PagingParameters pagingParameters, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

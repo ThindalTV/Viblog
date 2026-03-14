@@ -48,7 +48,7 @@ public class BlogPostListFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.GetPaginatedPostsAsync(pagingParams);
+        var result = await _facade.GetPaginatedPostsAsync(pagingParams, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -83,7 +83,7 @@ public class BlogPostListFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.GetPaginatedPostsAsync(pagingParams);
+        var result = await _facade.GetPaginatedPostsAsync(pagingParams, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -112,7 +112,7 @@ public class BlogPostListFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.GetPaginatedPostsAsync(pagingParams);
+        var result = await _facade.GetPaginatedPostsAsync(pagingParams, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -140,7 +140,7 @@ public class BlogPostListFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        await _facade.GetPaginatedPostsAsync(pagingParams);
+        await _facade.GetPaginatedPostsAsync(pagingParams, CancellationToken.None);
 
         // Assert
         _mockRepository.Verify(r => r.GetPublishedPostsAsync(
@@ -173,7 +173,7 @@ public class BlogPostListFacadeTests
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _facade.GetPaginatedPostsAsync(pagingParams);
+        var result = await _facade.GetPaginatedPostsAsync(pagingParams, CancellationToken.None);
 
         // Assert
         Assert.All(result.Items, post => Assert.NotNull(post.Live));

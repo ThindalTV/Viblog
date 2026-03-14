@@ -1,10 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Shared.Configuration;
 
-namespace Viblog.Shared.Services;
+namespace EricJohansson.se.Helpers;
 
 /// <summary>
 /// Helper service for generating JSON-LD structured data for SEO
