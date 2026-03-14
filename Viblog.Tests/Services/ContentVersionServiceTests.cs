@@ -107,8 +107,10 @@ public class ContentVersionServiceTests
 
         await _service.PromoteDraftToLiveAsync(post, "user1");
 
+        // Snapshot must be staged via AddAsync so the caller's SaveChangesAsync commits it
         _mockBlogVersionRepo.Verify(r => r.AddAsync(It.IsAny<BlogPostVersion>(), default), Times.Once);
-        _mockBlogVersionRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
+        // SaveChangesAsync must NOT be called here — the caller owns the unit of work
+        _mockBlogVersionRepo.Verify(r => r.SaveChangesAsync(default), Times.Never);
     }
 
     [Fact]
@@ -178,8 +180,10 @@ public class ContentVersionServiceTests
 
         await _service.PromoteDraftToLiveAsync(page, "user1");
 
+        // Snapshot must be staged via AddAsync so the caller's SaveChangesAsync commits it
         _mockPageVersionRepo.Verify(r => r.AddAsync(It.IsAny<PageVersion>(), default), Times.Once);
-        _mockPageVersionRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
+        // SaveChangesAsync must NOT be called here — the caller owns the unit of work
+        _mockPageVersionRepo.Verify(r => r.SaveChangesAsync(default), Times.Never);
     }
 
     #endregion

@@ -81,7 +81,8 @@ public class ContentVersionService
             };
 
             await _blogPostVersionRepository.AddAsync(snapshot, cancellationToken);
-            await _blogPostVersionRepository.SaveChangesAsync(cancellationToken);
+            // Do not call SaveChangesAsync here — the caller commits both the version
+            // snapshot and the blog post together in a single unit of work.
 
             _logger.LogInformation("Created version {Version} for BlogPost {ContentId}", versionNumber, content.Id);
         }
@@ -107,7 +108,8 @@ public class ContentVersionService
             };
 
             await _pageVersionRepository.AddAsync(snapshot, cancellationToken);
-            await _pageVersionRepository.SaveChangesAsync(cancellationToken);
+            // Do not call SaveChangesAsync here — the caller commits both the version
+            // snapshot and the page together in a single unit of work.
 
             _logger.LogInformation("Created version {Version} for Page {ContentId}", versionNumber, content.Id);
         }

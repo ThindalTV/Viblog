@@ -64,11 +64,17 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         // CosmosDB does not allow updating partition keys in place — delete old document then reinsert.
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
-        // Phase 1: delete using the original partition key
+        // Phase 1: delete using the original partition key.
+        // Load the document fresh so EF Core has its full tracking metadata (__jObject / _etag).
+        // Reusing the already-detached entity loses that metadata and causes a 404 in CosmosDB.
         var newGroupKey = entity.GroupKey;
-        entity.GroupKey = originalGroupKey;
-        _dbSet.Remove(entity);
-        await _context.SaveChangesAsync(cancellationToken); // entity is Detached after this
+        var toDelete = await LoadByPartitionKeyForDeleteAsync(entity.Id, originalGroupKey, cancellationToken)
+            ?? throw new InvalidOperationException(
+                $"BlogPost '{entity.Id}' not found at partition key '{originalGroupKey}'. " +
+                "It may have already been moved or deleted.");
+
+        _dbSet.Remove(toDelete);
+        await _context.SaveChangesAsync(cancellationToken);
 
         // Phase 2: stage the reinsert with the new partition key.
         // The caller's SaveChangesAsync will commit the insert.
@@ -76,6 +82,20 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         entity.GroupKey = newGroupKey;
         await _dbSet.AddAsync(entity, cancellationToken);
     }
+
+    /// <summary>
+    /// Loads a blog post by id within a specific partition key, used by the
+    /// partition-key-change delete path in <see cref="UpdateAsync"/>.
+    /// Virtual so tests can override with an InMemory-compatible query
+    /// (the InMemory provider does not support <c>WithPartitionKey</c>).
+    /// </summary>
+    protected virtual Task<BlogPost?> LoadByPartitionKeyForDeleteAsync(
+        string id,
+        string partitionKey,
+        CancellationToken cancellationToken) =>
+        _dbSet
+            .WithPartitionKey(partitionKey)
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
     /// <inheritdoc/>
     public virtual async Task<PagedResult<BlogPost>> GetPublishedPostsAsync(
