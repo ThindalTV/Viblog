@@ -12,59 +12,6 @@ namespace Viblog.Shared.Data.Sources.CosmosDb;
 public static class CosmosDbServiceExtensions
 {
     /// <summary>
-    /// Add CosmosDB database context with proper configuration
-    /// </summary>
-    /// <param name="services">The service collection</param>
-    /// <param name="configuration">Application configuration</param>
-    /// <param name="isDevelopment">Whether the application is running in development mode</param>
-    /// <returns>The service collection for chaining</returns>
-    public static IServiceCollection AddCosmosDbContext(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        bool isDevelopment)
-    {/*
-        var cosmosConnectionString =
-            configuration.GetConnectionString("aspireCosmosDatabase") // Aspire
-            //?? configuration.GetConnectionString("CosmosConnection")
-            ?? throw new InvalidOperationException("Connection string 'CosmosConnection' not found.");
-        var cosmosDatabaseName = "aspireCosmosDatabase"; configuration.GetConnectionString("cosmosStorage")
-            //?? configuration["CosmosDb:DatabaseName"]
-            ?? throw new InvalidOperationException("CosmosDb:DatabaseName configuration not found.");*/
-        //services.AddCosmosDbContext<ApplicationDbContext>();
-        //services.AddCosmosDbContext<ApplicationDbContext>(cosmosConnectionString);/*options =>
-        /*{
-            options.UseCosmos(
-                cosmosConnectionString,
-                cosmosDatabaseName,
-                cosmosOptions =>
-                {
-                    // In development, configure for the emulator
-                    if (isDevelopment)
-                    {
-                        // Use Gateway mode for the emulator (required for localhost)
-                        // cosmosOptions.ConnectionMode(Microsoft.Azure.Cosmos.ConnectionMode.Gateway);
-
-                        // Limit to endpoint to prevent DNS resolution to internal Docker IPs
-                        // cosmosOptions.LimitToEndpoint();
-
-                        // Accept self-signed certificates from the emulator
-                        /*cosmosOptions.HttpClientFactory(() => new HttpClient(new HttpClientHandler
-                        {
-                            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                        }));
-                    }
-                    else
-                    {
-                        // Use Direct mode for production (better performance)
-                        cosmosOptions.ConnectionMode(Microsoft.Azure.Cosmos.ConnectionMode.Direct);
-                    }
-                });
-        });*/
-
-        return services;
-    }
-
-    /// <summary>
     /// Register CosmosDB-specific repository implementations
     /// </summary>
     /// <param name="services">The service collection</param>
@@ -100,7 +47,6 @@ public static class CosmosDbServiceExtensions
         IConfiguration configuration,
         bool isDevelopment)
     {
-        services.AddCosmosDbContext(configuration, isDevelopment);
         services.AddCosmosDbRepositories();
 
         return services;

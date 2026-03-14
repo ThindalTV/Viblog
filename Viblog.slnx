@@ -11,10 +11,6 @@
     <Project Path="Sample/EricJohansson.se.Tests/EricJohansson.se.Tests.csproj" Id="453d33c2-d841-4826-a0b1-76a9b8c2df07" />
     <Project Path="Sample/EricJohansson.se/EricJohansson.se.csproj" Id="cde4e174-c7aa-490b-bba7-d153d9624f6f" />
   </Folder>
-  <Folder Name="/Viblog.Data/">
-    <Project Path="Viblog.Data/Viblog.Data.AzureStorage/Viblog.Data.AzureStorage.csproj" Id="9b7ca11b-8e74-4a4f-9378-1e4984cca577" />
-    <Project Path="Viblog.Data/Viblog.Data.CosmosDb/Viblog.Data.CosmosDb.csproj" Id="ba1aca08-92ca-4e0c-956f-cd4df8827ead" />
-  </Folder>
   <Project Path="Viblog.Tests/Viblog.Tests.csproj" />
   <Project Path="Viblog/Viblog.csproj" />
 </Solution>

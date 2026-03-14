@@ -32,7 +32,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Viblog\Viblog.csproj" />
-    <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -62,7 +62,6 @@ public static class ViblogStartupExtensions
             collection.AddRazorComponents().AddInteractiveServerComponents();
 
             // Data storage
-            collection.AddCosmosDbContext(configuration, false);
             collection.AddCosmosDbRepositories();
             collection.AddDatabaseDeveloperPageExceptionFilter();
             collection.AddAzureBlobStorageRepository();

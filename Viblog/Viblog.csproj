@@ -3,47 +3,50 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-ViblogViblog-9812851b-d00e-4c01-9949-944fd4067437</UserSecretsId>
-    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <!-- ASP.NET Core -->
   <ItemGroup>
-    <Compile Remove="Admin\Pages\Media\**" />
-    <Compile Remove="Services\**" />
-    <Content Remove="Admin\Pages\Media\**" />
-    <Content Remove="Services\**" />
-    <EmbeddedResource Remove="Admin\Pages\Media\**" />
-    <EmbeddedResource Remove="Services\**" />
-    <None Remove="Admin\Pages\Media\**" />
-    <None Remove="Services\**" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
+	<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
   </ItemGroup>
 
+  <!-- Data -->
   <ItemGroup>
-    <PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
-    <PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
-    <PackageReference Include="ColorCode.HTML" Version="2.0.15" />
-    <PackageReference Include="Markdig" Version="1.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SkiaSharp" Version="3.119.2" />
-    <PackageReference Include="Telerik.UI.for.Blazor" Version="13.0.0" />
+	<PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.Cosmos" Version="*" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="10.0.3" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
   </ItemGroup>
 
+  <!-- Authentication -->
   <ItemGroup>
-    <ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Viblog.Data\Viblog.Data.AzureStorage\Viblog.Data.AzureStorage.csproj" />
-    <ProjectReference Include="..\Viblog.Data\Viblog.Data.CosmosDb\Viblog.Data.CosmosDb.csproj" />
+	<PackageReference Include="Auth0.AuthenticationApi" Version="7.45.0" />
+	<PackageReference Include="Auth0.ManagementApi" Version="7.45.0" />
   </ItemGroup>
 
+  <!-- Azure -->
   <ItemGroup>
-    <Folder Include="Admin\Authentication\" />
-    <Folder Include="Shared\Data\Sources\CosmosDb\Data\Seeders\" />
+	<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
   </ItemGroup>
 
+  <!-- UI -->
+  <ItemGroup>
+	<PackageReference Include="Telerik.UI.for.Blazor" Version="13.0.0" />
+  </ItemGroup>
+
+  <!-- Content -->
+  <ItemGroup>
+	<PackageReference Include="ColorCode.HTML" Version="2.0.15" />
+	<PackageReference Include="Markdig" Version="1.0.0" />
+	<PackageReference Include="SkiaSharp" Version="3.119.2" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Aspire\AppHost.ServiceDefaults\AppHost.ServiceDefaults.csproj" />
+	</ItemGroup>
 </Project>
