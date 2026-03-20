@@ -30,18 +30,27 @@ public class ContentSchedulingService
     {
         _logger.LogInformation("Publishing content {ContentId} by {User}", content.Id, publishedBy);
 
-        // Set first publish date if this is the initial publish (for sorting)
-        SetFirstPublishedDateIfNeeded(content);
+        try
+        {
+            // Set first publish date if this is the initial publish (for sorting)
+            SetFirstPublishedDateIfNeeded(content);
 
-        // Promote Draft to Live (creates version snapshot internally)
-        await _versionService.PromoteDraftToLiveAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
+            // Promote Draft to Live (creates version snapshot internally)
+            await _versionService.PromoteDraftToLiveAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
 
-        // Update scheduling metadata
-        content.Schedule.Status = ContentStatus.Draft;  // Back to default
-        content.Schedule.PublishedAt = DateTimeOffset.UtcNow;  // For "Last published" display
-        content.Schedule.ScheduledPublishDate = null;  // Clear schedule
+            // Update scheduling metadata
+            content.Schedule.Status = ContentStatus.Draft;  // Back to default
+            content.Schedule.PublishedAt = DateTimeOffset.UtcNow;  // For "Last published" display
+            content.Schedule.ScheduledPublishDate = null;  // Clear schedule
 
-        _logger.LogInformation("Content {ContentId} published successfully", content.Id);
+            _logger.LogInformation("Content {ContentId} published successfully", content.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "PublishNowAsync failed for content {ContentId}. Exception: {ExceptionType}: {ExceptionMessage}",
+                content.Id, ex.GetType().Name, ex.Message);
+            throw new InvalidOperationException($"Failed to publish content '{content.Id}'. {ex.GetType().Name}: {ex.Message}", ex);
+        }
     }
 
     /// <summary>

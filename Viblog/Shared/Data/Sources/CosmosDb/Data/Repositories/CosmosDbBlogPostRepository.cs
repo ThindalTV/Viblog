@@ -586,4 +586,33 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
                         p.Schedule.ScheduledPublishDate <= now)
             .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("SaveChangesAsync called for BlogPost context. Pending changes: {ChangeCount}",
+            _context.ChangeTracker.Entries().Count(e => e.State != Microsoft.EntityFrameworkCore.EntityState.Unchanged && e.State != Microsoft.EntityFrameworkCore.EntityState.Detached));
+
+        try
+        {
+            var result = await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("SaveChangesAsync completed successfully. Rows affected: {RowsAffected}", result);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"SaveChangesAsync failed. Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, "SaveChangesAsync failed for BlogPost context. Exception: {ExceptionType}: {ExceptionMessage}",
+                ex.GetType().Name, ex.Message);
+
+            // Log tracked entity state to help diagnose partition key / CosmosDB issues
+            foreach (var entry in _context.ChangeTracker.Entries<BlogPost>())
+            {
+                _logger.LogError("Tracked BlogPost entry during failed save: Id={PostId}, State={State}, GroupKey={GroupKey}, IsPublished={IsPublished}, PublishedAt={PublishedAt}",
+                    entry.Entity.Id, entry.State, entry.Entity.GroupKey, entry.Entity.IsPublished, entry.Entity.PublishedAt);
+            }
+
+            throw new InvalidOperationException(diagnosticMsg, ex);
+        }
+    }
 }

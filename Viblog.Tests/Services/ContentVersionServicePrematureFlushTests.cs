@@ -86,7 +86,7 @@ public class ContentVersionServicePrematureFlushTests
     {
         // Arrange — both repositories share the SAME context, mirroring production DI scope
         using var context = CreateSharedContext(Guid.NewGuid().ToString());
-        var versionRepo = new BlogPostVersionRepository(context);
+        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
         var service = new ContentVersionService(
             versionRepo,
             Mock.Of<IPageVersionRepository>(),
@@ -133,7 +133,7 @@ public class ContentVersionServicePrematureFlushTests
     {
         var dbName = Guid.NewGuid().ToString();
         using var context = CreateSharedContext(dbName);
-        var versionRepo = new BlogPostVersionRepository(context);
+        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
         var service = new ContentVersionService(
             versionRepo,
             Mock.Of<IPageVersionRepository>(),
@@ -181,7 +181,7 @@ public class ContentVersionServicePrematureFlushTests
         using var context = CreateSharedContext(dbName);
 
         // Both repositories use the SAME context — mirrors the production DI scope
-        var versionRepo = new BlogPostVersionRepository(context);
+        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
         var service = new ContentVersionService(
             versionRepo,
             Mock.Of<IPageVersionRepository>(),

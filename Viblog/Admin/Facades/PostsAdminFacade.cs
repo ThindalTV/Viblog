@@ -19,14 +19,17 @@ public class PostsAdminFacade : IPostsAdminFacade
     private readonly ContentSchedulingService? _schedulingService;
     private readonly IAuditLogService? _auditLogService;
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly ILogger<PostsAdminFacade> _logger;
 
     public PostsAdminFacade(
         IBlogPostRepository blogPostRepository,
+        ILogger<PostsAdminFacade> logger,
         ContentSchedulingService? schedulingService = null,
         IAuditLogService? auditLogService = null,
         IHttpContextAccessor? httpContextAccessor = null)
     {
         _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _schedulingService = schedulingService; // Optional
         _auditLogService = auditLogService; // Optional
         _httpContextAccessor = httpContextAccessor; // Optional
@@ -166,22 +169,42 @@ public class PostsAdminFacade : IPostsAdminFacade
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentNullException.ThrowIfNull(_schedulingService, nameof(_schedulingService));
 
-        var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException($"Post '{id}' not found.");
+        _logger.LogInformation("PublishPostNowAsync started for post {PostId}", id);
 
-        var (userId, userName, _) = GetCurrentUser();
+        try
+        {
+            var post = await _blogPostRepository.GetByIdWithoutPartitionKeyAsync(id, cancellationToken)
+                ?? throw new InvalidOperationException($"Post '{id}' not found.");
 
-        await _schedulingService.PublishNowAsync(post, userId, userName, cancellationToken: cancellationToken);
+            _logger.LogDebug("Post {PostId} loaded. Title={Title}, IsPublished={IsPublished}, GroupKey={GroupKey}",
+                post.Id, post.Draft.Title, post.IsPublished, post.GroupKey);
 
-        await _blogPostRepository.UpdateAsync(post, cancellationToken);
-        await _blogPostRepository.SaveChangesAsync(cancellationToken);
+            var (userId, userName, _) = GetCurrentUser();
 
-        await LogAuditAsync(
-            AuditAction.ContentPublished,
-            post.Id,
-            post.Draft.Title,
-            $"Published BlogPost '{post.Draft.Title}'",
-            cancellationToken);
+            _logger.LogDebug("Calling PublishNowAsync for post {PostId} by user {UserId}", id, userId);
+            await _schedulingService.PublishNowAsync(post, userId, userName, cancellationToken: cancellationToken);
+
+            _logger.LogDebug("Calling UpdateAsync for post {PostId}", id);
+            await _blogPostRepository.UpdateAsync(post, cancellationToken);
+
+            _logger.LogDebug("Calling SaveChangesAsync for post {PostId}", id);
+            await _blogPostRepository.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("PublishPostNowAsync completed successfully for post {PostId}", id);
+
+            await LogAuditAsync(
+                AuditAction.ContentPublished,
+                post.Id,
+                post.Draft.Title,
+                $"Published BlogPost '{post.Draft.Title}'",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "PublishPostNowAsync failed for post {PostId}. Exception: {ExceptionType}: {ExceptionMessage}",
+                id, ex.GetType().Name, ex.Message);
+            throw new InvalidOperationException($"Failed to publish post '{id}'. {ex.GetType().Name}: {ex.Message}", ex);
+        }
     }
 
     /// <inheritdoc/>
