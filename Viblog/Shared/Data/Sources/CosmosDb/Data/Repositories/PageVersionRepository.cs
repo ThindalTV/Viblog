@@ -18,7 +18,8 @@ public class PageVersionRepository : CosmosDbRepository<PageVersion>, IPageVersi
     public async Task<IEnumerable<PageVersion>> GetVersionsForContentAsync(string contentId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .Where(v => v.GroupKey == "PageVersion" && v.ContentId == contentId && !v.IsDeleted)
+            .WithPartitionKey("PageVersion")
+            .Where(v => v.ContentId == contentId && !v.IsDeleted)
             .OrderByDescending(v => v.VersionNumber)
             .ToListAsync(cancellationToken);
     }
@@ -27,7 +28,8 @@ public class PageVersionRepository : CosmosDbRepository<PageVersion>, IPageVersi
     public async Task<int> GetLatestVersionNumberAsync(string contentId, CancellationToken cancellationToken = default)
     {
         var latest = await _dbSet
-            .Where(v => v.GroupKey == "PageVersion" && v.ContentId == contentId && !v.IsDeleted)
+            .WithPartitionKey("PageVersion")
+            .Where(v => v.ContentId == contentId && !v.IsDeleted)
             .OrderByDescending(v => v.VersionNumber)
             .FirstOrDefaultAsync(cancellationToken);
 

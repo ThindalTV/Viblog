@@ -43,7 +43,8 @@ public class BlogPostVersionRepository : CosmosDbRepository<BlogPostVersion>, IB
     public async Task<IEnumerable<BlogPostVersion>> GetVersionsForContentAsync(string contentId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .Where(v => v.GroupKey == "BlogPostVersion" && v.ContentId == contentId && !v.IsDeleted)
+            .WithPartitionKey("BlogPostVersion")
+            .Where(v => v.ContentId == contentId && !v.IsDeleted)
             .OrderByDescending(v => v.VersionNumber)
             .ToListAsync(cancellationToken);
     }
@@ -56,7 +57,8 @@ public class BlogPostVersionRepository : CosmosDbRepository<BlogPostVersion>, IB
         try
         {
             var latest = await _dbSet
-                .Where(v => v.GroupKey == "BlogPostVersion" && v.ContentId == contentId && !v.IsDeleted)
+                .WithPartitionKey("BlogPostVersion")
+                .Where(v => v.ContentId == contentId && !v.IsDeleted)
                 .OrderByDescending(v => v.VersionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
