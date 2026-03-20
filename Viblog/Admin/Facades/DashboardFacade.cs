@@ -1,3 +1,4 @@
+using System.Globalization;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
@@ -103,7 +104,7 @@ public class DashboardFacade : IDashboardFacade
                 1, 0, 0, 0,
                 TimeSpan.Zero))
             .OrderBy(g => g.Key)
-            .Select(g => new ViewsByMonthData(g.Key.ToString("MMMM"), g.Sum(p => p.ViewCount)))
+            .Select(g => new ViewsByMonthData(g.Key.ToString("MMMM", CultureInfo.InvariantCulture), g.Sum(p => p.ViewCount)))
             .ToList();
     }
 
