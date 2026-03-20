@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
@@ -12,8 +13,11 @@ namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 /// </summary>
 public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
 {
-    public CosmosDbPageRepository(ApplicationDbContext context) : base(context)
+    private readonly ILogger<CosmosDbPageRepository> _logger;
+
+    public CosmosDbPageRepository(ApplicationDbContext context, ILogger<CosmosDbPageRepository> logger) : base(context)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
@@ -116,16 +120,59 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
-        var page = await _dbSet
-            .WithPartitionKey(partitionKey)
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
-
-        if (page != null)
+        try
         {
-            page.ViewCount++;
-            page.UpdatedAt = DateTimeOffset.UtcNow;
-            _dbSet.Update(page);
-            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("Incrementing view count for Page {PageId} in partition {PartitionKey}", id, partitionKey);
+            
+            var page = await _dbSet
+                .WithPartitionKey(partitionKey)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+
+            if (page != null)
+            {
+                page.ViewCount++;
+                page.UpdatedAt = DateTimeOffset.UtcNow;
+                _dbSet.Update(page);
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogDebug("Successfully incremented view count for Page {PageId}. New count: {ViewCount}", id, page.ViewCount);
+            }
+            else
+            {
+                _logger.LogWarning("Page {PageId} not found in partition {PartitionKey} for view count increment. " +
+                                  "Attempting cross-partition fallback.", id, partitionKey);
+                
+                // Try fallback cross-partition query
+                var pageFallback = await _dbSet
+                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+                
+                if (pageFallback != null)
+                {
+                    pageFallback.ViewCount++;
+                    pageFallback.UpdatedAt = DateTimeOffset.UtcNow;
+                    _dbSet.Update(pageFallback);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Cross-partition fallback succeeded for Page {PageId}. Found in partition {ActualPartitionKey}. New count: {ViewCount}",
+                        id, pageFallback.GroupKey, pageFallback.ViewCount);
+                }
+                else
+                {
+                    var warnMsg = $"Page {id} not found in any partition. View count increment skipped. " +
+                                 $"Attempted partition: {partitionKey}";
+                    _logger.LogWarning(warnMsg);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"Error incrementing view count for Page {id} in partition {partitionKey}. " +
+                               $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMsg);
+            
+            // Log but don't throw - view count increment is non-critical
+            // This prevents a non-critical operation from breaking the request
+            _logger.LogWarning("View count increment failed but continuing operation. " +
+                              "Page {PageId} may have incorrect view count. Details: {DiagnosticMessage}",
+                id, diagnosticMsg);
         }
     }
 

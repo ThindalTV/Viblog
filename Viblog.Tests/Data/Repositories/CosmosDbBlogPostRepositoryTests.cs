@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Shared.Data.Sources.CosmosDb.Data;
 using Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
@@ -46,6 +48,12 @@ public class CosmosDbBlogPostRepositoryTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options);
 
+    private static ILogger<CosmosDbBlogPostRepository> CreateMockLogger()
+    {
+        var mockLogger = new Mock<ILogger<CosmosDbBlogPostRepository>>();
+        return mockLogger.Object;
+    }
+
     /// <summary>
     /// Spy subclass that:
     /// - Records whether LoadByPartitionKeyForDeleteAsync was called and with which partition key
@@ -53,8 +61,8 @@ public class CosmosDbBlogPostRepositoryTests
     /// Without the virtual method (i.e. before the fix), the spy can never be called, so
     /// FreshLoadAttempted stays false and the assertion fails — reproducing the bug.
     /// </summary>
-    private sealed class SpyBlogPostRepository(ApplicationDbContext context)
-        : CosmosDbBlogPostRepository(context)
+    private sealed class SpyBlogPostRepository(ApplicationDbContext context, ILogger<CosmosDbBlogPostRepository> logger)
+        : CosmosDbBlogPostRepository(context, logger)
     {
         public bool FreshLoadAttempted { get; private set; }
         public string? PartitionKeyUsedForDelete { get; private set; }
@@ -103,7 +111,8 @@ public class CosmosDbBlogPostRepositoryTests
     {
         // Arrange
         using var context = CreateInMemoryContext();
-        var repo = new SpyBlogPostRepository(context);
+        var logger = CreateMockLogger();
+        var repo = new SpyBlogPostRepository(context, logger);
 
         var post = CreateDraftPost();
         await repo.AddAsync(post, default);
@@ -131,7 +140,8 @@ public class CosmosDbBlogPostRepositoryTests
     public async Task UpdateAsync_WhenPartitionKeyChanges_MovesDocumentToNewPartition()
     {
         using var context = CreateInMemoryContext();
-        var repo = new SpyBlogPostRepository(context);
+        var logger = CreateMockLogger();
+        var repo = new SpyBlogPostRepository(context, logger);
 
         var post = CreateDraftPost();
         await repo.AddAsync(post, default);
@@ -161,7 +171,8 @@ public class CosmosDbBlogPostRepositoryTests
     public async Task UpdateAsync_WhenPartitionKeyUnchanged_DoesNotAttemptFreshLoad()
     {
         using var context = CreateInMemoryContext();
-        var repo = new SpyBlogPostRepository(context);
+        var logger = CreateMockLogger();
+        var repo = new SpyBlogPostRepository(context, logger);
 
         var post = CreateDraftPost();
         await repo.AddAsync(post, default);

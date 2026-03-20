@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
@@ -12,8 +13,11 @@ namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 /// </summary>
 public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPostRepository
 {
-    public CosmosDbBlogPostRepository(ApplicationDbContext context) : base(context)
+    private readonly ILogger<CosmosDbBlogPostRepository> _logger;
+
+    public CosmosDbBlogPostRepository(ApplicationDbContext context, ILogger<CosmosDbBlogPostRepository> logger) : base(context)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
@@ -51,6 +55,10 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         // This ensures we have the correct original partition key for comparison.
         if (string.IsNullOrEmpty(originalGroupKey))
         {
+            var diagnosticMsg = $"BlogPost {entity.Id} has empty GroupKey. Recalculating based on entity state. " +
+                               $"IsPublished={entity.IsPublished}, PublishedAt={entity.PublishedAt}";
+            _logger.LogWarning(diagnosticMsg);
+            
             // Temporarily determine what the current partition key should be
             if (entity.IsPublished && entity.PublishedAt.HasValue)
             {
@@ -60,7 +68,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
             {
                 originalGroupKey = "draft";
             }
-            // Note: We don't update entity.GroupKey here; we'll do that via SetPartitionKey() below
+            _logger.LogInformation("Recalculated partition key for BlogPost {PostId}: {PartitionKey}", entity.Id, originalGroupKey);
         }
 
         // Detach via Entry() BEFORE SetPartitionKey() mutates GroupKey.
@@ -73,30 +81,91 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         if (entity.GroupKey == originalGroupKey)
         {
             // Partition key unchanged — base.UpdateAsync re-attaches and updates normally.
+            _logger.LogDebug("Partition key unchanged for BlogPost {PostId}: {PartitionKey}. Using standard update.", entity.Id, entity.GroupKey);
             await base.UpdateAsync(entity, cancellationToken);
             return;
         }
 
         // Partition key changed (e.g. publish/unpublish moves between "draft" and year partition).
         // CosmosDB does not allow updating partition keys in place — delete old document then reinsert.
+        _logger.LogInformation("Partition key changed for BlogPost {PostId}: {OldKey} → {NewKey}. Performing delete and reinsert.",
+            entity.Id, originalGroupKey, entity.GroupKey);
+        
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Phase 1: delete using the original partition key.
         // Load the document fresh so EF Core has its full tracking metadata (__jObject / _etag).
         // Reusing the already-detached entity loses that metadata and causes a 404 in CosmosDB.
         var newGroupKey = entity.GroupKey;
-        var toDelete = await LoadByPartitionKeyForDeleteAsync(entity.Id, originalGroupKey, cancellationToken)
-            ?? throw new InvalidOperationException(
-                $"BlogPost '{entity.Id}' not found at partition key '{originalGroupKey}'. " +
-                "It may have already been moved or deleted.");
+        
+        // Try to load from the original partition. If not found, try searching all partitions as fallback.
+        BlogPost? toDelete = null;
+        string? fallbackAttemptInfo = null;
+        
+        try
+        {
+            toDelete = await LoadByPartitionKeyForDeleteAsync(entity.Id, originalGroupKey, cancellationToken);
+        }
+        catch (ArgumentException)
+        {
+            // Partition key was invalid, rethrow
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Any other error loading from the original partition, try a cross-partition query
+            // as a fallback to find the document in case it's in an unexpected partition
+            fallbackAttemptInfo = $"Primary partition query failed: {ex.GetType().Name}: {ex.Message}. ";
+            _logger.LogWarning(ex, "Failed to load BlogPost {PostId} from partition {PartitionKey}. Attempting cross-partition fallback.",
+                entity.Id, originalGroupKey);
+            
+            try
+            {
+                toDelete = await _dbSet
+                    .FirstOrDefaultAsync(e => e.Id == entity.Id && !e.IsDeleted, cancellationToken);
+                
+                if (toDelete != null)
+                {
+                    var fallbackSuccess = $"Cross-partition fallback succeeded for BlogPost {entity.Id}. Found in partition {toDelete.GroupKey}";
+                    _logger.LogInformation(fallbackSuccess);
+                    fallbackAttemptInfo += $"Fallback successful: {fallbackSuccess}";
+                }
+            }
+            catch (Exception fallbackEx)
+            {
+                // If fallback also fails, log and rethrow the original exception with diagnostic info
+                fallbackAttemptInfo += $"Fallback failed: {fallbackEx.GetType().Name}: {fallbackEx.Message}";
+                _logger.LogError(fallbackEx, "Cross-partition fallback also failed for BlogPost {PostId}. " +
+                                           "Primary failure: {PrimaryException}. Fallback failure: {FallbackException}",
+                    entity.Id, ex.Message, fallbackEx.Message);
+                
+                var diagnosticError = $"Failed to load BlogPost {entity.Id} for partition migration. " +
+                                    $"Attempted partition: {originalGroupKey}. " +
+                                    $"{fallbackAttemptInfo}";
+                throw new InvalidOperationException(diagnosticError, ex);
+            }
+        }
 
+        if (toDelete == null)
+        {
+            var errorMsg = $"BlogPost '{entity.Id}' not found at partition key '{originalGroupKey}'. " +
+                          $"It may have already been moved or deleted. Post state: " +
+                          $"IsPublished={entity.IsPublished}, PublishedAt={entity.PublishedAt}, GroupKey={originalGroupKey}. " +
+                          $"{fallbackAttemptInfo}";
+            _logger.LogError(errorMsg);
+            throw new InvalidOperationException(errorMsg);
+        }
+
+        _logger.LogDebug("Deleting BlogPost {PostId} from partition {OldPartitionKey}", entity.Id, originalGroupKey);
         _dbSet.Remove(toDelete);
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Successfully deleted BlogPost {PostId} from partition {OldPartitionKey}", entity.Id, originalGroupKey);
 
         // Phase 2: stage the reinsert with the new partition key.
         // The caller's SaveChangesAsync will commit the insert.
         // Use _dbSet.AddAsync directly to preserve the original CreatedAt.
         entity.GroupKey = newGroupKey;
+        _logger.LogDebug("Re-inserting BlogPost {PostId} into partition {NewPartitionKey}", entity.Id, newGroupKey);
         await _dbSet.AddAsync(entity, cancellationToken);
     }
 
@@ -106,13 +175,46 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
     /// Virtual so tests can override with an InMemory-compatible query
     /// (the InMemory provider does not support <c>WithPartitionKey</c>).
     /// </summary>
-    protected virtual Task<BlogPost?> LoadByPartitionKeyForDeleteAsync(
+    protected virtual async Task<BlogPost?> LoadByPartitionKeyForDeleteAsync(
         string id,
         string partitionKey,
-        CancellationToken cancellationToken) =>
-        _dbSet
-            .WithPartitionKey(partitionKey)
-            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        // Validate partition key to prevent invalid CosmosDB queries
+        if (string.IsNullOrWhiteSpace(partitionKey))
+        {
+            var error = $"Partition key cannot be null or empty. Entity ID: {id}. " +
+                       "This usually indicates a failure to properly calculate the partition key.";
+            _logger.LogError(error);
+            throw new ArgumentException(error, nameof(partitionKey));
+        }
+
+        try
+        {
+            _logger.LogDebug("Loading BlogPost {PostId} from partition {PartitionKey} for deletion", id, partitionKey);
+            var result = await _dbSet
+                .WithPartitionKey(partitionKey)
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            
+            if (result != null)
+            {
+                _logger.LogDebug("Successfully loaded BlogPost {PostId} from partition {PartitionKey}", id, partitionKey);
+            }
+            else
+            {
+                _logger.LogWarning("BlogPost {PostId} not found in partition {PartitionKey}", id, partitionKey);
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMessage = $"Error loading BlogPost {id} from partition {partitionKey}. " +
+                                   $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMessage);
+            throw new InvalidOperationException(diagnosticMessage, ex);
+        }
+    }
 
     /// <inheritdoc/>
     public virtual async Task<PagedResult<BlogPost>> GetPublishedPostsAsync(
@@ -274,16 +376,59 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
-        var post = await _dbSet
-            .WithPartitionKey(partitionKey)
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
-
-        if (post != null)
+        try
         {
-            post.ViewCount++;
-            post.UpdatedAt = DateTimeOffset.UtcNow;
-            _dbSet.Update(post);
-            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("Incrementing view count for BlogPost {PostId} in partition {PartitionKey}", id, partitionKey);
+            
+            var post = await _dbSet
+                .WithPartitionKey(partitionKey)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+
+            if (post != null)
+            {
+                post.ViewCount++;
+                post.UpdatedAt = DateTimeOffset.UtcNow;
+                _dbSet.Update(post);
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogDebug("Successfully incremented view count for BlogPost {PostId}. New count: {ViewCount}", id, post.ViewCount);
+            }
+            else
+            {
+                _logger.LogWarning("BlogPost {PostId} not found in partition {PartitionKey} for view count increment. " +
+                                  "Attempting cross-partition fallback.", id, partitionKey);
+                
+                // Try fallback cross-partition query
+                var postFallback = await _dbSet
+                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+                
+                if (postFallback != null)
+                {
+                    postFallback.ViewCount++;
+                    postFallback.UpdatedAt = DateTimeOffset.UtcNow;
+                    _dbSet.Update(postFallback);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Cross-partition fallback succeeded for BlogPost {PostId}. Found in partition {ActualPartitionKey}. New count: {ViewCount}",
+                        id, postFallback.GroupKey, postFallback.ViewCount);
+                }
+                else
+                {
+                    var warnMsg = $"BlogPost {id} not found in any partition. View count increment skipped. " +
+                                 $"Attempted partition: {partitionKey}";
+                    _logger.LogWarning(warnMsg);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"Error incrementing view count for BlogPost {id} in partition {partitionKey}. " +
+                               $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMsg);
+            
+            // Log but don't throw - view count increment is non-critical
+            // This prevents a non-critical operation from breaking the request
+            _logger.LogWarning("View count increment failed but continuing operation. " +
+                              "BlogPost {PostId} may have incorrect view count. Details: {DiagnosticMessage}",
+                id, diagnosticMsg);
         }
     }
 
