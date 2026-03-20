@@ -46,6 +46,23 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
         var originalGroupKey = entity.GroupKey;
 
+        // If GroupKey is empty or null, the entity was likely loaded without partition key context.
+        // Recalculate the current partition key based on the entity's state BEFORE any changes.
+        // This ensures we have the correct original partition key for comparison.
+        if (string.IsNullOrEmpty(originalGroupKey))
+        {
+            // Temporarily determine what the current partition key should be
+            if (entity.IsPublished && entity.PublishedAt.HasValue)
+            {
+                originalGroupKey = entity.PublishedAt.Value.Year.ToString();
+            }
+            else
+            {
+                originalGroupKey = "draft";
+            }
+            // Note: We don't update entity.GroupKey here; we'll do that via SetPartitionKey() below
+        }
+
         // Detach via Entry() BEFORE SetPartitionKey() mutates GroupKey.
         // Entry() does not trigger DetectChanges; ChangeTracker.Entries<T>() does.
         // If the entity is not tracked this is a no-op.

@@ -11,7 +11,7 @@
                                    Format="MMM dd, yyyy HH:mm"
                                    Width="100%" />
             <p class="schedule-picker-note">All times are UTC.</p>
-            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
+            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTime.UtcNow)
             {
                 <p class="schedule-picker-warning">The selected time must be in the future.</p>
             }
@@ -48,15 +48,30 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private DateTime? _selectedDate;
+    private DateTime? _previousInitialDate;
     private readonly DateTime _minDate = DateTime.UtcNow.AddMinutes(1);
 
     protected override void OnParametersSet()
     {
+        // Only reinitialize when the dialog becomes visible or InitialDate changes
         if (Visible)
         {
-            _selectedDate = InitialDate.HasValue
-                ? InitialDate.Value.UtcDateTime
-                : DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+            var initialDateValue = InitialDate?.UtcDateTime;
+            
+            // Reinitialize if this is the first time visible, or if InitialDate changed
+            if (_previousInitialDate != initialDateValue || _selectedDate == null)
+            {
+                _selectedDate = InitialDate.HasValue
+                    ? InitialDate.Value.UtcDateTime
+                    : DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+                
+                _previousInitialDate = initialDateValue;
+            }
+        }
+        else
+        {
+            // Reset tracking when dialog closes so we reinit on next open
+            _previousInitialDate = null;
         }
     }
 
