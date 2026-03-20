@@ -25,8 +25,26 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-        await base.AddAsync(entity, cancellationToken);
+        try
+        {
+            _logger.LogDebug("Adding BlogPost {PostId}. State: IsPublished={IsPublished}, PublishedAt={PublishedAt}, Slug={Slug}",
+                entity.Id, entity.IsPublished, entity.PublishedAt, entity.Slug);
+            
+            entity.SetPartitionKey(); // Ensure partition key is set based on publication date
+            _logger.LogDebug("Set partition key for BlogPost {PostId}: {PartitionKey}", entity.Id, entity.GroupKey);
+            
+            await base.AddAsync(entity, cancellationToken);
+            _logger.LogDebug("Successfully added BlogPost {PostId} to {PartitionKey}", entity.Id, entity.GroupKey);
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"Error adding BlogPost {entity.Id}. " +
+                               $"State: IsPublished={entity.IsPublished}, PublishedAt={entity.PublishedAt}, " +
+                               $"Slug={entity.Slug}, PartitionKey={entity.GroupKey}. " +
+                               $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMsg);
+            throw new InvalidOperationException(diagnosticMsg, ex);
+        }
     }
 
     /// <inheritdoc/>
@@ -34,13 +52,40 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        var entityList = entities.ToList();
-        foreach (var entity in entityList)
+        try
         {
-            entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-        }
+            var entityList = entities.ToList();
+            _logger.LogDebug("Adding {Count} BlogPosts. IDs: {PostIds}", 
+                entityList.Count, string.Join(", ", entityList.Select(e => e.Id)));
+            
+            foreach (var entity in entityList)
+            {
+                try
+                {
+                    entity.SetPartitionKey(); // Ensure partition key is set based on publication date
+                    _logger.LogDebug("Set partition key for BlogPost {PostId}: {PartitionKey}", entity.Id, entity.GroupKey);
+                }
+                catch (Exception ex)
+                {
+                    var diagnosticMsg = $"Error setting partition key for BlogPost {entity.Id}. " +
+                                       $"State: IsPublished={entity.IsPublished}, PublishedAt={entity.PublishedAt}, " +
+                                       $"Slug={entity.Slug}. " +
+                                       $"Exception: {ex.GetType().Name}: {ex.Message}";
+                    _logger.LogError(ex, diagnosticMsg);
+                    throw new InvalidOperationException(diagnosticMsg, ex);
+                }
+            }
 
-        await base.AddRangeAsync(entityList, cancellationToken);
+            await base.AddRangeAsync(entityList, cancellationToken);
+            _logger.LogInformation("Successfully added {Count} BlogPosts to CosmosDB", entityList.Count);
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"Error adding batch of BlogPosts. " +
+                               $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMsg);
+            throw new InvalidOperationException(diagnosticMsg, ex);
+        }
     }
 
     /// <inheritdoc/>
