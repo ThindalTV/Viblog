@@ -1,3 +1,5 @@
+using Microsoft.Azure.Cosmos;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Viblog.Infrastructure.Data.Repositories;
@@ -67,6 +69,27 @@ public static class CosmosDbServiceExtensions
         {
             logger?.LogInformation("Ensuring CosmosDB database and containers are created...");
             await dbContext.Database.EnsureCreatedAsync();
+
+            var cosmosClient = dbContext.Database.GetCosmosClient();
+            var databaseId = dbContext.Database.GetCosmosDatabaseId();
+            var database = cosmosClient.GetDatabase(databaseId);
+
+            var containers = new[]
+            {
+                "Users",
+                "BlogPosts",
+                "Pages",
+                "BlogPostVersions",
+                "PageVersions",
+                "MediaItems",
+                "AuditLogs"
+            };
+
+            foreach (var containerName in containers)
+            {
+                await database.CreateContainerIfNotExistsAsync(new ContainerProperties(containerName, "/GroupKey"));
+            }
+
             logger?.LogInformation("CosmosDB database and containers are ready.");
         }
         catch (Exception ex)

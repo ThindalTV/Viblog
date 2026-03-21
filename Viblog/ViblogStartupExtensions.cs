@@ -247,6 +247,8 @@ public static class ViblogStartupExtensions
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
 
+            await app.Services.EnsureCosmosDbCreatedAsync();
+
             using var scope = app.Services.CreateScope();
             var syncService = scope.ServiceProvider.GetService<IIdentityProviderSyncService>();
             var userManagementService = scope.ServiceProvider.GetService<IUserManagementService>();
