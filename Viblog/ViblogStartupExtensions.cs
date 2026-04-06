@@ -216,8 +216,9 @@ public static class ViblogStartupExtensions
     extension(WebApplicationBuilder builder)
     {
         /// <summary>
-        /// Configures builder-level Viblog infrastructure (Aspire CosmosDB binding, Blazor circuit options).
-        /// Call after <see cref="AddViblogServices"/>.
+        /// Configures builder-level Viblog infrastructure, including <see cref="AddViblogServices"/>
+        /// registrations and Aspire CosmosDB binding.
+        /// Do not call <see cref="AddViblogServices"/> separately before this method.
         /// </summary>
         /// <param name="configure">Optional callback to configure host-level Viblog options.</param>
         public WebApplicationBuilder AddViblog(Action<ViblogOptions>? configure = null)
