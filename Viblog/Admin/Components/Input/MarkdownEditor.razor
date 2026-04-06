@@ -3,12 +3,22 @@
 @using Viblog.Admin.Services
 @using Viblog.Admin.Services.Dialogs
 @using Viblog.Infrastructure.Services
+@using Viblog.Shared.Configuration
+@using Microsoft.Extensions.Options
 @using Microsoft.JSInterop
 
 @inject IMarkdownService MarkdownService
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
+@inject IOptions<ViblogOptions> ViblogOptions
 @implements IAsyncDisposable
+
+@if (!string.IsNullOrWhiteSpace(ViblogOptions.Value.PreviewStylesheetPath))
+{
+    <HeadContent>
+        <link rel="stylesheet" href="@ViblogOptions.Value.PreviewStylesheetPath" />
+    </HeadContent>
+}
 
 <div class="markdown-editor">
     @if (!string.IsNullOrWhiteSpace(Label))
