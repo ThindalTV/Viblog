@@ -133,9 +133,6 @@ public class MediaService : IMediaService
             var iconPath = MediaIconHelper.GetFileTypeIcon(mimeType);
             mediaItem.PreviewUrl = iconPath ?? storageResult.PublicUrl; // Use actual image URL if icon is null
 
-            // Update partition key
-            mediaItem.UpdatePartitionKey();
-
             // Save to database
             await _metadataRepository.AddAsync(mediaItem, cancellationToken);
             await _metadataRepository.SaveChangesAsync(cancellationToken);

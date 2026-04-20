@@ -196,48 +196,6 @@ public class MediaServiceTests
         Assert.Equal("Storage error", exception.Message);
     }
 
-    [Fact]
-    public async Task UploadAsync_SetsCorrectPartitionKey()
-    {
-        // Arrange
-        var fileName = "test.jpg";
-        using var stream = new MemoryStream(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 });
-        var now = DateTime.UtcNow;
-        var expectedPartitionKey = now.ToString("yyyy-MM");
-
-        var storageResult = new MediaStorageResult
-        {
-            StoragePath = "2024/01/test.jpg",
-            PublicUrl = "https://cdn.example.com/test.jpg",
-            FileSize = 512
-        };
-
-        _mockStorageRepository
-            .Setup(x => x.UploadAsync(fileName, It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(storageResult);
-
-        _mockMetadataExtractor
-            .Setup(x => x.ExtractMetadataAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<string, string>());
-
-        MediaItem? capturedItem = null;
-        _mockMetadataRepository
-            .Setup(x => x.AddAsync(It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()))
-            .Callback<MediaItem, CancellationToken>((item, _) => capturedItem = item)
-            .Returns(Task.CompletedTask);
-
-        _mockMetadataRepository
-            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
-
-        // Act
-        var result = await _service.UploadAsync(fileName, stream, "image/jpeg", "/");
-
-        // Assert
-        Assert.NotNull(capturedItem);
-        Assert.Equal(expectedPartitionKey, capturedItem.GroupKey);
-    }
-
     [Theory]
     [InlineData("/")]
     [InlineData("/images")]

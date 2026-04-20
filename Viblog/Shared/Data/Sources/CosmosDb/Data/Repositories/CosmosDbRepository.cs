@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Viblog.Infrastructure.Data.Common;
@@ -13,6 +14,20 @@ namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 /// <typeparam name="TEntity">The entity type that inherits from BaseEntity</typeparam>
 public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : BaseEntity
 {
+    /// <summary>
+    /// Constant partition key per entity type. Because each type has fewer than ~1 000
+    /// documents, a single logical partition per type is the simplest strategy and
+    /// avoids cross-partition fan-out on every query.
+    /// </summary>
+    private static readonly FrozenDictionary<Type, string> PartitionKeys = new Dictionary<Type, string>
+    {
+        [typeof(BlogPost)] = "blogpost",
+        [typeof(Page)] = "page",
+        [typeof(MediaItem)] = "media",
+        [typeof(AuditLog)] = "auditlog",
+        [typeof(BlogPostVersion)] = "blogpostversion",
+    }.ToFrozenDictionary();
+
     protected readonly ApplicationDbContext _context;
     protected readonly DbSet<TEntity> _dbSet;
 
@@ -93,6 +108,17 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
         return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Assigns the constant partition key for this entity type.
+    /// </summary>
+    private static void AssignPartitionKey(BaseEntity entity)
+    {
+        if (PartitionKeys.TryGetValue(entity.GetType(), out var key))
+        {
+            entity.GroupKey = key;
+        }
+    }
+
     /// <inheritdoc/>
     public virtual async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
@@ -100,6 +126,7 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
 
         entity.CreatedAt = DateTimeOffset.UtcNow;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
+        AssignPartitionKey(entity);
 
         await _dbSet.AddAsync(entity, cancellationToken);
     }
@@ -116,6 +143,7 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
         {
             entity.CreatedAt = now;
             entity.UpdatedAt = now;
+            AssignPartitionKey(entity);
         }
 
         await _dbSet.AddRangeAsync(entityList, cancellationToken);
@@ -127,25 +155,15 @@ public class CosmosDbRepository<TEntity> : IRepository<TEntity> where TEntity : 
         ArgumentNullException.ThrowIfNull(entity);
 
         entity.UpdatedAt = DateTimeOffset.UtcNow;
-        
-        // Check if the entity is already being tracked (match by ID only, partition key can change)
+
+        // Check if the entity is already being tracked (match by ID)
         var tracked = _context.ChangeTracker.Entries<TEntity>()
             .FirstOrDefault(e => e.Entity.Id == entity.Id);
 
         if (tracked != null)
         {
-            // Check if partition key has changed (Cosmos DB doesn't allow partition key updates)
-            if (tracked.Entity.GroupKey != entity.GroupKey)
-            {
-                // For Cosmos DB: partition key change requires delete + add
-                _dbSet.Remove(tracked.Entity);
-                _dbSet.Add(entity);
-            }
-            else
-            {
-                // Update the tracked entity's properties (partition key unchanged)
-                _context.Entry(tracked.Entity).CurrentValues.SetValues(entity);
-            }
+            // Update the tracked entity's properties
+            _context.Entry(tracked.Entity).CurrentValues.SetValues(entity);
         }
         else
         {

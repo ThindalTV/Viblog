@@ -3,7 +3,6 @@ using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Shared.Data.Sources.CosmosDb.Data.Entities;
 
 namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
@@ -16,86 +15,6 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
     {
     }
 
-    /// <inheritdoc/>
-    public override async Task AddAsync(BlogPost entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-        await base.AddAsync(entity, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override async Task AddRangeAsync(IEnumerable<BlogPost> entities, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entities);
-
-        var entityList = entities.ToList();
-        foreach (var entity in entityList)
-        {
-            entity.SetPartitionKey(); // Ensure partition key is set based on publication date
-        }
-
-        await base.AddRangeAsync(entityList, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override async Task UpdateAsync(BlogPost entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        var originalGroupKey = entity.GroupKey;
-
-        // Detach via Entry() BEFORE SetPartitionKey() mutates GroupKey.
-        // Entry() does not trigger DetectChanges; ChangeTracker.Entries<T>() does.
-        // If the entity is not tracked this is a no-op.
-        _context.Entry(entity).State = EntityState.Detached;
-
-        entity.SetPartitionKey(); // Safe to mutate now that entity is detached
-
-        if (entity.GroupKey == originalGroupKey)
-        {
-            // Partition key unchanged — base.UpdateAsync re-attaches and updates normally.
-            await base.UpdateAsync(entity, cancellationToken);
-            return;
-        }
-
-        // Partition key changed (e.g. publish/unpublish moves between "draft" and year partition).
-        // CosmosDB does not allow updating partition keys in place — delete old document then reinsert.
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
-
-        // Phase 1: delete using the original partition key.
-        // Load the document fresh so EF Core has its full tracking metadata (__jObject / _etag).
-        // Reusing the already-detached entity loses that metadata and causes a 404 in CosmosDB.
-        var newGroupKey = entity.GroupKey;
-        var toDelete = await LoadByPartitionKeyForDeleteAsync(entity.Id, originalGroupKey, cancellationToken)
-            ?? throw new InvalidOperationException(
-                $"BlogPost '{entity.Id}' not found at partition key '{originalGroupKey}'. " +
-                "It may have already been moved or deleted.");
-
-        _dbSet.Remove(toDelete);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Phase 2: stage the reinsert with the new partition key.
-        // The caller's SaveChangesAsync will commit the insert.
-        // Use _dbSet.AddAsync directly to preserve the original CreatedAt.
-        entity.GroupKey = newGroupKey;
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
-
-    /// <summary>
-    /// Loads a blog post by id within a specific partition key, used by the
-    /// partition-key-change delete path in <see cref="UpdateAsync"/>.
-    /// Virtual so tests can override with an InMemory-compatible query
-    /// (the InMemory provider does not support <c>WithPartitionKey</c>).
-    /// </summary>
-    protected virtual Task<BlogPost?> LoadByPartitionKeyForDeleteAsync(
-        string id,
-        string partitionKey,
-        CancellationToken cancellationToken) =>
-        _dbSet
-            .WithPartitionKey(partitionKey)
-            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
     /// <inheritdoc/>
     public virtual async Task<PagedResult<BlogPost>> GetPublishedPostsAsync(

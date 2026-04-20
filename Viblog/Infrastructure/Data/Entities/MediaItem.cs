@@ -100,11 +100,4 @@ public class MediaItem : BaseEntity
     /// </summary>
     public string? ErrorMessage { get; set; }
 
-    /// <summary>
-    /// Updates the partition key based on creation date (format: yyyy-MM)
-    /// </summary>
-    public void UpdatePartitionKey()
-    {
-        GroupKey = CreatedAt.ToString("yyyy-MM");
     }
-}

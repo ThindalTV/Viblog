@@ -3,7 +3,6 @@ using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Shared.Data.Sources.CosmosDb.Data.Entities;
 
 namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
@@ -16,37 +15,6 @@ public class CosmosDbPageRepository : CosmosDbRepository<Page>, IPageRepository
     {
     }
 
-    /// <inheritdoc/>
-    public override async Task AddAsync(Page entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        entity.SetPartitionKey();
-        await base.AddAsync(entity, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override async Task AddRangeAsync(IEnumerable<Page> entities, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entities);
-
-        var entityList = entities.ToList();
-        foreach (var entity in entityList)
-        {
-            entity.SetPartitionKey();
-        }
-
-        await base.AddRangeAsync(entityList, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override Task UpdateAsync(Page entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        entity.SetPartitionKey();
-        return base.UpdateAsync(entity, cancellationToken);
-    }
 
     /// <inheritdoc/>
     public virtual async Task<Page?> GetBySlugAsync(

@@ -55,5 +55,8 @@
 		<PackageReference Include="Markdig" Version="1.0.0" />
 		<PackageReference Include="SkiaSharp" Version="3.119.2" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Shared\Data\Sources\CosmosDb\Data\Entities\" />
+	</ItemGroup>
 
 </Project>

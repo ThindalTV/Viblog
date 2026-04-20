@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Repositories;
-using Viblog.Shared.Data.Sources.CosmosDb.Data.Entities;
 
 namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 
@@ -16,36 +15,6 @@ public class CosmosDbAuditLogRepository : CosmosDbRepository<AuditLog>, IAuditLo
     }
 
     /// <inheritdoc/>
-    public override async Task AddAsync(AuditLog entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        entity.SetPartitionKey();
-        await base.AddAsync(entity, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override async Task AddRangeAsync(IEnumerable<AuditLog> entities, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entities);
-
-        var entityList = entities.ToList();
-        foreach (var entity in entityList)
-        {
-            entity.SetPartitionKey();
-        }
-
-        await base.AddRangeAsync(entityList, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public override Task UpdateAsync(AuditLog entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        entity.SetPartitionKey();
-        return base.UpdateAsync(entity, cancellationToken);
-    }
 
     /// <inheritdoc/>
     public virtual async Task<PagedResult<AuditLog>> GetByUserIdAsync(
