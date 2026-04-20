@@ -35,6 +35,7 @@ public class PostsAdminFacadePublishTests
 
         _facade = new PostsAdminFacade(
             _mockRepository.Object,
+            Mock.Of<ILogger<PostsAdminFacade>>(),
             _mockSchedulingService.Object,
             httpContextAccessor: CreateMockHttpContextAccessor());
     }

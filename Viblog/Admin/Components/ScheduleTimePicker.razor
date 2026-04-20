@@ -12,7 +12,7 @@
                    @onchange="OnDateChanged"
                    class="form-control" />
             <p class="schedule-picker-note">All times are UTC.</p>
-            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
+            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTime.UtcNow)
             {
                 <p class="schedule-picker-warning">The selected time must be in the future.</p>
             }
@@ -49,6 +49,7 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private DateTime? _selectedDate;
+    private DateTime? _previousInitialDate;
     private readonly DateTime _minDate = DateTime.UtcNow.AddMinutes(1);
     private bool _previousVisible;
 

@@ -33,24 +33,33 @@ public class ContentVersionService
     {
         _logger.LogInformation("Promoting Draft to Live for content {ContentId}", content.Id);
 
-        // Clone Draft to Live
-        var draftContent = content.GetDraftContent();
-
-        if (draftContent == null)
+        try
         {
-            throw new InvalidOperationException("Cannot publish content without Draft");
+            // Clone Draft to Live
+            var draftContent = content.GetDraftContent();
+
+            if (draftContent == null)
+            {
+                throw new InvalidOperationException("Cannot publish content without Draft");
+            }
+
+            var clonedContent = CloneContent(draftContent);
+            content.SetLiveContent(clonedContent);
+
+            // Create version snapshot (saves to repository)
+            await CreatePublishedSnapshotAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
+
+            // Apply retention policy
+            await ApplyRetentionPolicyAsync(content, cancellationToken);
+
+            _logger.LogInformation("Draft promoted to Live for content {ContentId}", content.Id);
         }
-
-        var clonedContent = CloneContent(draftContent);
-        content.SetLiveContent(clonedContent);
-
-        // Create version snapshot (saves to repository)
-        await CreatePublishedSnapshotAsync(content, publishedBy, publishedByName, changeNote, cancellationToken);
-
-        // Apply retention policy
-        await ApplyRetentionPolicyAsync(content, cancellationToken);
-
-        _logger.LogInformation("Draft promoted to Live for content {ContentId}", content.Id);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "PromoteDraftToLiveAsync failed for content {ContentId}. Exception: {ExceptionType}: {ExceptionMessage}",
+                content.Id, ex.GetType().Name, ex.Message);
+            throw new InvalidOperationException($"Failed to promote draft to live for content '{content.Id}'. {ex.GetType().Name}: {ex.Message}", ex);
+        }
     }
 
     /// <summary>
@@ -59,59 +68,68 @@ public class ContentVersionService
     /// </summary>
     public virtual async Task CreatePublishedSnapshotAsync(ISchedulableContent content, string publishedBy, string? publishedByName = null, string? changeNote = null, CancellationToken cancellationToken = default)
     {
-        if (content is BlogPost blogPost)
+        try
         {
-            if (blogPost.Live == null)
+            if (content is BlogPost blogPost)
             {
-                _logger.LogWarning("Cannot create snapshot for BlogPost {ContentId} - no Live version", content.Id);
-                return;
+                if (blogPost.Live == null)
+                {
+                    _logger.LogWarning("Cannot create snapshot for BlogPost {ContentId} - no Live version", content.Id);
+                    return;
+                }
+
+                var versionNumber = await _blogPostVersionRepository.GetLatestVersionNumberAsync(blogPost.Id, cancellationToken) + 1;
+
+                var snapshot = new BlogPostVersion
+                {
+                    ContentId = blogPost.Id,
+                    Content = CloneContent(blogPost.Live) as BlogPostContent ?? throw new InvalidOperationException("Failed to clone BlogPostContent"),
+                    PublishedAt = DateTimeOffset.UtcNow,
+                    PublishedBy = publishedBy,
+                    PublishedByName = publishedByName ?? publishedBy,
+                    ChangeNote = changeNote,
+                    VersionNumber = versionNumber
+                };
+
+                await _blogPostVersionRepository.AddAsync(snapshot, cancellationToken);
+                // Do not call SaveChangesAsync here — the caller commits both the version
+                // snapshot and the blog post together in a single unit of work.
+
+                _logger.LogInformation("Created version {Version} for BlogPost {ContentId}", versionNumber, content.Id);
             }
-
-            var versionNumber = await _blogPostVersionRepository.GetLatestVersionNumberAsync(blogPost.Id, cancellationToken) + 1;
-
-            var snapshot = new BlogPostVersion
+            else if (content is Page page)
             {
-                ContentId = blogPost.Id,
-                Content = CloneContent(blogPost.Live) as BlogPostContent ?? throw new InvalidOperationException("Failed to clone BlogPostContent"),
-                PublishedAt = DateTimeOffset.UtcNow,
-                PublishedBy = publishedBy,
-                PublishedByName = publishedByName ?? publishedBy,
-                ChangeNote = changeNote,
-                VersionNumber = versionNumber
-            };
+                if (page.Live == null)
+                {
+                    _logger.LogWarning("Cannot create snapshot for Page {ContentId} - no Live version", content.Id);
+                    return;
+                }
 
-            await _blogPostVersionRepository.AddAsync(snapshot, cancellationToken);
-            // Do not call SaveChangesAsync here — the caller commits both the version
-            // snapshot and the blog post together in a single unit of work.
+                var versionNumber = await _pageVersionRepository.GetLatestVersionNumberAsync(page.Id, cancellationToken) + 1;
 
-            _logger.LogInformation("Created version {Version} for BlogPost {ContentId}", versionNumber, content.Id);
+                var snapshot = new PageVersion
+                {
+                    ContentId = page.Id,
+                    Content = CloneContent(page.Live) as PageContent ?? throw new InvalidOperationException("Failed to clone PageContent"),
+                    PublishedAt = DateTimeOffset.UtcNow,
+                    PublishedBy = publishedBy,
+                    PublishedByName = publishedByName ?? publishedBy,
+                    ChangeNote = changeNote,
+                    VersionNumber = versionNumber
+                };
+
+                await _pageVersionRepository.AddAsync(snapshot, cancellationToken);
+                // Do not call SaveChangesAsync here — the caller commits both the version
+                // snapshot and the page together in a single unit of work.
+
+                _logger.LogInformation("Created version {Version} for Page {ContentId}", versionNumber, content.Id);
+            }
         }
-        else if (content is Page page)
+        catch (Exception ex)
         {
-            if (page.Live == null)
-            {
-                _logger.LogWarning("Cannot create snapshot for Page {ContentId} - no Live version", content.Id);
-                return;
-            }
-
-            var versionNumber = await _pageVersionRepository.GetLatestVersionNumberAsync(page.Id, cancellationToken) + 1;
-
-            var snapshot = new PageVersion
-            {
-                ContentId = page.Id,
-                Content = CloneContent(page.Live) as PageContent ?? throw new InvalidOperationException("Failed to clone PageContent"),
-                PublishedAt = DateTimeOffset.UtcNow,
-                PublishedBy = publishedBy,
-                PublishedByName = publishedByName ?? publishedBy,
-                ChangeNote = changeNote,
-                VersionNumber = versionNumber
-            };
-
-            await _pageVersionRepository.AddAsync(snapshot, cancellationToken);
-            // Do not call SaveChangesAsync here — the caller commits both the version
-            // snapshot and the page together in a single unit of work.
-
-            _logger.LogInformation("Created version {Version} for Page {ContentId}", versionNumber, content.Id);
+            _logger.LogError(ex, "CreatePublishedSnapshotAsync failed for content {ContentId}. Exception: {ExceptionType}: {ExceptionMessage}",
+                content.Id, ex.GetType().Name, ex.Message);
+            throw new InvalidOperationException($"Failed to create published snapshot for content '{content.Id}'. {ex.GetType().Name}: {ex.Message}", ex);
         }
     }
 

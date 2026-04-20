@@ -28,6 +28,7 @@ using Viblog.Infrastructure.Services;
 using Viblog.Shared;
 using Viblog.Shared.Configuration;
 using Viblog.Shared.Data.Seeders;
+using Microsoft.Extensions.Options;
 using Viblog.Shared.Data.Sources.AzureStorage;
 using Viblog.Shared.Data.Sources.CosmosDb;
 using Viblog.Shared.Data.Sources.CosmosDb.Data;
@@ -212,11 +213,17 @@ public static class ViblogStartupExtensions
     extension(WebApplicationBuilder builder)
     {
         /// <summary>
-        /// Configures builder-level Viblog infrastructure (Aspire CosmosDB binding, Blazor circuit options).
-        /// Call after <see cref="AddViblogServices"/>.
+        /// Configures builder-level Viblog infrastructure, including <see cref="AddViblogServices"/>
+        /// registrations and Aspire CosmosDB binding.
+        /// Do not call <see cref="AddViblogServices"/> separately before this method.
         /// </summary>
-        public WebApplicationBuilder AddViblog()
+        /// <param name="configure">Optional callback to configure host-level Viblog options.</param>
+        public WebApplicationBuilder AddViblog(Action<ViblogOptions>? configure = null)
         {
+            var options = new ViblogOptions();
+            configure?.Invoke(options);
+            builder.Services.AddSingleton(Options.Create(options));
+
             builder.Services.AddViblogServices();
             builder.AddCosmosDbContext<ApplicationDbContext>("aspireCosmosDatabase");
             return builder;
@@ -243,6 +250,8 @@ public static class ViblogStartupExtensions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
+
+            await app.Services.EnsureCosmosDbCreatedAsync();
 
             using var scope = app.Services.CreateScope();
             var syncService = scope.ServiceProvider.GetService<IIdentityProviderSyncService>();

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Viblog.Infrastructure.Data.Entities.Content;
 using Viblog.Shared.Data.Sources.CosmosDb.Data;
 using Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;

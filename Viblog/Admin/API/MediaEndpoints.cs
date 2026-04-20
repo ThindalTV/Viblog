@@ -38,11 +38,13 @@ public static class MediaEndpoints
         // CRUD endpoints
         group.MapGet("/{id}", GetMediaItemAsync)
             .WithName("GetMediaItem")
-            .WithDescription("Get a media item by ID");
+            .WithDescription("Get a media item by ID")
+            .RequireAuthorization("Admin");
 
         group.MapGet("/", GetMediaItemsAsync)
             .WithName("GetMediaItems")
-            .WithDescription("Get media items with optional filtering");
+            .WithDescription("Get media items with optional filtering")
+            .RequireAuthorization("Admin");
 
         group.MapPut("/{id}/metadata", UpdateMetadataAsync)
             .WithName("UpdateMediaMetadata")

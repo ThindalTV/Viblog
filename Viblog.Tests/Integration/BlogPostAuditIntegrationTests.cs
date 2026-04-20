@@ -306,6 +306,7 @@ public class BlogTestFixture : IDisposable
         // Initialize facade
         PostsAdminFacade = new PostsAdminFacade(
             BlogPostRepository,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<PostsAdminFacade>.Instance,
             schedulingService,
             AuditLogService,
             httpContextAccessor);

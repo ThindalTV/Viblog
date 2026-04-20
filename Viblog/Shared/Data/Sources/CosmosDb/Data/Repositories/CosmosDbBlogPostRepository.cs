@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Viblog.Infrastructure.Data.Common;
 using Viblog.Infrastructure.Data.Entities;
 using Viblog.Infrastructure.Data.Entities.Content;
@@ -11,7 +12,9 @@ namespace Viblog.Shared.Data.Sources.CosmosDb.Data.Repositories;
 /// </summary>
 public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPostRepository
 {
-    public CosmosDbBlogPostRepository(ApplicationDbContext context) : base(context)
+    private readonly ILogger<CosmosDbBlogPostRepository> _logger;
+
+    public CosmosDbBlogPostRepository(ApplicationDbContext context, ILogger<CosmosDbBlogPostRepository> logger) : base(context)
     {
     }
 
@@ -176,16 +179,59 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
-        var post = await _dbSet
-            .WithPartitionKey(partitionKey)
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
-
-        if (post != null)
+        try
         {
-            post.ViewCount++;
-            post.UpdatedAt = DateTimeOffset.UtcNow;
-            _dbSet.Update(post);
-            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("Incrementing view count for BlogPost {PostId} in partition {PartitionKey}", id, partitionKey);
+            
+            var post = await _dbSet
+                .WithPartitionKey(partitionKey)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+
+            if (post != null)
+            {
+                post.ViewCount++;
+                post.UpdatedAt = DateTimeOffset.UtcNow;
+                _dbSet.Update(post);
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogDebug("Successfully incremented view count for BlogPost {PostId}. New count: {ViewCount}", id, post.ViewCount);
+            }
+            else
+            {
+                _logger.LogWarning("BlogPost {PostId} not found in partition {PartitionKey} for view count increment. " +
+                                  "Attempting cross-partition fallback.", id, partitionKey);
+                
+                // Try fallback cross-partition query
+                var postFallback = await _dbSet
+                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+                
+                if (postFallback != null)
+                {
+                    postFallback.ViewCount++;
+                    postFallback.UpdatedAt = DateTimeOffset.UtcNow;
+                    _dbSet.Update(postFallback);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Cross-partition fallback succeeded for BlogPost {PostId}. Found in partition {ActualPartitionKey}. New count: {ViewCount}",
+                        id, postFallback.GroupKey, postFallback.ViewCount);
+                }
+                else
+                {
+                    var warnMsg = $"BlogPost {id} not found in any partition. View count increment skipped. " +
+                                 $"Attempted partition: {partitionKey}";
+                    _logger.LogWarning(warnMsg);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"Error incrementing view count for BlogPost {id} in partition {partitionKey}. " +
+                               $"Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, diagnosticMsg);
+            
+            // Log but don't throw - view count increment is non-critical
+            // This prevents a non-critical operation from breaking the request
+            _logger.LogWarning("View count increment failed but continuing operation. " +
+                              "BlogPost {PostId} may have incorrect view count. Details: {DiagnosticMessage}",
+                id, diagnosticMsg);
         }
     }
 
@@ -297,5 +343,34 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
                         p.Schedule.Status == ContentStatus.Scheduled &&
                         p.Schedule.ScheduledPublishDate <= now)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("SaveChangesAsync called for BlogPost context. Pending changes: {ChangeCount}",
+            _context.ChangeTracker.Entries().Count(e => e.State != Microsoft.EntityFrameworkCore.EntityState.Unchanged && e.State != Microsoft.EntityFrameworkCore.EntityState.Detached));
+
+        try
+        {
+            var result = await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("SaveChangesAsync completed successfully. Rows affected: {RowsAffected}", result);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var diagnosticMsg = $"SaveChangesAsync failed. Exception: {ex.GetType().Name}: {ex.Message}";
+            _logger.LogError(ex, "SaveChangesAsync failed for BlogPost context. Exception: {ExceptionType}: {ExceptionMessage}",
+                ex.GetType().Name, ex.Message);
+
+            // Log tracked entity state to help diagnose partition key / CosmosDB issues
+            foreach (var entry in _context.ChangeTracker.Entries<BlogPost>())
+            {
+                _logger.LogError("Tracked BlogPost entry during failed save: Id={PostId}, State={State}, GroupKey={GroupKey}, IsPublished={IsPublished}, PublishedAt={PublishedAt}",
+                    entry.Entity.Id, entry.State, entry.Entity.GroupKey, entry.Entity.IsPublished, entry.Entity.PublishedAt);
+            }
+
+            throw new InvalidOperationException(diagnosticMsg, ex);
+        }
     }
 }

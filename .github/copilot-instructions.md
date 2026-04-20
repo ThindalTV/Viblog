@@ -44,6 +44,9 @@ Blog components:
 - Constants: PascalCase
 - Private fields: _camelCase (with underscore prefix)
 
+### Formatting
+- Always use `CultureInfo.InvariantCulture` when calling `ToString()` with format specifiers (e.g., `.ToString("format", CultureInfo.InvariantCulture)`) to ensure consistent output regardless of system locale. This is especially important for month/date formatting, number formatting, and any culture-dependent string operations in Viblog library code.
+
 ## Development Guidelines
 
 ### Testing Requirements
@@ -81,15 +84,15 @@ Blog components:
 ## Specific Do's and Don'ts
 
 ### Do:
-- ? Follow the existing project structure
-- ? Use async/await for I/O operations
-- ? Validate inputs and handle edge cases
-- ? Keep methods focused and single-purpose
-- ? Use SASS for styling
+- Follow the existing project structure
+- Use async/await for I/O operations
+- Validate inputs and handle edge cases
+- Keep methods focused and single-purpose
+- Use SASS for styling
 
 ### Don't:
-- ? Mix different architectural patterns
-- ? Add dependencies without consideration
-- ? Ignore existing conventions
-- ? Leave commented-out code
-- ? Use bootstrap or any other CSS framework
+- Mix different architectural patterns
+- Add dependencies without consideration
+- Ignore existing conventions
+- Leave commented-out code
+- Use bootstrap or any other CSS framework
