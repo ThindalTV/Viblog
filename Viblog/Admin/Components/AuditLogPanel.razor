@@ -23,12 +23,10 @@
                     <span class="audit-log-timestamp" title="@log.Timestamp.ToString("u")">
                         @log.Timestamp.ToString("MMM dd, yyyy 'at' HH:mm")
                     </span>
-                    <span class="audit-log-user">@log.UserName</span>
-                    <span class="audit-log-action">@GetActionLabel(log.Action)</span>
-                    @if (!string.IsNullOrWhiteSpace(log.Description))
-                    {
+                    <div class="audit-log-details">
+                        <span class="audit-log-user">@log.UserName</span>
                         <span class="audit-log-description">@log.Description</span>
-                    }
+                    </div>
                 </li>
             }
         </ol>
@@ -102,18 +100,4 @@
             StateHasChanged();
         }
     }
-
-    private static string GetActionLabel(AuditAction action) => action switch
-    {
-        AuditAction.ContentCreated => "Created",
-        AuditAction.ContentUpdated => "Updated",
-        AuditAction.ContentDeleted => "Deleted",
-        AuditAction.ContentPublished => "Published",
-        AuditAction.ContentUnpublished => "Unpublished",
-        AuditAction.ContentScheduled => "Scheduled",
-        AuditAction.ContentScheduleUpdated => "Schedule updated",
-        AuditAction.ContentScheduleCancelled => "Schedule cancelled",
-        AuditAction.ContentOwnershipTransferred => "Ownership transferred",
-        _ => action.ToString()
-    };
 }
