@@ -38,6 +38,7 @@
     private bool _isRendered;
     private bool _shouldRenderContent = false;
     private IJSObjectReference? _module;
+    private bool _previousVisible = false;
 
     /// <summary>
     /// Title content for the dialog
@@ -70,10 +71,40 @@
     public string CssClass { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether the dialog is currently visible (supports two-way binding)
+    /// </summary>
+    [Parameter]
+    public bool Visible { get; set; }
+
+    /// <summary>
+    /// Callback when Visible changes (enables @bind-Visible)
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>
     /// Callback when the dialog is closed
     /// </summary>
     [Parameter]
     public EventCallback OnClose { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Handle Visible parameter changes
+        if (Visible != _previousVisible)
+        {
+            _previousVisible = Visible;
+
+            if (Visible)
+            {
+                await ShowAsync();
+            }
+            else
+            {
+                await CloseAsync();
+            }
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -160,6 +191,14 @@
 
     private async Task HandleClose()
     {
+        // Update Visible and notify parent
+        if (Visible)
+        {
+            Visible = false;
+            _previousVisible = false;
+            await VisibleChanged.InvokeAsync(false);
+        }
+
         await CloseAsync();
     }
 

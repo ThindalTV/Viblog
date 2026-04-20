@@ -2,55 +2,55 @@
 @inject IDialogService DialogService
 @implements IDisposable
 
-@if (_visible)
-{
-    <div class="dialog-overlay" @onclick="HandleCancel">
-        <div class="dialog" @onclick:stopPropagation="true">
-            <div class="dialog-header">
-                <h3>@(_dialogInfo?.Title ?? string.Empty)</h3>
-            </div>
-            <div class="dialog-content">
-                <p>@(_dialogInfo?.Message ?? string.Empty)</p>
-            </div>
-            <div class="dialog-buttons">
-                @if (_dialogInfo?.ShowCancel == true)
-                {
-                    <button class="btn" @onclick="HandleCancel">@_dialogInfo.CancelText</button>
-                }
-                @if (_dialogInfo?.ShowConfirm == true)
-                {
-                    <button class="btn btn-primary" @onclick="HandleConfirm">@_dialogInfo.ConfirmText</button>
-                }
-            </div>
-        </div>
-    </div>
-}
+<DialogBase @ref="_dialogBase" IsModal="true" CssClass="message-dialog" OnClose="HandleCancel">
+    <Title>
+        @if (!string.IsNullOrWhiteSpace(_dialogInfo?.Title))
+        {
+            <h3 class="dialog-title">@_dialogInfo.Title</h3>
+        }
+    </Title>
+    <Content>
+        @if (!string.IsNullOrWhiteSpace(_dialogInfo?.Message))
+        {
+            <p>@_dialogInfo.Message</p>
+        }
+    </Content>
+    <ActionButtons>
+        @if (_dialogInfo?.ShowCancel == true)
+        {
+            <button type="button" class="btn-dialog-cancel" @onclick="HandleCancel">@_dialogInfo.CancelText</button>
+        }
+        @if (_dialogInfo?.ShowConfirm == true)
+        {
+            <button type="button" class="btn-dialog-confirm" @onclick="HandleConfirm">@_dialogInfo.ConfirmText</button>
+        }
+    </ActionButtons>
+</DialogBase>
 
 @code {
+    private DialogBase? _dialogBase;
     private MessageDialogInfo? _dialogInfo;
-    private bool _visible;
 
     protected override void OnInitialized()
     {
         DialogService.OnDialogChanged += HandleDialogChangedAsync;
     }
 
-    private Task HandleDialogChangedAsync(DialogInfo? dialog)
+    private async Task HandleDialogChangedAsync(DialogInfo? dialog)
     {
         if (dialog is not MessageDialogInfo messageDialog)
         {
-            return Task.CompletedTask;
+            await (_dialogBase?.CloseAsync() ?? Task.CompletedTask);
+            return;
         }
 
         _dialogInfo = messageDialog;
-        _visible = true;
         StateHasChanged();
-        return Task.CompletedTask;
+        await (_dialogBase?.ShowAsync() ?? Task.CompletedTask);
     }
 
     private async Task HandleConfirm()
     {
-        _visible = false;
         if (_dialogInfo?.OnConfirmAsync != null)
         {
             await _dialogInfo.OnConfirmAsync.Invoke();
@@ -65,7 +65,6 @@
 
     private async Task HandleCancel()
     {
-        _visible = false;
         if (_dialogInfo?.OnCancelAsync != null)
         {
             await _dialogInfo.OnCancelAsync.Invoke();

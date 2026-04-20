@@ -1,0 +1,150 @@
+/* DialogBase Component Styles */
+
+/* Base dialog styling */
+.dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+/* Non-modal dialogs don't have ::backdrop, so they need positioning */
+.dialog:not([open])::backdrop {
+    display: none;
+}
+
+.dialog-content {
+    padding: 0;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+}
+
+.dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border-light);
+    flex-shrink: 0;
+}
+
+.dialog-title-container {
+    flex: 1;
+}
+
+.dialog-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--admin-text);
+}
+
+.dialog-close {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--admin-text-light);
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.dialog-close:hover {
+    background-color: var(--color-gray-lightest);
+    color: var(--admin-text);
+}
+
+.dialog-body {
+    padding: 1.5rem;
+    color: var(--admin-text-light);
+    line-height: 1.6;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.dialog-body p {
+    margin: 0;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border-light);
+    flex-shrink: 0;
+}
+
+/* Dialog button styles */
+::deep .btn-dialog-cancel,
+::deep .btn-dialog-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+::deep .btn-dialog-cancel {
+    background-color: var(--color-gray-lightest);
+    color: var(--admin-text-light);
+}
+
+::deep .btn-dialog-cancel:hover {
+    background-color: var(--color-gray-light);
+}
+
+::deep .btn-dialog-confirm {
+    background-color: var(--admin-primary);
+    color: white;
+}
+
+::deep .btn-dialog-confirm:hover {
+    background-color: var(--admin-primary-dark);
+}
+
+/* Variant sizes */
+.dialog.message-dialog {
+    max-width: 500px;
+}
+
+.dialog.media-upload-dialog {
+    max-width: 700px;
+    width: 90%;
+}
+
+.dialog.password-reset-dialog {
+    max-width: 500px;
+}
+
+.dialog.markdown-syntax-dialog {
+    max-width: 800px;
+    width: 90%;
+    max-height: 85vh;
+}
+
+.dialog.schedule-picker-dialog {
+    max-width: 380px;
+    width: 90%;
+}

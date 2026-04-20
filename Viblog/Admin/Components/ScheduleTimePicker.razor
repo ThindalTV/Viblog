@@ -1,36 +1,34 @@
-@if (Visible)
-{
-    <div class="dialog-overlay" @onclick="OnCancelClick">
-        <div class="dialog" style="width: 380px;" @onclick:stopPropagation="true">
-            <div class="dialog-header">
-                <h3>@Title</h3>
-                <button class="btn btn-icon" @onclick="OnCancelClick"><Icon Name="close" /></button>
-            </div>
-            <div class="dialog-content">
-                <div class="schedule-picker-content">
-                    <input type="datetime-local"
-                           value="@(_selectedDate?.ToString("yyyy-MM-ddTHH:mm"))"
-                           min="@_minDate.ToString("yyyy-MM-ddTHH:mm")"
-                           @onchange="OnDateChanged"
-                           class="form-control" />
-                    <p class="schedule-picker-note">All times are UTC.</p>
-                    @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
-                    {
-                        <p class="schedule-picker-warning">The selected time must be in the future.</p>
-                    }
-                </div>
-            </div>
-            <div class="dialog-buttons">
-                <button class="btn" @onclick="OnCancelClick">Cancel</button>
-                <button class="btn btn-primary" @onclick="OnConfirmClick" disabled="@(!IsConfirmEnabled)">
-                    Confirm
-                </button>
-            </div>
+@using Viblog.Admin.Components.Dialogs
+
+<DialogBase @ref="_dialogBase" IsModal="true" CssClass="schedule-picker-dialog" OnClose="OnCancelClick">
+    <Title>
+        <h3 class="dialog-title">@Title</h3>
+    </Title>
+    <Content>
+        <div class="schedule-picker-content">
+            <input type="datetime-local"
+                   value="@(_selectedDate?.ToString("yyyy-MM-ddTHH:mm"))"
+                   min="@_minDate.ToString("yyyy-MM-ddTHH:mm")"
+                   @onchange="OnDateChanged"
+                   class="form-control" />
+            <p class="schedule-picker-note">All times are UTC.</p>
+            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
+            {
+                <p class="schedule-picker-warning">The selected time must be in the future.</p>
+            }
         </div>
-    </div>
-}
+    </Content>
+    <ActionButtons>
+        <button type="button" class="btn-dialog-cancel" @onclick="OnCancelClick">Cancel</button>
+        <button type="button" class="btn-dialog-confirm" @onclick="OnConfirmClick" disabled="@(!IsConfirmEnabled)">
+            Confirm
+        </button>
+    </ActionButtons>
+</DialogBase>
 
 @code {
+    private DialogBase? _dialogBase;
+
     /// <summary>Controls dialog visibility; supports two-way binding.</summary>
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
@@ -52,14 +50,26 @@
 
     private DateTime? _selectedDate;
     private readonly DateTime _minDate = DateTime.UtcNow.AddMinutes(1);
+    private bool _previousVisible;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        if (Visible)
+        if (Visible != _previousVisible)
         {
-            _selectedDate = InitialDate.HasValue
-                ? InitialDate.Value.UtcDateTime
-                : DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+            _previousVisible = Visible;
+
+            if (Visible)
+            {
+                _selectedDate = InitialDate.HasValue
+                    ? InitialDate.Value.UtcDateTime
+                    : DateTime.UtcNow.Date.AddDays(1).AddHours(9);
+
+                await (_dialogBase?.ShowAsync() ?? Task.CompletedTask);
+            }
+            else
+            {
+                await (_dialogBase?.CloseAsync() ?? Task.CompletedTask);
+            }
         }
     }
 
@@ -78,12 +88,14 @@
     {
         if (!IsConfirmEnabled || !_selectedDate.HasValue) return;
 
+        Visible = false;
         await VisibleChanged.InvokeAsync(false);
         await OnConfirm.InvokeAsync(new DateTimeOffset(_selectedDate.Value, TimeSpan.Zero));
     }
 
     private async Task OnCancelClick()
     {
+        Visible = false;
         await VisibleChanged.InvokeAsync(false);
         await OnCancel.InvokeAsync();
     }

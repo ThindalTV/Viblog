@@ -1,74 +1,70 @@
 @using Microsoft.Extensions.Logging
 @using Viblog.Admin.Services
+@using Viblog.Admin.Components.Dialogs
 @inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<MediaUploadDialog> Logger
 @inject HttpClient Http
 
-@if (IsVisible)
-{
-    <div class="dialog-overlay" @onclick="OnClose">
-        <div class="dialog" style="width: 700px;" @onclick:stopPropagation="true">
-            <div class="dialog-header">
-                <strong>Upload Media Files</strong>
-                <button class="btn btn-icon" @onclick="OnClose"><Icon Name="close" /></button>
+<DialogBase @ref="_dialogBase" IsModal="true" CssClass="media-upload-dialog" OnClose="OnClose">
+    <Title>
+        <strong>Upload Media Files</strong>
+    </Title>
+    <Content>
+        <div class="upload-dialog-content">
+            <InputFile OnChange="@OnFilesSelected"
+                       multiple
+                       accept="@string.Join(",", AllowedExtensions)" />
+
+            <div class="upload-info">
+                <span>Images, PDFs, Documents, Videos, Audio</span>
+                <span>Max @(MaxFileSize / 1024 / 1024) MB per file</span>
             </div>
-            <div class="dialog-content">
-                <div class="upload-dialog-content">
-                    <InputFile OnChange="@OnFilesSelected"
-                               multiple
-                               accept="@string.Join(",", AllowedExtensions)" />
 
-                    <div class="upload-info">
-                        <span>Images, PDFs, Documents, Videos, Audio</span>
-                        <span>Max @(MaxFileSize / 1024 / 1024) MB per file</span>
-                    </div>
-
-                    @if (_selectedFiles.Any())
+            @if (_selectedFiles.Any())
+            {
+                <div class="selected-files">
+                    @foreach (var file in _selectedFiles)
                     {
-                        <div class="selected-files">
-                            @foreach (var file in _selectedFiles)
-                            {
-                                <div class="selected-file">@file.Name (@(file.Size / 1024) KB)</div>
-                            }
-                        </div>
+                        <div class="selected-file">@file.Name (@(file.Size / 1024) KB)</div>
                     }
-
-                    @if (_successMessages.Any())
-                    {
-                        <div class="success-messages">
-                            @foreach (var message in _successMessages)
-                            {
-                                <div class="success-message">
-                                    <span class="success-icon">✓</span>
-                                    @message
-                                </div>
-                            }
-                        </div>
-                    }
-
-                    @if (_errorMessages.Any())
-                    {
-                        <div class="error-messages">
-                            @foreach (var error in _errorMessages)
-                            {
-                                <div class="error-message">@error</div>
-                            }
-                        </div>
-                    }
-
-                    <div class="dialog-footer">
-                        <button class="btn" @onclick="@OnClose">Close</button>
-                        <button class="btn btn-primary" @onclick="@StartUpload" disabled="@(!_hasSelectedFiles || _isUploading)">
-                            @(_isUploading ? "Uploading..." : "Upload All")
-                        </button>
-                    </div>
                 </div>
-            </div>
+            }
+
+            @if (_successMessages.Any())
+            {
+                <div class="success-messages">
+                    @foreach (var message in _successMessages)
+                    {
+                        <div class="success-message">
+                            <span class="success-icon">✓</span>
+                            @message
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (_errorMessages.Any())
+            {
+                <div class="error-messages">
+                    @foreach (var error in _errorMessages)
+                    {
+                        <div class="error-message">@error</div>
+                    }
+                </div>
+            }
         </div>
-    </div>
-}
+    </Content>
+    <ActionButtons>
+        <button class="btn" @onclick="@OnClose">Close</button>
+        <button class="btn btn-primary" @onclick="@StartUpload" disabled="@(!_hasSelectedFiles || _isUploading)">
+            @(_isUploading ? "Uploading..." : "Upload All")
+        </button>
+    </ActionButtons>
+</DialogBase>
 
 @code {
+    private DialogBase? _dialogBase;
+
     /// <summary>Whether the dialog is visible.</summary>
     [Parameter]
     public bool IsVisible { get; set; }
@@ -117,6 +113,25 @@
     private List<string> _successMessages = [];
     private List<string> _errorMessages = [];
     private int _uploadedCount;
+    private bool _previousIsVisible;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Handle IsVisible parameter changes
+        if (IsVisible != _previousIsVisible)
+        {
+            _previousIsVisible = IsVisible;
+
+            if (IsVisible)
+            {
+                await (_dialogBase?.ShowAsync() ?? Task.CompletedTask);
+            }
+            else
+            {
+                await (_dialogBase?.CloseAsync() ?? Task.CompletedTask);
+            }
+        }
+    }
 
     private void OnFilesSelected(InputFileChangeEventArgs args)
     {
@@ -177,6 +192,8 @@
 
     private async Task OnClose()
     {
+        // Update visibility via two-way binding
+        IsVisible = false;
         await IsVisibleChanged.InvokeAsync(false);
 
         if (_uploadedCount > 0)
