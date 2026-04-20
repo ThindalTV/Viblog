@@ -15,19 +15,18 @@
     </div>
 
     <div class="page-content">
-        <TelerikGrid TItem="@AuditLog"
-                     OnRead="@OnReadAsync"
-                     Pageable="true"
-                     PageSize="@_pageSize"
-                     Sortable="true"
-                     FilterMode="@GridFilterMode.FilterRow"
-                     Height="auto"
-                     Class="audit-logs-grid">
-            <GridColumns>
-                <GridColumn Field="@nameof(AuditLog.Timestamp)" 
-                           Title="Time"
-                           Width="180px"
-                           Filterable="false">
+        <ViGrid TItem="@AuditLog"
+                OnRead="@OnReadAsync"
+                Pageable="true"
+                PageSize="@_pageSize"
+                Sortable="true"
+                Class="audit-logs-grid">
+            <Columns>
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.Timestamp)"
+                        Title="Time"
+                        Width="180px"
+                        Sortable="false">
                     <Template>
                         @{
                             var log = (AuditLog)context;
@@ -36,11 +35,12 @@
                             </span>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.UserName)"
-                           Title="User"
-                           Width="200px">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.UserName)"
+                        Title="User"
+                        Width="200px">
                     <Template>
                         @{
                             var log = (AuditLog)context;
@@ -50,11 +50,12 @@
                             </div>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.Action)"
-                           Title="Action"
-                           Width="150px">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.Action)"
+                        Title="Action"
+                        Width="150px">
                     <Template>
                         @{
                             var log = (AuditLog)context;
@@ -63,22 +64,24 @@
                             </span>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.EntityType)"
-                           Title="Entity"
-                           Width="120px">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.EntityType)"
+                        Title="Entity"
+                        Width="120px">
                     <Template>
                         @{
                             var log = (AuditLog)context;
                             <span class="entity-badge">@log.EntityType</span>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.Description)"
-                           Title="Description"
-                           Filterable="false">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.Description)"
+                        Title="Description"
+                        Sortable="false">
                     <Template>
                         @{
                             var log = (AuditLog)context;
@@ -91,12 +94,13 @@
                             </div>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.Result)"
-                           Title="Result"
-                           Width="100px"
-                           Filterable="false">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.Result)"
+                        Title="Result"
+                        Width="100px"
+                        Sortable="false">
                     <Template>
                         @{
                             var log = (AuditLog)context;
@@ -105,21 +109,22 @@
                             </span>
                         }
                     </Template>
-                </GridColumn>
+                </Column>
 
-                <GridColumn Field="@nameof(AuditLog.IpAddress)"
-                           Title="IP Address"
-                           Width="140px"
-                           Filterable="false">
+                <Column TItem="AuditLog"
+                        Field="@nameof(AuditLog.IpAddress)"
+                        Title="IP Address"
+                        Width="140px"
+                        Sortable="false">
                     <Template>
                         @{
                             var log = (AuditLog)context;
                             @(log.IpAddress ?? "—")
                         }
                     </Template>
-                </GridColumn>
-            </GridColumns>
-        </TelerikGrid>
+                </Column>
+            </Columns>
+        </ViGrid>
     </div>
 </div>
 

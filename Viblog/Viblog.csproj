@@ -36,11 +36,6 @@
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
 	</ItemGroup>
 
-	<!-- UI -->
-	<ItemGroup>
-		<PackageReference Include="Telerik.UI.for.Blazor" Version="13.0.0" />
-	</ItemGroup>
-
 	<!-- Build info -->
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">

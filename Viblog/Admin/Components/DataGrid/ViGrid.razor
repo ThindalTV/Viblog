@@ -1,0 +1,265 @@
+@namespace Viblog.Admin.Components.DataGrid
+@typeparam TItem
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="vi-grid @Class" style="@HeightStyle">
+        <div class="vi-grid-header">
+            <table>
+                <thead>
+                    <tr>
+                        @foreach (var col in _columns)
+                        {
+                            <th style="@col.WidthStyle" class="@col.HeaderClass"
+                                @onclick="() => OnHeaderClick(col)">
+                                <span class="vi-grid-header-text">@col.Title</span>
+                                @if (col.Field == _sortField)
+                                {
+                                    <span class="vi-grid-sort-icon">@(_sortDirection == SortDirection.Ascending ? "▲" : "▼")</span>
+                                }
+                            </th>
+                        }
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="vi-grid-body">
+            <table>
+                <tbody>
+                    @if (_data is not null)
+                    {
+                        @foreach (var item in _data)
+                        {
+                            <tr class="vi-grid-row @(OnRowClick.HasDelegate ? "vi-grid-row-clickable" : "")"
+                                @onclick="() => HandleRowClick(item)">
+                                @foreach (var col in _columns)
+                                {
+                                    <td style="@col.WidthStyle">
+                                        @if (col.Template is not null)
+                                        {
+                                            @col.Template(item)
+                                        }
+                                        else
+                                        {
+                                            @GetFieldValue(item, col.Field)
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Pageable && _totalCount > PageSize)
+        {
+            <div class="vi-grid-pager">
+                <button class="vi-grid-pager-btn" disabled="@(_currentPage <= 1)" @onclick="GoToPreviousPage">‹</button>
+                <span class="vi-grid-pager-info">Page @_currentPage of @TotalPages</span>
+                <button class="vi-grid-pager-btn" disabled="@(_currentPage >= TotalPages)" @onclick="GoToNextPage">›</button>
+            </div>
+        }
+    </div>
+    @* Hidden render fragment to collect column definitions *@
+    <div style="display:none">@Columns</div>
+</CascadingValue>
+
+@code {
+    private readonly List<Column<TItem>> _columns = [];
+    private IEnumerable<object>? _data;
+    private int _totalCount;
+    private int _currentPage = 1;
+    private string? _sortField;
+    private SortDirection _sortDirection = SortDirection.Ascending;
+
+    /// <summary>
+    /// Child content containing Column definitions.
+    /// </summary>
+    [Parameter] public RenderFragment? Columns { get; set; }
+
+    /// <summary>
+    /// Callback invoked to load data into the grid.
+    /// </summary>
+    [Parameter] public EventCallback<GridReadEventArgs> OnRead { get; set; }
+
+    /// <summary>
+    /// Static data source (alternative to OnRead for non-server scenarios).
+    /// </summary>
+    [Parameter] public IEnumerable<TItem>? Data { get; set; }
+
+    /// <summary>
+    /// Callback invoked when a row is clicked.
+    /// </summary>
+    [Parameter] public EventCallback<GridRowClickEventArgs> OnRowClick { get; set; }
+
+    /// <summary>
+    /// Whether paging is enabled.
+    /// </summary>
+    [Parameter] public bool Pageable { get; set; }
+
+    /// <summary>
+    /// Number of items per page.
+    /// </summary>
+    [Parameter] public int PageSize { get; set; } = 20;
+
+    /// <summary>
+    /// Whether sorting is enabled.
+    /// </summary>
+    [Parameter] public bool Sortable { get; set; }
+
+    /// <summary>
+    /// Optional height for the grid container.
+    /// </summary>
+    [Parameter] public string? Height { get; set; }
+
+    /// <summary>
+    /// Optional CSS class.
+    /// </summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// Callback when page changes.
+    /// </summary>
+    [Parameter] public EventCallback<int> PageChanged { get; set; }
+
+    private string? HeightStyle => Height is not null ? $"height: {Height}" : null;
+    private int TotalPages => _totalCount <= 0 ? 1 : (int)Math.Ceiling((double)_totalCount / PageSize);
+
+    /// <summary>
+    /// Registers a column with this grid. Called by child Column components.
+    /// </summary>
+    internal void AddColumn(Column<TItem> column)
+    {
+        if (!_columns.Contains(column))
+        {
+            _columns.Add(column);
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Removes a column from this grid.
+    /// </summary>
+    internal void RemoveColumn(Column<TItem> column)
+    {
+        _columns.Remove(column);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadData();
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Data is not null)
+        {
+            _data = Data.Cast<object>();
+            _totalCount = _data.Count();
+        }
+    }
+
+    /// <summary>
+    /// Triggers a data reload (equivalent to Telerik's Rebind).
+    /// </summary>
+    public async void Rebind()
+    {
+        _currentPage = 1;
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        if (!OnRead.HasDelegate) return;
+
+        var sorts = new List<GridSortDescriptor>();
+        if (_sortField is not null)
+        {
+            sorts.Add(new GridSortDescriptor { Member = _sortField, SortDirection = _sortDirection });
+        }
+
+        var args = new GridReadEventArgs
+        {
+            Request = new GridRequest
+            {
+                Page = _currentPage,
+                PageSize = PageSize,
+                Sorts = sorts
+            }
+        };
+
+        await OnRead.InvokeAsync(args);
+
+        _data = args.Data;
+        _totalCount = args.Total;
+    }
+
+    private async Task OnHeaderClick(Column<TItem> column)
+    {
+        if (!Sortable || !column.Sortable) return;
+        if (string.IsNullOrEmpty(column.Field)) return;
+
+        if (_sortField == column.Field)
+        {
+            _sortDirection = _sortDirection == SortDirection.Ascending
+                ? SortDirection.Descending
+                : SortDirection.Ascending;
+        }
+        else
+        {
+            _sortField = column.Field;
+            _sortDirection = SortDirection.Ascending;
+        }
+
+        _currentPage = 1;
+        await LoadData();
+    }
+
+    private async Task HandleRowClick(object item)
+    {
+        if (OnRowClick.HasDelegate)
+        {
+            await OnRowClick.InvokeAsync(new GridRowClickEventArgs { Item = item });
+        }
+    }
+
+    private async Task GoToPreviousPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+            await PageChanged.InvokeAsync(_currentPage);
+            await LoadData();
+        }
+    }
+
+    private async Task GoToNextPage()
+    {
+        if (_currentPage < TotalPages)
+        {
+            _currentPage++;
+            await PageChanged.InvokeAsync(_currentPage);
+            await LoadData();
+        }
+    }
+
+    private static string? GetFieldValue(object item, string? field)
+    {
+        if (string.IsNullOrEmpty(field) || item is null) return null;
+
+        var parts = field.Split('.');
+        object? current = item;
+        foreach (var part in parts)
+        {
+            if (current is null) return null;
+            var prop = current.GetType().GetProperty(part);
+            if (prop is null) return null;
+            current = prop.GetValue(current);
+        }
+        return current?.ToString();
+    }
+}

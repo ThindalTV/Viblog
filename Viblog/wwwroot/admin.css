@@ -42,6 +42,69 @@
     font-size: 1.1rem;
 }
 
+/* Button base */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    border: 1px solid var(--admin-border, #e0e0e0);
+    border-radius: var(--border-radius, 4px);
+    background-color: var(--color-white, #ffffff);
+    color: var(--admin-text, #333);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn:hover {
+    background-color: var(--color-gray-lightest, #f8f8f8);
+    border-color: var(--color-gray-light, #d7d7d7);
+}
+
+.btn-primary {
+    background-color: var(--admin-primary, #667eea);
+    border-color: var(--admin-primary, #667eea);
+    color: var(--color-white, #ffffff);
+}
+
+.btn-primary:hover {
+    background-color: var(--admin-primary-dark, #5568d3);
+    border-color: var(--admin-primary-dark, #5568d3);
+    color: var(--color-white, #ffffff);
+}
+
+.btn-active {
+    background-color: var(--admin-primary, #667eea);
+    border-color: var(--admin-primary, #667eea);
+    color: var(--color-white, #ffffff);
+}
+
+.btn-active:hover {
+    background-color: var(--admin-primary-dark, #5568d3);
+    border-color: var(--admin-primary-dark, #5568d3);
+}
+
+/* Button group */
+.button-group {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.button-group .btn {
+    border-radius: 0;
+}
+
+.button-group .btn:first-child {
+    border-radius: var(--border-radius, 4px) 0 0 var(--border-radius, 4px);
+}
+
+.button-group .btn:last-child {
+    border-radius: 0 var(--border-radius, 4px) var(--border-radius, 4px) 0;
+}
+
 /* Card styles used across admin pages */
 .card {
     background-color: #ffffff;

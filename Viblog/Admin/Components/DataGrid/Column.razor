@@ -1,0 +1,47 @@
+@namespace Viblog.Admin.Components.DataGrid
+@typeparam TItem
+@implements IDisposable
+
+@code {
+    [CascadingParameter] private ViGrid<TItem>? Grid { get; set; }
+
+    /// <summary>
+    /// The field name (property path) this column displays and sorts by.
+    /// </summary>
+    [Parameter] public string? Field { get; set; }
+
+    /// <summary>
+    /// The column header title.
+    /// </summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>
+    /// Optional fixed width (e.g., "200px").
+    /// </summary>
+    [Parameter] public string? Width { get; set; }
+
+    /// <summary>
+    /// Whether this column is sortable. Defaults to true.
+    /// </summary>
+    [Parameter] public bool Sortable { get; set; } = true;
+
+    /// <summary>
+    /// Optional custom template for cell rendering.
+    /// The context object is the row's data item.
+    /// </summary>
+    [Parameter] public RenderFragment<object>? Template { get; set; }
+
+    internal string? WidthStyle => Width is not null ? $"width: {Width}" : null;
+
+    internal string HeaderClass => Sortable ? "vi-grid-header-sortable" : "";
+
+    protected override void OnInitialized()
+    {
+        Grid?.AddColumn(this);
+    }
+
+    public void Dispose()
+    {
+        Grid?.RemoveColumn(this);
+    }
+}

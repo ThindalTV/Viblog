@@ -37,8 +37,8 @@ public class PagesAdminFacade : IPagesAdminFacade
     public virtual async Task<PagedResult<Page>> GetPagesAsync(
         PagingParameters pagingParameters,
         bool? publishedOnly = null,
-        PageSortField sortField = PageSortField.Slug,
-        bool ascending = true,
+        PageSortField sortField = PageSortField.PublishedAt,
+        bool ascending = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(pagingParameters);
@@ -47,7 +47,7 @@ public class PagesAdminFacade : IPagesAdminFacade
         Expression<Func<Page, bool>> predicate = publishedOnly switch
         {
             true => p => p.IsPublished,
-            false => p => true, // Not restricting to published only — include all
+            false => p => !p.IsPublished,
             null => p => true // All pages
         };
 
@@ -62,6 +62,9 @@ public class PagesAdminFacade : IPagesAdminFacade
 
             PageSortField.IsPublished => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.IsPublished, ascending, false, cancellationToken),
+
+            PageSortField.PublishedAt => await _pageRepository.FindAsync(
+                predicate, pagingParameters, p => p.Schedule.PublishedAt, ascending, false, cancellationToken),
 
             PageSortField.Slug or _ => await _pageRepository.FindAsync(
                 predicate, pagingParameters, p => p.Slug, ascending, false, cancellationToken)

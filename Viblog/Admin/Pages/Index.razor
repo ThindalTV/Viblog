@@ -17,16 +17,16 @@
 
         <!-- Stat Cards -->
         <div class="grid-item stat-card-area published">
-            <StatCard Icon="@SvgIcon.Check" Value="@_stats.PublishedCount.ToString()" Label="Published" />
+            <StatCard Icon="check_circle" Value="@_stats.PublishedCount.ToString()" Label="Published" />
         </div>
         <div class="grid-item stat-card-area drafts">
-            <StatCard Icon="@SvgIcon.Pencil" Value="@_stats.DraftCount.ToString()" Label="Drafts" />
+            <StatCard Icon="edit" Value="@_stats.DraftCount.ToString()" Label="Drafts" />
         </div>
         <div class="grid-item stat-card-area scheduled">
-            <StatCard Icon="@SvgIcon.Clock" Value="@_stats.ScheduledCount.ToString()" Label="Scheduled" />
+            <StatCard Icon="schedule" Value="@_stats.ScheduledCount.ToString()" Label="Scheduled" />
         </div>
         <div class="grid-item stat-card-area views">
-            <StatCard Icon="@SvgIcon.Eye" Value="@_stats.TotalViews.ToString("N0")" Label="Total Views" />
+            <StatCard Icon="visibility" Value="@_stats.TotalViews.ToString("N0")" Label="Total Views" />
         </div>
 
         <!-- Top Posts by Views -->
@@ -34,38 +34,38 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Top Posts by Views</h2>
-                    <TelerikDropDownList Data="@_dateFilters"
-                                         @bind-Value="@_selectedFilter"
-                                         TextField="@nameof(DateFilterOption.Label)"
-                                         ValueField="@nameof(DateFilterOption.Value)"
-                                         Width="160px"
-                                         OnChange="@OnFilterChangedAsync" />
+                    <select class="filter-select" @onchange="OnFilterSelectChanged">
+                        @foreach (var filter in _dateFilters)
+                        {
+                            <option value="@filter.Value" selected="@(filter.Value == _selectedFilter)">@filter.Label</option>
+                        }
+                    </select>
                 </div>
 
-                <TelerikGrid Data="@_topPosts"
-                             Pageable="false"
-                             Sortable="false"
-                             Height="auto">
-                    <GridColumns>
-                        <GridColumn Field="@nameof(BlogPost.Draft)" Title="Title">
+                <ViGrid Data="@_topPosts"
+                        TItem="BlogPost"
+                        Pageable="false"
+                        Sortable="false">
+                    <Columns>
+                        <Column TItem="BlogPost" Field="@nameof(BlogPost.Draft)" Title="Title">
                             <Template>
                                 @{
                                     var post = (BlogPost)context;
                                 }
                                 <a href="/viblog/posts/edit/@post.Id">@post.Draft.Title</a>
                             </Template>
-                        </GridColumn>
-                        <GridColumn Field="@nameof(BlogPost.PublishedAt)" Title="Published" Width="140px">
+                        </Column>
+                        <Column TItem="BlogPost" Field="@nameof(BlogPost.PublishedAt)" Title="Published" Width="140px">
                             <Template>
                                 @{
                                     var post = (BlogPost)context;
                                 }
                                 @(post.PublishedAt?.ToString("MMM d, yyyy") ?? "-")
                             </Template>
-                        </GridColumn>
-                        <GridColumn Field="@nameof(BlogPost.ViewCount)" Title="Views" Width="90px" />
-                    </GridColumns>
-                </TelerikGrid>
+                        </Column>
+                        <Column TItem="BlogPost" Field="@nameof(BlogPost.ViewCount)" Title="Views" Width="90px" />
+                    </Columns>
+                </ViGrid>
             </div>
         </div>
 
@@ -73,28 +73,14 @@
         <div class="grid-item chart-area">
             <div class="card">
                 <h2 class="card-title">Views by Published Month</h2>
-                <TelerikChart Height="360px">
-                    <ChartSeriesItems>
-                        <ChartSeries Type="ChartSeriesType.Column"
-                                     Data="@_viewsByMonth"
-                                     Field="@nameof(ViewsByMonthData.TotalViews)"
-                                     CategoryField="@nameof(ViewsByMonthData.Month)"
-                                     Name="Views">
-                            <ChartSeriesLabels Visible="false" />
-                        </ChartSeries>
-                    </ChartSeriesItems>
-                    <ChartCategoryAxes>
-                        <ChartCategoryAxis>
-                            <ChartCategoryAxisLabels />
-                        </ChartCategoryAxis>
-                    </ChartCategoryAxes>
-                    <ChartValueAxes>
-                        <ChartValueAxis>
-                            <ChartValueAxisLabels Format="{0:N0}" />
-                        </ChartValueAxis>
-                    </ChartValueAxes>
-                    <ChartLegend Visible="false" />
-                </TelerikChart>
+                <div class="chart-placeholder" style="height: 360px; display: flex; align-items: flex-end; gap: 4px; padding: 16px;">
+                    @foreach (var item in _viewsByMonth)
+                    {
+                        var maxViews = _viewsByMonth.Count > 0 ? _viewsByMonth.Max(v => v.TotalViews) : 1;
+                        var heightPct = maxViews > 0 ? (int)(100.0 * item.TotalViews / maxViews) : 0;
+                        <div class="chart-bar" style="flex: 1; height: @(heightPct)%; background: var(--primary-color, #4f46e5); border-radius: 4px 4px 0 0; min-height: 2px;" title="@item.Month: @item.TotalViews views"></div>
+                    }
+                </div>
             </div>
         </div>
 
@@ -114,7 +100,7 @@
                             <li class="scheduled-item">
                                 <a href="/viblog/posts/edit/@post.Id" class="scheduled-title">@post.Draft.Title</a>
                                 <span class="scheduled-date">
-                                    <TelerikSvgIcon Icon="@SvgIcon.Clock" />
+                                    <Icon Name="schedule" />
                                     @(post.Schedule.ScheduledPublishDate?.ToString("MMM d, yyyy HH:mm") ?? "-")
                                 </span>
                             </li>
@@ -182,8 +168,12 @@
         await LoadDataAsync();
     }
 
-    private async Task OnFilterChangedAsync(object _)
+    private async Task OnFilterSelectChanged(ChangeEventArgs e)
     {
+        if (Enum.TryParse<DashboardDateFilter>(e.Value?.ToString(), out var filter))
+        {
+            _selectedFilter = filter;
+        }
         await LoadTopPostsAsync();
     }
 

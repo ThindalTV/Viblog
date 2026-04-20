@@ -8,7 +8,7 @@
     <div class="dialog-overlay">
         <div class="dialog-content">
             <div class="dialog-icon">
-                <TelerikSvgIcon Icon="@SvgIcon.ArrowRotateCw" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" Class="spin" />
+                <Icon Name="sync" Size="48" Class="spin" />
             </div>
             <h3 class="dialog-title">Connection Lost</h3>
             <p class="dialog-message">Attempting to reconnect to the server...</p>
@@ -21,13 +21,11 @@
     <div class="dialog-overlay">
         <div class="dialog-content">
             <div class="dialog-icon error">
-                <TelerikSvgIcon Icon="@SvgIcon.XCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                <Icon Name="cancel" Size="48" />
             </div>
             <h3 class="dialog-title">Connection Failed</h3>
             <p class="dialog-message">Unable to reconnect to the server.</p>
-            <button type="button" 
-                    class="k-button k-button-md k-button-solid k-button-solid-primary k-rounded-md"
-                    onclick="window.location.reload()">
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
                 Reload Page
             </button>
         </div>
@@ -39,13 +37,11 @@
     <div class="dialog-overlay">
         <div class="dialog-content">
             <div class="dialog-icon error">
-                <TelerikSvgIcon Icon="@SvgIcon.XCircle" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                <Icon Name="cancel" Size="48" />
             </div>
             <h3 class="dialog-title">Connection Rejected</h3>
             <p class="dialog-message">The server rejected the connection.</p>
-            <button type="button" 
-                    class="k-button k-button-md k-button-solid k-button-solid-primary k-rounded-md"
-                    onclick="window.location.reload()">
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
                 Reload Page
             </button>
         </div>

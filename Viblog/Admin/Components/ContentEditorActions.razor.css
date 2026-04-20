@@ -1,3 +1,29 @@
+/* ── Editor Actions Layout ── */
+.editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.actions-status,
+.actions-publish,
+.actions-primary,
+.actions-danger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Separators between groups */
+.actions-publish,
+.actions-primary,
+.actions-danger {
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--border-light, #e0e0e0);
+}
+
+/* ── Base Button Styles ── */
 .btn-primary,
 .btn-action {
     display: inline-flex;
@@ -34,54 +60,12 @@
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
-.btn-publish-now {
-    background-color: var(--success-light, #e6f4ea);
-    color: var(--success, #1e8e3e);
-    border-color: var(--success, #1e8e3e);
-}
-
-.btn-publish-now:hover:not(:disabled) {
-    background-color: var(--success-hover, #d4edda);
-    border-color: var(--success-dark, #0d5f23);
-}
-
-.btn-schedule {
-    background-color: var(--info-light, #e8f0fe);
-    color: var(--info, #1a73e8);
-    border-color: var(--info, #1a73e8);
-}
-
-.btn-schedule:hover:not(:disabled) {
-    background-color: var(--info-hover, #d2e3fc);
-    border-color: var(--info-dark, #1557b0);
-}
-
-.btn-unpublish {
-    background-color: var(--warning-light, #fff4e5);
-    color: var(--warning, #f57c00);
-    border-color: var(--warning, #f57c00);
-}
-
-.btn-unpublish:hover:not(:disabled) {
-    background-color: var(--warning-hover, #ffe0b2);
-    border-color: var(--warning-dark, #e65100);
-}
-
-.btn-delete {
-    background-color: var(--color-error-light, #fce8e6);
-    color: var(--color-error, #d93025);
-    border-color: var(--color-error, #d93025);
-}
-
-.btn-delete:hover:not(:disabled) {
-    background-color: var(--color-error-hover, #f4c2c0);
-    border-color: var(--color-error-dark, #b71c1c);
-}
-
+/* ── Primary CTA: Save Draft (filled, prominent) ── */
 .btn-save-draft {
     background-color: var(--primary-color, #007bff);
     color: white;
     border-color: var(--primary-color, #007bff);
+    font-weight: 600;
 }
 
 .btn-save-draft:hover:not(:disabled) {
@@ -91,6 +75,57 @@
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
+/* ── Secondary: Publish Group (outlined) ── */
+.btn-publish-now {
+    background-color: transparent;
+    color: var(--success, #1e8e3e);
+    border-color: var(--success, #1e8e3e);
+}
+
+.btn-publish-now:hover:not(:disabled) {
+    background-color: var(--success-light, #e6f4ea);
+    border-color: var(--success-dark, #0d5f23);
+}
+
+.btn-schedule {
+    background-color: transparent;
+    color: var(--info, #1a73e8);
+    border-color: var(--info, #1a73e8);
+}
+
+.btn-schedule:hover:not(:disabled) {
+    background-color: var(--info-light, #e8f0fe);
+    border-color: var(--info-dark, #1557b0);
+}
+
+/* ── Danger Zone: Ghost/Text-only Style ── */
+.btn-unpublish,
+.btn-delete {
+    background-color: transparent;
+    border-color: transparent;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.btn-unpublish {
+    color: var(--warning, #f57c00);
+}
+
+.btn-unpublish:hover:not(:disabled) {
+    background-color: var(--warning-light, #fff4e5);
+    color: var(--warning-dark, #e65100);
+}
+
+.btn-delete {
+    color: var(--color-error, #d93025);
+}
+
+.btn-delete:hover:not(:disabled) {
+    background-color: var(--color-error-light, #fce8e6);
+    color: var(--color-error-dark, #b71c1c);
+}
+
+/* ── Disabled State ── */
 .btn-primary:disabled,
 .btn-action:disabled {
     opacity: 0.6;
@@ -98,7 +133,7 @@
     transform: none;
 }
 
-.btn-confirm-active {
+/* ── Confirm Animation ── */.btn-confirm-active {
     animation: pulse-confirm 0.8s ease-in-out infinite alternate;
 }
 

@@ -20,7 +20,7 @@
         @if (_isLoading)
         {
             <div class="loading-indicator">
-                <TelerikLoader Size="@ThemeConstants.Loader.Size.Medium" />
+                <Icon Name="sync" Class="spin" />
                 <p>Loading profile...</p>
             </div>
         }
@@ -67,27 +67,25 @@
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label for="name">Name</label>
-                            <TelerikTextBox @bind-Value="@_profileModel.Name"
-                                          Id="name"
-                                          Placeholder="Enter your name"
-                                          Width="100%" />
+                            <InputText @bind-Value="@_profileModel.Name"
+                                       id="name"
+                                       placeholder="Enter your name"
+                                       class="form-control" />
                             <ValidationMessage For="@(() => _profileModel.Name)" />
                         </div>
 
                         <div class="form-group col-md-6">
                             <label for="email">Email</label>
-                            <TelerikTextBox @bind-Value="@_profileModel.Email"
-                                          Id="email"
-                                          Placeholder="Enter your email"
-                                          Width="100%" />
+                            <InputText @bind-Value="@_profileModel.Email"
+                                       id="email"
+                                       placeholder="Enter your email"
+                                       class="form-control" />
                             <ValidationMessage For="@(() => _profileModel.Email)" />
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <TelerikButton ButtonType="@ButtonType.Submit"
-                                     ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                     Enabled="@(!_isSavingProfile)">
+                        <button type="submit" class="btn btn-primary" disabled="@_isSavingProfile">
                             @if (_isSavingProfile)
                             {
                                 <span>Saving...</span>
@@ -96,7 +94,7 @@
                             {
                                 <span>Update Profile</span>
                             }
-                        </TelerikButton>
+                        </button>
                     </div>
                 </EditForm>
             </div>
@@ -109,22 +107,22 @@
 
                     <div class="form-group">
                         <label for="currentPassword">Current Password</label>
-                        <TelerikTextBox @bind-Value="@_passwordModel.CurrentPassword"
-                                      Id="currentPassword"
-                                      Password="true"
-                                      Placeholder="Enter current password"
-                                      Width="100%" />
+                        <InputText @bind-Value="@_passwordModel.CurrentPassword"
+                                   id="currentPassword"
+                                   type="password"
+                                   placeholder="Enter current password"
+                                   class="form-control" />
                         <ValidationMessage For="@(() => _passwordModel.CurrentPassword)" />
                     </div>
 
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label for="newPassword">New Password</label>
-                            <TelerikTextBox @bind-Value="@_passwordModel.NewPassword"
-                                          Id="newPassword"
-                                          Password="true"
-                                          Placeholder="Enter new password"
-                                          Width="100%" />
+                            <InputText @bind-Value="@_passwordModel.NewPassword"
+                                       id="newPassword"
+                                       type="password"
+                                       placeholder="Enter new password"
+                                       class="form-control" />
                             <ValidationMessage For="@(() => _passwordModel.NewPassword)" />
                             <small class="form-text text-muted">
                                 Must be at least 8 characters with uppercase, lowercase, number, and special character.
@@ -133,19 +131,17 @@
 
                         <div class="form-group col-md-6">
                             <label for="confirmPassword">Confirm New Password</label>
-                            <TelerikTextBox @bind-Value="@_passwordModel.ConfirmPassword"
-                                          Id="confirmPassword"
-                                          Password="true"
-                                          Placeholder="Confirm new password"
-                                          Width="100%" />
+                            <InputText @bind-Value="@_passwordModel.ConfirmPassword"
+                                       id="confirmPassword"
+                                       type="password"
+                                       placeholder="Confirm new password"
+                                       class="form-control" />
                             <ValidationMessage For="@(() => _passwordModel.ConfirmPassword)" />
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <TelerikButton ButtonType="@ButtonType.Submit"
-                                     ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                     Enabled="@(!_isSavingPassword)">
+                        <button type="submit" class="btn btn-primary" disabled="@_isSavingPassword">
                             @if (_isSavingPassword)
                             {
                                 <span>Changing Password...</span>
@@ -154,7 +150,7 @@
                             {
                                 <span>Change Password</span>
                             }
-                        </TelerikButton>
+                        </button>
                     </div>
                 </EditForm>
             </div>

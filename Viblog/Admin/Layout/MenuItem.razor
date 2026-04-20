@@ -2,7 +2,7 @@
    class="nav-item @(IsActive ? "active" : "")"
    @onclick="OnClick"
    @onclick:preventDefault="PreventDefault">
-    <TelerikSvgIcon Icon="@Icon" />
+    <Icon Name="@Icon" />
     @if (Expanded)
     {
         <span class="nav-item-text">@Text</span>
@@ -17,10 +17,10 @@
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
-    /// The icon to display for this menu item
+    /// The Material Symbols icon name to display for this menu item
     /// </summary>
     [Parameter]
-    public ISvgIcon? Icon { get; set; }
+    public string? Icon { get; set; }
 
     /// <summary>
     /// The URL this menu item navigates to

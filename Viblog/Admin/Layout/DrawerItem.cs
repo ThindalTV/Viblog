@@ -1,5 +1,3 @@
-using Telerik.SvgIcons;
-
 namespace Viblog.Admin.Layout;
 
 /// <summary>
@@ -13,9 +11,9 @@ public record DrawerItem
     public required string Text { get; init; }
 
     /// <summary>
-    /// The icon to display for the menu item
+    /// The Material Symbols icon name to display for the menu item
     /// </summary>
-    public ISvgIcon? Icon { get; init; }
+    public string? Icon { get; init; }
 
     /// <summary>
     /// The URL this menu item navigates to

@@ -2,21 +2,29 @@
 @inject IDialogService DialogService
 @implements IDisposable
 
-<TelerikDialog @bind-Visible="_visible" Title="@(_dialogInfo?.Title ?? string.Empty)">
-    <DialogContent>
-        <p>@(_dialogInfo?.Message ?? string.Empty)</p>
-    </DialogContent>
-    <DialogButtons>
-        @if (_dialogInfo?.ShowCancel == true)
-        {
-            <TelerikButton OnClick="HandleCancel">@_dialogInfo.CancelText</TelerikButton>
-        }
-        @if (_dialogInfo?.ShowConfirm == true)
-        {
-            <TelerikButton OnClick="HandleConfirm" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@_dialogInfo.ConfirmText</TelerikButton>
-        }
-    </DialogButtons>
-</TelerikDialog>
+@if (_visible)
+{
+    <div class="dialog-overlay" @onclick="HandleCancel">
+        <div class="dialog" @onclick:stopPropagation="true">
+            <div class="dialog-header">
+                <h3>@(_dialogInfo?.Title ?? string.Empty)</h3>
+            </div>
+            <div class="dialog-content">
+                <p>@(_dialogInfo?.Message ?? string.Empty)</p>
+            </div>
+            <div class="dialog-buttons">
+                @if (_dialogInfo?.ShowCancel == true)
+                {
+                    <button class="btn" @onclick="HandleCancel">@_dialogInfo.CancelText</button>
+                }
+                @if (_dialogInfo?.ShowConfirm == true)
+                {
+                    <button class="btn btn-primary" @onclick="HandleConfirm">@_dialogInfo.ConfirmText</button>
+                }
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private MessageDialogInfo? _dialogInfo;

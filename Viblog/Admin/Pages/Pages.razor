@@ -18,46 +18,41 @@
     <div class="page-header">
         <h1>Pages</h1>
         <div class="page-actions">
-            <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                         Icon="@SvgIcon.Plus"
-                         OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/viblog/pages/new"))">
-                New Page
-            </TelerikButton>
+            <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/viblog/pages/new"))">
+                <Icon Name="add" /> New Page
+            </button>
         </div>
     </div>
 
     <div class="page-content">
         <div class="card">
             <div class="pages-toolbar">
-                <TelerikButtonGroup SelectionMode="@ButtonGroupSelectionMode.Single">
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(null))"
-                                   Icon="@SvgIcon.Grid">
-                        All Pages
-                    </TelerikButton>
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(true))"
-                                   Icon="@SvgIcon.Check">
-                        Published
-                    </TelerikButton>
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(false))"
-                                   Icon="@SvgIcon.X">
-                        Unpublished
-                    </TelerikButton>
-                </TelerikButtonGroup>
+                <div class="button-group">
+                    <button class="btn @(_publishedFilter == null ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(null))">
+                        <Icon Name="grid_view" /> All Pages
+                    </button>
+                    <button class="btn @(_publishedFilter == true ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(true))">
+                        <Icon Name="check" /> Published
+                    </button>
+                    <button class="btn @(_publishedFilter == false ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(false))">
+                        <Icon Name="close" /> Unpublished
+                    </button>
+                </div>
             </div>
 
-            <TelerikGrid @ref="@_gridRef"
-                        TItem="PageEntity"
-                        OnRead="@ReadPagesAsync"
-                        OnRowClick="@OnRowClick"
-                        Pageable="true"
-                        PageSize="@_pageSize"
-                        Sortable="true"
-                        FilterMode="@GridFilterMode.FilterRow"
-                        Height="calc(100vh - 300px)">
-                <GridColumns>
-                    <GridColumn Field="@nameof(PageEntity.Slug)" 
-                               Title="Slug" 
-                               Sortable="true">
+            <ViGrid @ref="@_gridRef"
+                    TItem="PageEntity"
+                    OnRead="@ReadPagesAsync"
+                    OnRowClick="@OnRowClick"
+                    Pageable="true"
+                    PageSize="@_pageSize"
+                    Sortable="true"
+                    Height="calc(100vh - 300px)">
+                <Columns>
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.Slug)"
+                            Title="Slug"
+                            Sortable="true">
                         <Template>
                             @{
                                 var item = context as PageEntity;
@@ -66,23 +61,25 @@
                                 </div>
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(PageEntity.Draft)" 
-                               Title="Title" 
-                               Sortable="false">
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.Draft)"
+                            Title="Title"
+                            Sortable="false">
                         <Template>
                             @{
                                 var item = context as PageEntity;
                                 @item?.Draft.Title
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(PageEntity.CreatedAt)" 
-                               Title="Created" 
-                               Width="180px"
-                               Sortable="true">
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.CreatedAt)"
+                            Title="Created"
+                            Width="180px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var item = context as PageEntity;
@@ -90,12 +87,13 @@
                             }
                             @created
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(PageEntity.UpdatedAt)" 
-                               Title="Last Updated" 
-                               Width="180px"
-                               Sortable="true">
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.UpdatedAt)"
+                            Title="Last Updated"
+                            Width="180px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var item = context as PageEntity;
@@ -103,12 +101,33 @@
                             }
                             @updated
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(PageEntity.Schedule)"
-                               Title="Status"
-                               Width="260px"
-                               Sortable="false">
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="PublishedAt"
+                            Title="Published"
+                            Width="180px"
+                            Sortable="true">
+                        <Template>
+                            @{
+                                var item = context as PageEntity;
+                                if (item?.Schedule.PublishedAt is { } publishedAt)
+                                {
+                                    @publishedAt.ToString("MMM dd, yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Draft</span>
+                                }
+                            }
+                        </Template>
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.IsPublished)"
+                            Title="Status"
+                            Width="260px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var item = context as PageEntity;
@@ -120,12 +139,13 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(PageEntity.ViewCount)" 
-                               Title="Views" 
-                               Width="100px"
-                               Sortable="false">
+                    </Column>
+
+                    <Column TItem="PageEntity"
+                            Field="@nameof(PageEntity.ViewCount)"
+                            Title="Views"
+                            Width="100px"
+                            Sortable="false">
                         <Template>
                             @{
                                 var item = context as PageEntity;
@@ -140,15 +160,15 @@
                                 <span class="text-muted">-</span>
                             }
                         </Template>
-                    </GridColumn>
-                </GridColumns>
-            </TelerikGrid>
+                    </Column>
+                </Columns>
+            </ViGrid>
         </div>
     </div>
 </div>
 
 @code {
-    private TelerikGrid<PageEntity>? _gridRef;
+    private ViGrid<PageEntity>? _gridRef;
     private int _pageSize = 20;
     private bool? _publishedFilter = null;
 
@@ -156,7 +176,7 @@
     {
         // Determine sort field and direction from grid state
         var sortDescriptor = args.Request.Sorts.FirstOrDefault();
-        var sortField = PageSortField.Slug;
+        var sortField = PageSortField.IsPublished;
         var sortAscending = true;
 
         if (sortDescriptor != null)
@@ -166,10 +186,11 @@
                 nameof(PageEntity.Slug) => PageSortField.Slug,
                 nameof(PageEntity.CreatedAt) => PageSortField.CreatedAt,
                 nameof(PageEntity.UpdatedAt) => PageSortField.UpdatedAt,
-                "IsPublished" => PageSortField.IsPublished, // Since IsPublished is a method, we can't use nameof
-                _ => PageSortField.Slug
+                "IsPublished" => PageSortField.IsPublished,
+                "PublishedAt" => PageSortField.PublishedAt,
+                _ => PageSortField.IsPublished
             };
-            sortAscending = sortDescriptor.SortDirection == Telerik.DataSource.ListSortDirection.Ascending;
+            sortAscending = sortDescriptor.SortDirection == SortDirection.Ascending;
         }
 
         // Calculate paging parameters

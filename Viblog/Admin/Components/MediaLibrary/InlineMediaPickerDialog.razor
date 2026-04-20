@@ -2,41 +2,29 @@
 
 @if (_isVisible)
 {
-    <TelerikWindow Visible="@_isVisible"
-                   VisibleChanged="@OnWindowVisibleChanged"
-                   Modal="true"
-                   Width="560px"
-                   Height="auto">
-        <WindowTitle>
-            <strong>Insert Media</strong>
-        </WindowTitle>
-        <WindowContent>
-            <div class="inline-picker-dialog-content">
-                <InlineMediaPicker OnMediaItemSelected="OnItemSelectedAsync" />
+    <div class="dialog-overlay" @onclick="CloseAsync">
+        <div class="dialog" style="width: 560px;" @onclick:stopPropagation="true">
+            <div class="dialog-header">
+                <strong>Insert Media</strong>
+                <button class="btn btn-icon" @onclick="CloseAsync"><Icon Name="close" /></button>
             </div>
-        </WindowContent>
-        <WindowActions>
-        </WindowActions>
-        <WindowFooter>
-            <div class="inline-picker-dialog-footer">
+            <div class="dialog-content">
+                <div class="inline-picker-dialog-content">
+                    <InlineMediaPicker OnMediaItemSelected="OnItemSelectedAsync" />
+                </div>
+            </div>
+            <div class="dialog-footer inline-picker-dialog-footer">
                 @if (_selectedItem != null)
                 {
                     <span class="picker-selection-label" title="@_selectedItem.FileName">
                         @_selectedItem.FileName
                     </span>
                 }
-                <TelerikButton OnClick="@CloseAsync"
-                               ThemeColor="@ThemeConstants.Button.ThemeColor.Base">
-                    Cancel
-                </TelerikButton>
-                <TelerikButton OnClick="@InsertAsync"
-                               ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                               Enabled="@(_selectedItem != null)">
-                    Insert
-                </TelerikButton>
+                <button class="btn" @onclick="@CloseAsync">Cancel</button>
+                <button class="btn btn-primary" @onclick="@InsertAsync" disabled="@(_selectedItem == null)">Insert</button>
             </div>
-        </WindowFooter>
-    </TelerikWindow>
+        </div>
+    </div>
 }
 
 @code {

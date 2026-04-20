@@ -5,26 +5,24 @@
 @inject NavigationManager Navigation
 
 <HeadContent>
-    <link rel="stylesheet" href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/all.css" />
-    <link rel="stylesheet" href="@Assets["admin.css"]" />
-    <script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/_content/Viblog/admin.css" />
 </HeadContent>
 
-<TelerikRootComponent>
-    <CascadingAuthenticationState>
-        <AuthorizeView>
-            <Authorized Context="authContext">
-                <div class="admin-container">
-                    <aside class="admin-sidebar @(_expanded ? "expanded" : "collapsed")">
-                        <div class="sidebar-header">
-                            <div class="logo">
-                                <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
-                                @if (_expanded)
-                                {
-                                    <span class="logo-text">Viblo<strong>G</strong></span>
-                                }
-                            </div>
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized Context="authContext">
+            <div class="admin-container">
+                <aside class="admin-sidebar @(_expanded ? "expanded" : "collapsed")">
+                    <div class="sidebar-header">
+                        <div class="logo">
+                            <Icon Name="image" Size="32" />
+                            @if (_expanded)
+                            {
+                                <span class="logo-text">Viblo<strong>G</strong></span>
+                            }
                         </div>
+                    </div>
 
                         <nav class="sidebar-nav">
                             <div class="nav-section">
@@ -43,7 +41,7 @@
                                 <div class="nav-section-title">@(_expanded ? "Stats" : "")</div>
                                 <div class="stats-widget">
                                     <div class="stat-item">
-                                        <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                        <Icon Name="calendar_month" />
                                         @if (_expanded)
                                         {
                                             <div class="stat-content">
@@ -53,7 +51,7 @@
                                         }
                                     </div>
                                     <div class="stat-item">
-                                        <TelerikSvgIcon Icon="@SvgIcon.Calendar" />
+                                        <Icon Name="calendar_month" />
                                         @if (_expanded)
                                         {
                                             <div class="stat-content">
@@ -67,7 +65,7 @@
 
                             <div class="nav-section nav-section-logout">
                                 <MenuItem Text="Logout"
-                                          Icon="@SvgIcon.Logout"
+                                          Icon="logout"
                                           Url="/viblog/logout"
                                           Expanded="@_expanded"
                                           IsActive="false" />
@@ -78,15 +76,14 @@
                     <div class="admin-main">
                         <header class="admin-header">
                             <div class="header-left">
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                               Icon="@(_expanded ? SvgIcon.ChevronDoubleLeft : SvgIcon.Menu)"
-                                               OnClick="@((MouseEventArgs args) => _expanded = !_expanded)">
-                                </TelerikButton>
-                                <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                               Icon="@SvgIcon.X">
-                                </TelerikButton>
+                                <button class="btn btn-icon" @onclick="@(() => _expanded = !_expanded)">
+                                    <Icon Name="@(_expanded ? "chevron_left" : "menu")" />
+                                </button>
+                                <button class="btn btn-icon">
+                                    <Icon Name="close" />
+                                </button>
                                 <div class="search-box">
-                                    <TelerikSvgIcon Icon="@SvgIcon.Search" />
+                                    <Icon Name="search" />
                                     <input type="text" placeholder="Search..." />
                                 </div>
                             </div>
@@ -118,21 +115,20 @@
         </AuthorizeView>
     </CascadingAuthenticationState>
     <ReconnectModal />
-</TelerikRootComponent>
 @code {
     private bool _expanded = true;
 
     private List<DrawerItem> _navigationItems = new()
     {
-        new DrawerItem { Text = "Dashboard", Icon = SvgIcon.Grid, Url = "/viblog" },
-        new DrawerItem { Text = "Posts", Icon = SvgIcon.FileAdd, Url = "/viblog/posts" },
-        new DrawerItem { Text = "Pages", Icon = SvgIcon.FileData, Url = "/viblog/pages" },
-        new DrawerItem { Text = "Media", Icon = SvgIcon.Image, Url = "/viblog/media" },
-        new DrawerItem { Text = "Users", Icon = SvgIcon.User, Url = "/viblog/users" },
-        new DrawerItem { Text = "Profile", Icon = SvgIcon.User, Url = "/viblog/profile" },
-        new DrawerItem { Text = "Audit Logs", Icon = SvgIcon.FileReport, Url = "/viblog/audit-logs" },
-        new DrawerItem { Text = "Analytics", Icon = SvgIcon.ChartLineMarkers, Url = "/viblog/analytics" },
-        new DrawerItem { Text = "Settings", Icon = SvgIcon.Gear, Url = "/viblog/settings" }
+        new DrawerItem { Text = "Dashboard", Icon = "dashboard", Url = "/viblog" },
+        new DrawerItem { Text = "Posts", Icon = "post_add", Url = "/viblog/posts" },
+        new DrawerItem { Text = "Pages", Icon = "description", Url = "/viblog/pages" },
+        new DrawerItem { Text = "Media", Icon = "image", Url = "/viblog/media" },
+        new DrawerItem { Text = "Users", Icon = "person", Url = "/viblog/users" },
+        new DrawerItem { Text = "Profile", Icon = "account_circle", Url = "/viblog/profile" },
+        new DrawerItem { Text = "Audit Logs", Icon = "assignment", Url = "/viblog/audit-logs" },
+        new DrawerItem { Text = "Analytics", Icon = "analytics", Url = "/viblog/analytics" },
+        new DrawerItem { Text = "Settings", Icon = "settings", Url = "/viblog/settings" }
     };
 
     protected override void OnInitialized()

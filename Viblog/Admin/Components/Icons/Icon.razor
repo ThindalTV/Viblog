@@ -1,0 +1,22 @@
+@namespace Viblog.Admin.Components.Icons
+
+<span class="material-symbols-outlined @Class" style="@SizeStyle" aria-hidden="true">@Name</span>
+
+@code {
+    /// <summary>
+    /// The Material Symbols icon name (e.g., "star", "add", "check", "close").
+    /// </summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional CSS class to apply to the icon element.
+    /// </summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// Optional size in pixels. Defaults to 24.
+    /// </summary>
+    [Parameter] public int? Size { get; set; }
+
+    private string? SizeStyle => Size.HasValue ? $"font-size: {Size}px" : null;
+}

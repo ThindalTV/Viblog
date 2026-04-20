@@ -49,9 +49,6 @@ public static class ViblogStartupExtensions
         /// </summary>
         public IServiceCollection AddViblogServices()
         {
-            // Set up Telerik
-            collection.AddTelerikBlazor();
-
             var configuration = collection.BuildServiceProvider().GetRequiredService<IConfiguration>();
 
             collection.AddHttpContextAccessor();

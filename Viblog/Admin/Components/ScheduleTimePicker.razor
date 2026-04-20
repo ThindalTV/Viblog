@@ -1,31 +1,34 @@
-@using Telerik.Blazor.Components
-
-<TelerikDialog @bind-Visible="Visible"
-               Title="@Title"
-               Width="380px"
-               ShowCloseButton="true">
-    <DialogContent>
-        <div class="schedule-picker-content">
-            <TelerikDateTimePicker @bind-Value="_selectedDate"
-                                   Min="@_minDate"
-                                   Format="MMM dd, yyyy HH:mm"
-                                   Width="100%" />
-            <p class="schedule-picker-note">All times are UTC.</p>
-            @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
-            {
-                <p class="schedule-picker-warning">The selected time must be in the future.</p>
-            }
+@if (Visible)
+{
+    <div class="dialog-overlay" @onclick="OnCancelClick">
+        <div class="dialog" style="width: 380px;" @onclick:stopPropagation="true">
+            <div class="dialog-header">
+                <h3>@Title</h3>
+                <button class="btn btn-icon" @onclick="OnCancelClick"><Icon Name="close" /></button>
+            </div>
+            <div class="dialog-content">
+                <div class="schedule-picker-content">
+                    <input type="datetime-local"
+                           value="@(_selectedDate?.ToString("yyyy-MM-ddTHH:mm"))"
+                           min="@_minDate.ToString("yyyy-MM-ddTHH:mm")"
+                           @onchange="OnDateChanged"
+                           class="form-control" />
+                    <p class="schedule-picker-note">All times are UTC.</p>
+                    @if (_selectedDate.HasValue && _selectedDate.Value <= DateTimeOffset.UtcNow)
+                    {
+                        <p class="schedule-picker-warning">The selected time must be in the future.</p>
+                    }
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="btn" @onclick="OnCancelClick">Cancel</button>
+                <button class="btn btn-primary" @onclick="OnConfirmClick" disabled="@(!IsConfirmEnabled)">
+                    Confirm
+                </button>
+            </div>
         </div>
-    </DialogContent>
-    <DialogButtons>
-        <TelerikButton OnClick="OnCancelClick">Cancel</TelerikButton>
-        <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                       OnClick="OnConfirmClick"
-                       Enabled="@IsConfirmEnabled">
-            Confirm
-        </TelerikButton>
-    </DialogButtons>
-</TelerikDialog>
+    </div>
+}
 
 @code {
     /// <summary>Controls dialog visibility; supports two-way binding.</summary>
@@ -62,6 +65,14 @@
 
     private bool IsConfirmEnabled =>
         _selectedDate.HasValue && _selectedDate.Value > DateTime.UtcNow;
+
+    private void OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsed))
+        {
+            _selectedDate = parsed;
+        }
+    }
 
     private async Task OnConfirmClick()
     {

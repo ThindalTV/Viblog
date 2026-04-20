@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Viblog.Admin.Models;
 
@@ -40,4 +42,32 @@ public class BlogPostModel
 
     public List<string> Tags { get; set; } = [];
     public List<string> CategoryIds { get; set; } = [];
+
+    /// <summary>
+    /// Computes a deterministic hash of all editable fields for dirty-tracking.
+    /// </summary>
+    public string GetFormHash()
+    {
+        var sb = new StringBuilder();
+        sb.Append(Title);
+        sb.Append('|');
+        sb.Append(Slug);
+        sb.Append('|');
+        sb.Append(Short);
+        sb.Append('|');
+        sb.Append(Markdown);
+        sb.Append('|');
+        sb.Append(FeaturedImageUrl);
+        sb.Append('|');
+        sb.Append(FeaturedImageAlt);
+        sb.Append('|');
+        sb.Append(IsFeatured);
+        sb.Append('|');
+        sb.Append(string.Join(',', Tags.Order()));
+        sb.Append('|');
+        sb.Append(string.Join(',', CategoryIds.Order()));
+
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()));
+        return Convert.ToHexStringLower(bytes);
+    }
 }

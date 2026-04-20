@@ -21,8 +21,8 @@ public interface IPagesAdminFacade
     Task<PagedResult<Page>> GetPagesAsync(
         PagingParameters pagingParameters,
         bool? publishedOnly = null,
-        PageSortField sortField = PageSortField.Slug,
-        bool ascending = true,
+        PageSortField sortField = PageSortField.PublishedAt,
+        bool ascending = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -100,5 +100,6 @@ public enum PageSortField
     Slug,
     CreatedAt,
     UpdatedAt,
-    IsPublished
+    IsPublished,
+    PublishedAt
 }

@@ -1,0 +1,106 @@
+.vi-grid {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface-color, #fff);
+}
+
+.vi-grid-header table,
+.vi-grid-body table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.vi-grid-header {
+    background: var(--header-bg, #f8f9fa);
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.vi-grid-header th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6c757d);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vi-grid-header-sortable {
+    cursor: pointer;
+}
+
+.vi-grid-header-sortable:hover {
+    color: var(--text-primary, #212529);
+    background: var(--header-hover-bg, #e9ecef);
+}
+
+.vi-grid-sort-icon {
+    margin-left: 4px;
+    font-size: 0.7rem;
+}
+
+.vi-grid-body {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.vi-grid-body td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color-light, #f0f0f0);
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.vi-grid-row:last-child td {
+    border-bottom: none;
+}
+
+.vi-grid-row-clickable {
+    cursor: pointer;
+}
+
+.vi-grid-row-clickable:hover {
+    background: var(--row-hover-bg, #f8f9fa);
+}
+
+.vi-grid-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    background: var(--header-bg, #f8f9fa);
+}
+
+.vi-grid-pager-btn {
+    border: 1px solid var(--border-color, #e0e0e0);
+    background: var(--surface-color, #fff);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.vi-grid-pager-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.vi-grid-pager-btn:not(:disabled):hover {
+    background: var(--header-hover-bg, #e9ecef);
+}
+
+.vi-grid-pager-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6c757d);
+}

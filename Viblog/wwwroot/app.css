@@ -13,12 +13,6 @@ a, .btn-link {
     color: var(--color-primary);
 }
 
-.btn-primary {
-    color: var(--color-white);
-    background-color: var(--color-primary-bg);
-    border-color: var(--color-primary-border);
-}
-
 .btn:focus,
 .btn:active:focus,
 .btn-link.nav-link:focus,

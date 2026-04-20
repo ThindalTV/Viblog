@@ -1,50 +1,65 @@
 @using Viblog.Admin.Services.Dialogs
 @using Viblog.Infrastructure.Data.Entities.Content
+@using Viblog.Infrastructure.Extensions
 @inject IDialogService DialogService
 
 @{
     var isEditMode = Content is not null;
     var isDeleted = Content?.IsDeleted ?? false;
     var isPublished = Content?.IsPublished ?? false;
+    var draftDiffersFromLive = Content?.DraftDiffersFromLive() ?? true;
+    var hasAnythingToPublish = HasUnsavedChanges || draftDiffersFromLive;
+    var publishDisabled = IsSaving || (isPublished && !hasAnythingToPublish);
+    var saveDisabled = IsSaving || (isEditMode && !HasUnsavedChanges);
 }
 
-<ContentStatusBadge Content="@Content" />
+<div class="editor-actions">
+    <div class="actions-status">
+        <ContentStatusBadge Content="@Content" />
+    </div>
 
-@if (!isDeleted)
-{
-    <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@IsSaving">
-        @(_confirmPublishNow ? "Click to confirm" : (isPublished ? "Publish Update Now" : "Publish Now"))
-    </button>
-
-    <button type="button" class="btn-action btn-schedule" @onclick="HandleScheduleClickAsync" disabled="@IsSaving">
-        @(isPublished ? "Schedule Update" : "Schedule Publish")
-    </button>
-
-    @if (isEditMode && isPublished)
+    @if (!isDeleted)
     {
-        <button type="button" class="btn-action btn-unpublish" @onclick="HandleUnpublishClick" disabled="@IsSaving">
-            Unpublish
-        </button>
-    }
+        <div class="actions-publish">
+            <button type="button" class="@GetPublishNowCssClass()" @onclick="HandlePublishNowClickAsync" disabled="@publishDisabled">
+                @(_confirmPublishNow ? "Click to confirm" : (isPublished ? "Publish Update Now" : "Publish Now"))
+            </button>
 
-    @if (isEditMode)
-    {
-        <button type="button" class="btn-action btn-delete" @onclick="HandleDeleteClick" disabled="@IsSaving">
-            Delete
-        </button>
-    }
+            <button type="button" class="btn-action btn-schedule" @onclick="HandleScheduleClickAsync" disabled="@publishDisabled">
+                @(isPublished ? "Schedule Update" : "Schedule Publish")
+            </button>
+        </div>
 
-    <button type="button" class="btn-action btn-save-draft" @onclick="() => OnSaveDraft.InvokeAsync()" disabled="@IsSaving">
-        @if (IsSaving)
+        <div class="actions-primary">
+            <button type="button" class="btn-action btn-save-draft" @onclick="() => OnSaveDraft.InvokeAsync()" disabled="@saveDisabled">
+                @if (IsSaving)
+                {
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Draft</span>
+                }
+            </button>
+        </div>
+
+        @if (isEditMode)
         {
-            <span>Saving...</span>
+            <div class="actions-danger">
+                @if (isPublished)
+                {
+                    <button type="button" class="btn-action btn-unpublish" @onclick="HandleUnpublishClick" disabled="@IsSaving">
+                        Unpublish
+                    </button>
+                }
+
+                <button type="button" class="btn-action btn-delete" @onclick="HandleDeleteClick" disabled="@IsSaving">
+                    Delete
+                </button>
+            </div>
         }
-        else
-        {
-            <span>Save Draft</span>
-        }
-    </button>
-}
+    }
+</div>
 
 <ScheduleTimePicker @bind-Visible="_schedulePickerVisible"
                     Title="@(Content?.Schedule.Status == ContentStatus.Scheduled ? "Change Scheduled Time" : "Schedule Publication")"
@@ -54,6 +69,9 @@
 @code {
     /// <summary>Whether a save or publish operation is currently in progress.</summary>
     [Parameter] public bool IsSaving { get; set; }
+
+    /// <summary>Whether the form has unsaved changes compared to the last load or save.</summary>
+    [Parameter] public bool HasUnsavedChanges { get; set; }
 
     /// <summary>
     /// The content entity being edited. Null when creating new content.

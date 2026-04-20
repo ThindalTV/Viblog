@@ -46,7 +46,7 @@ public class PostsAdminFacade : IPostsAdminFacade
         Expression<Func<BlogPost, bool>> predicate = publishedOnly switch
         {
             true => p => p.IsPublished,
-            false => p => true, // Not restricting to published only — include all
+            false => p => !p.IsPublished,
             null => p => true // All posts
         };
 

@@ -1,12 +1,12 @@
 <div class="card stat-card">
-    <TelerikSvgIcon Icon="@Icon" Class="stat-icon" />
+    <Icon Name="@Icon" Class="stat-icon" />
     <div class="stat-value">@Value</div>
     <div class="stat-label">@Label</div>
 </div>
 
 @code {
-    /// <summary>Icon displayed at the top of the card.</summary>
-    [Parameter, EditorRequired] public ISvgIcon Icon { get; set; } = SvgIcon.Star;
+    /// <summary>Material Symbols icon name displayed at the top of the card.</summary>
+    [Parameter, EditorRequired] public string Icon { get; set; } = "star";
 
     /// <summary>Formatted value string shown as the main number.</summary>
     [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;

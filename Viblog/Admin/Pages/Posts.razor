@@ -17,61 +17,58 @@
     <div class="page-header">
         <h1>Posts</h1>
         <div class="page-actions">
-            <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                           Icon="@SvgIcon.Plus"
-                           OnClick="@((MouseEventArgs args) => NavigationManager.NavigateTo("/viblog/posts/new"))">
-                New Post
-            </TelerikButton>
+            <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/viblog/posts/new"))">
+                <Icon Name="add" /> New Post
+            </button>
         </div>
     </div>
 
     <div class="page-content">
         <div class="card">
             <div class="posts-toolbar">
-                <TelerikButtonGroup SelectionMode="@ButtonGroupSelectionMode.Single">
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(null))"
-                                   Icon="@SvgIcon.Grid">
-                        All Posts
-                    </TelerikButton>
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(true))"
-                                   Icon="@SvgIcon.Check">
-                        Published
-                    </TelerikButton>
-                    <TelerikButton OnClick="@((MouseEventArgs args) => OnFilterChanged(false))"
-                                   Icon="@SvgIcon.X">
-                        Unpublished
-                    </TelerikButton>
-                </TelerikButtonGroup>
+                <div class="button-group">
+                    <button class="btn @(_publishedFilter == null ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(null))">
+                        <Icon Name="grid_view" /> All Posts
+                    </button>
+                    <button class="btn @(_publishedFilter == true ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(true))">
+                        <Icon Name="check" /> Published
+                    </button>
+                    <button class="btn @(_publishedFilter == false ? "btn-active" : "")" @onclick="@(() => OnFilterChanged(false))">
+                        <Icon Name="close" /> Unpublished
+                    </button>
+                </div>
             </div>
 
-            <TelerikGrid @ref="@_gridRef"
-                         TItem="BlogPost"
-                         OnRead="@ReadPostsAsync"
-                         OnRowClick="@OnRowClick"
-                         Pageable="true"
-                         PageSize="@_pageSize"
-                         Sortable="true"
-                         FilterMode="@GridFilterMode.FilterRow"
-                         Height="calc(100vh - 300px)" PageChanged="@PageChanged">
-                <GridColumns>
-                    <GridColumn Field="@nameof(BlogPost.IsFeatured)"
-                                Title="Featured"
-                                Width="100px"
-                                Sortable="true">
+            <ViGrid @ref="@_gridRef"
+                    TItem="BlogPost"
+                    OnRead="@ReadPostsAsync"
+                    OnRowClick="@OnRowClick"
+                    Pageable="true"
+                    PageSize="@_pageSize"
+                    Sortable="true"
+                    Height="calc(100vh - 300px)"
+                    PageChanged="@PageChanged">
+                <Columns>
+                    <Column TItem="BlogPost"
+                            Field="@nameof(BlogPost.IsFeatured)"
+                            Title="Featured"
+                            Width="100px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
                                 if (post?.IsFeatured == true)
                                 {
-                                    <TelerikSvgIcon Icon="@SvgIcon.Star" Class="featured-icon" />
+                                    <Icon Name="star" Class="featured-icon" />
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                     
-                    <GridColumn Field="Draft.Title"
-                                Title="Title"
-                                Sortable="true">
+                    </Column>
+
+                    <Column TItem="BlogPost"
+                            Field="Draft.Title"
+                            Title="Title"
+                            Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
@@ -84,30 +81,52 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(BlogPost.Slug)"
-                                Title="Slug"
-                                Width="200px"
-                                Sortable="true">
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(BlogPost.CreatedAt)"
-                                Title="Created"
-                                Width="180px"
-                                Sortable="true">
+                    </Column>
+
+                    <Column TItem="BlogPost"
+                            Field="@nameof(BlogPost.Slug)"
+                            Title="Slug"
+                            Width="200px"
+                            Sortable="true" />
+
+                    <Column TItem="BlogPost"
+                            Field="@nameof(BlogPost.CreatedAt)"
+                            Title="Created"
+                            Width="180px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
                                 @post?.CreatedAt.ToString("MMM dd, yyyy HH:mm")
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(BlogPost.Schedule)"
-                                Title="Publication Status"
-                                Width="260px"
-                                Sortable="false">
+                    </Column>
+
+                    <Column TItem="BlogPost"
+                            Field="@nameof(BlogPost.PublishedAt)"
+                            Title="Published"
+                            Width="180px"
+                            Sortable="true">
+                        <Template>
+                            @{
+                                var post = context as BlogPost;
+                                if (post?.PublishedAt is { } publishedAt)
+                                {
+                                    @publishedAt.ToString("MMM dd, yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Draft</span>
+                                }
+                            }
+                        </Template>
+                    </Column>
+
+                    <Column TItem="BlogPost"
+                            Field="@nameof(BlogPost.IsPublished)"
+                            Title="Status"
+                            Width="260px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var post = context as BlogPost;
@@ -119,15 +138,15 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                </GridColumns>
-            </TelerikGrid>
+                    </Column>
+                </Columns>
+            </ViGrid>
         </div>
     </div>
 </div>
 
 @code {
-    private TelerikGrid<BlogPost>? _gridRef;
+    private ViGrid<BlogPost>? _gridRef;
     private int _pageSize = 20;
     private bool? _publishedFilter = null;
     private int _skip = 0;
@@ -136,8 +155,8 @@
     {
         // Determine sort field and direction from grid state
         var sortDescriptor = args.Request.Sorts.FirstOrDefault();
-        var sortField = PostSortField.PublishedAt;
-        var sortAscending = false;
+        var sortField = PostSortField.IsPublished;
+        var sortAscending = true;
 
         if (sortDescriptor != null)
         {
@@ -149,15 +168,14 @@
                 nameof(BlogPost.IsFeatured) => PostSortField.IsFeatured,
                 nameof(BlogPost.IsPublished) => PostSortField.IsPublished,
                 nameof(BlogPost.CreatedAt) => PostSortField.CreatedAt,
-                _ => PostSortField.PublishedAt
+                _ => PostSortField.IsPublished
             };
-            sortAscending = sortDescriptor.SortDirection == Telerik.DataSource.ListSortDirection.Ascending;
+            sortAscending = sortDescriptor.SortDirection == SortDirection.Ascending;
         }
 
-        // Calculate page number from skip/take
-        var take = args.Request.PageSize;
-        var pageNumber = (_skip / take) + 1;
-        var pagingParams = new PagingParameters(pageNumber, take);
+        // Calculate page number from request
+        var pageNumber = args.Request.Page;
+        var pagingParams = new PagingParameters(pageNumber, args.Request.PageSize);
 
         // Create a new scope for each request to avoid DbContext disposal issues
         await using (var scope = ServiceProvider.CreateAsyncScope())
@@ -191,7 +209,7 @@
     private void OnFilterChanged(bool? publishedFilter)
     {
         _publishedFilter = publishedFilter;
-        _skip = 0; // Reset to first page when filter changes
+        _skip = 0;
         _gridRef?.Rebind();
     }
 }

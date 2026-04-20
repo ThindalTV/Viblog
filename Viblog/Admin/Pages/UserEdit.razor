@@ -28,20 +28,20 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="name">Name</label>
-                        <TelerikTextBox @bind-Value="@_model.Name"
-                                      Id="name"
-                                      Placeholder="Enter name"
-                                      Width="100%" />
+                        <InputText @bind-Value="@_model.Name"
+                                   id="name"
+                                   placeholder="Enter name"
+                                   class="form-control" />
                         <ValidationMessage For="@(() => _model.Name)" />
                     </div>
 
                     <div class="form-group col-md-6">
                         <label for="email">Email</label>
-                        <TelerikTextBox @bind-Value="@_model.Email"
-                                      Id="email"
-                                      Placeholder="Enter email"
-                                      Enabled="@IsNewUser"
-                                      Width="100%" />
+                        <InputText @bind-Value="@_model.Email"
+                                   id="email"
+                                   placeholder="Enter email"
+                                   disabled="@(!IsNewUser)"
+                                   class="form-control" />
                         <ValidationMessage For="@(() => _model.Email)" />
                         @if (!IsNewUser)
                         {
@@ -56,11 +56,11 @@
                 {
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <TelerikTextBox @bind-Value="@_model.Password"
-                                      Id="password"
-                                      Password="true"
-                                      Placeholder="Enter password"
-                                      Width="100%" />
+                        <InputText @bind-Value="@_model.Password"
+                                   id="password"
+                                   type="password"
+                                   placeholder="Enter password"
+                                   class="form-control" />
                         <ValidationMessage For="@(() => _model.Password)" />
                         <small class="form-text text-muted">
                             Must be at least 8 characters with uppercase, lowercase, number, and special character.
@@ -73,16 +73,15 @@
                         <label>Password</label>
                         <div class="password-reset-section">
                             <p class="form-text text-muted">Click the button below to reset this user's password.</p>
-                            <TelerikButton OnClick="@OnResetPassword"
-                                         ThemeColor="@ThemeConstants.Button.ThemeColor.Secondary">
+                            <button type="button" class="btn btn-secondary" @onclick="@OnResetPassword">
                                 Reset Password
-                            </TelerikButton>
+                            </button>
                         </div>
                     </div>
                 }
 
                 <div class="form-group">
-                    <TelerikCheckBox @bind-Value="@_model.IsActive" Id="isActive" />
+                    <InputCheckbox @bind-Value="@_model.IsActive" id="isActive" />
                     <label for="isActive">Active</label>
                 </div>
 
@@ -92,8 +91,8 @@
                         @foreach (var claim in _availableClaims)
                         {
                             <div class="claim-checkbox">
-                                <TelerikCheckBox @bind-Value="@_claimStates[claim]"
-                                               Id="@($"claim-{claim}")" />
+                                <InputCheckbox @bind-Value="@_claimStates[claim]"
+                                               id="@($"claim-{claim}")" />
                                 <label for="@($"claim-{claim}")">@GetClaimDisplayName(claim)</label>
                             </div>
                         }
@@ -101,9 +100,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <TelerikButton ButtonType="@ButtonType.Submit"
-                                 ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                 Enabled="@(!_isSaving)">
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
                         @if (_isSaving)
                         {
                             <span>Saving...</span>
@@ -112,11 +109,10 @@
                         {
                             <span>@(IsNewUser ? "Create" : "Update")</span>
                         }
-                    </TelerikButton>
-                    <TelerikButton OnClick="@OnCancel"
-                                 Enabled="@(!_isSaving)">
+                    </button>
+                    <button type="button" class="btn" @onclick="@OnCancel" disabled="@_isSaving">
                         Cancel
-                    </TelerikButton>
+                    </button>
                 </div>
             </EditForm>
         </div>

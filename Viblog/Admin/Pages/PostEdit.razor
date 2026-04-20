@@ -32,6 +32,7 @@
     {
         <div class="page-actions">
             <ContentEditorActions IsSaving="@_isSaving"
+                                  HasUnsavedChanges="@HasUnsavedChanges"
                                   Content="@_post"
                                   OnSaveDraft="HandleSaveDraftAsync"
                                   OnPublishNow="HandlePublishNowAsync"
@@ -146,6 +147,9 @@ else
     private bool _isEditMode;
     private string _currentUserId = string.Empty;
     private EditContext _editContext = new(new BlogPostModel());
+    private string _savedFormHash = string.Empty;
+
+    private bool HasUnsavedChanges => _model.GetFormHash() != _savedFormHash;
 
     [Parameter]
     public string? Id { get; set; }
@@ -168,6 +172,7 @@ else
             var userName = authState.User.Identity?.Name ?? "Anonymous";
             _model = new BlogPostModel { AuthorName = userName };
             RebuildEditContext();
+            _savedFormHash = _model.GetFormHash();
             _isLoading = false;
         }
     }
@@ -190,6 +195,7 @@ else
             _post = post;
             _model = post.ToModel();
             RebuildEditContext();
+            _savedFormHash = _model.GetFormHash();
         }
         catch (Exception ex)
         {

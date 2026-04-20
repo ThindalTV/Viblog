@@ -1,83 +1,74 @@
-﻿@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Logging
 @using Viblog.Admin.Services
 @inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<MediaUploadDialog> Logger
+@inject HttpClient Http
 
 @if (IsVisible)
 {
-    <TelerikWindow Visible="@IsVisible"
-                   VisibleChanged="@OnWindowVisibleChanged"
-                   Modal="true"
-                   Width="700px"
-                   Height="auto">
-        <WindowTitle>
-            <strong>Upload Media Files</strong>
-        </WindowTitle>
-        <WindowContent>
-            <div class="upload-dialog-content">
-                <TelerikUpload SaveUrl="@SaveUrl"
-                               RemoveUrl="@RemoveUrl"
-                               SaveField="file"
-                               RemoveField="file"
-                               AllowedExtensions="@AllowedExtensions"
-                               MaxFileSize="@MaxFileSize"
-                               Multiple="true"
-                               AutoUpload="false"
-                               OnSelect="@OnFileSelect"
-                               OnUpload="@OnUploadHandler"
-                               OnSuccess="@OnUploadSuccess"
-                               OnError="@OnUploadError"
-                               OnRemove="@OnRemoveHandler"
-                               @ref="@UploadRef">
-                </TelerikUpload>
+    <div class="dialog-overlay" @onclick="OnClose">
+        <div class="dialog" style="width: 700px;" @onclick:stopPropagation="true">
+            <div class="dialog-header">
+                <strong>Upload Media Files</strong>
+                <button class="btn btn-icon" @onclick="OnClose"><Icon Name="close" /></button>
+            </div>
+            <div class="dialog-content">
+                <div class="upload-dialog-content">
+                    <InputFile OnChange="@OnFilesSelected"
+                               multiple
+                               accept="@string.Join(",", AllowedExtensions)" />
 
-                <div class="upload-info">
-                    <span>Images, PDFs, Documents, Videos, Audio</span>
-                    <span>Max @(MaxFileSize / 1024 / 1024) MB per file</span>
-                </div>
-
-                @if (_successMessages.Any())
-                {
-                    <div class="success-messages">
-                        @foreach (var message in _successMessages)
-                        {
-                            <div class="success-message">
-                                <span class="success-icon">✓</span>
-                                @message
-                            </div>
-                        }
+                    <div class="upload-info">
+                        <span>Images, PDFs, Documents, Videos, Audio</span>
+                        <span>Max @(MaxFileSize / 1024 / 1024) MB per file</span>
                     </div>
-                }
 
-                @if (_errorMessages.Any())
-                {
-                    <div class="error-messages">
-                        @foreach (var error in _errorMessages)
-                        {
-                            <div class="error-message">@error</div>
-                        }
+                    @if (_selectedFiles.Any())
+                    {
+                        <div class="selected-files">
+                            @foreach (var file in _selectedFiles)
+                            {
+                                <div class="selected-file">@file.Name (@(file.Size / 1024) KB)</div>
+                            }
+                        </div>
+                    }
+
+                    @if (_successMessages.Any())
+                    {
+                        <div class="success-messages">
+                            @foreach (var message in _successMessages)
+                            {
+                                <div class="success-message">
+                                    <span class="success-icon">✓</span>
+                                    @message
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (_errorMessages.Any())
+                    {
+                        <div class="error-messages">
+                            @foreach (var error in _errorMessages)
+                            {
+                                <div class="error-message">@error</div>
+                            }
+                        </div>
+                    }
+
+                    <div class="dialog-footer">
+                        <button class="btn" @onclick="@OnClose">Close</button>
+                        <button class="btn btn-primary" @onclick="@StartUpload" disabled="@(!_hasSelectedFiles || _isUploading)">
+                            @(_isUploading ? "Uploading..." : "Upload All")
+                        </button>
                     </div>
-                }
-
-                <div class="dialog-footer">
-                    <TelerikButton OnClick="@OnClose"
-                                   ThemeColor="@ThemeConstants.Button.ThemeColor.Base">
-                        Close
-                    </TelerikButton>
-                    <TelerikButton OnClick="@StartUpload"
-                                   ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                   Enabled="@_hasSelectedFiles">
-                        Upload All
-                    </TelerikButton>
                 </div>
             </div>
-        </WindowContent>
-    </TelerikWindow>
+        </div>
+    </div>
 }
 
 @code {
-    private TelerikUpload? UploadRef { get; set; }
-
     /// <summary>Whether the dialog is visible.</summary>
     [Parameter]
     public bool IsVisible { get; set; }
@@ -119,82 +110,69 @@
         }
     }
 
-    private string RemoveUrl => "/api/media/upload/remove";
-
     // State
     private bool _hasSelectedFiles;
-    private bool _isRemoving;
+    private bool _isUploading;
+    private IReadOnlyList<Microsoft.AspNetCore.Components.Forms.IBrowserFile> _selectedFiles = [];
     private List<string> _successMessages = [];
     private List<string> _errorMessages = [];
     private int _uploadedCount;
 
-    private void OnFileSelect(UploadSelectEventArgs args)
+    private void OnFilesSelected(InputFileChangeEventArgs args)
     {
         _errorMessages.Clear();
-        _hasSelectedFiles = args.Files.Any();
+        _selectedFiles = args.GetMultipleFiles(20);
+        _hasSelectedFiles = _selectedFiles.Any();
         StateHasChanged();
     }
 
-    private void OnUploadHandler(UploadEventArgs args)
-    {
-        var folderPath = FolderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM");
-        args.RequestData.Add("folderPath", folderPath);
-        if (!string.IsNullOrEmpty(UploadedBy))
-            args.RequestData.Add("uploadedBy", UploadedBy);
-
-        Logger.LogInformation("Uploading {FileName} to {FolderPath}",
-            args.Files.FirstOrDefault()?.Name, folderPath);
-    }
-
-    private async Task OnUploadSuccess(UploadSuccessEventArgs args)
-    {
-        var fileName = args.Files.FirstOrDefault()?.Name ?? "Unknown file";
-        _successMessages.Add($"Successfully uploaded: {fileName}");
-        _uploadedCount++;
-
-        Logger.LogInformation("Upload succeeded: {FileName}", fileName);
-
-        // Refresh the media browser immediately without closing the dialog
-        await BroadcastService.BroadcastFolderContentsChangedAsync(
-            FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
-
-        StateHasChanged();
-    }
-
-    private void OnUploadError(UploadErrorEventArgs args)
-    {
-        // Suppress errors from remove requests — files are already saved
-        if (_isRemoving)
-        {
-            _isRemoving = false;
-            return;
-        }
-
-        var fileName = args.Files.FirstOrDefault()?.Name ?? "Unknown file";
-        _errorMessages.Add($"Failed to upload {fileName}: {args.Request.StatusText}");
-        Logger.LogError("Upload failed for {FileName}: {Status}", fileName, args.Request.StatusText);
-        StateHasChanged();
-    }
-
-    private void OnRemoveHandler(UploadEventArgs args)
-    {
-        _isRemoving = true;
-        Logger.LogInformation("Removing {FileName} from list", args.Files.FirstOrDefault()?.Name);
-    }
-
-    private void StartUpload()
+    private async Task StartUpload()
     {
         _successMessages.Clear();
         _errorMessages.Clear();
         _uploadedCount = 0;
-        UploadRef?.UploadFiles();
-    }
+        _isUploading = true;
+        StateHasChanged();
 
-    // Called when the TelerikWindow's built-in X button is clicked
-    private async Task OnWindowVisibleChanged(bool visible)
-    {
-        if (!visible)
-            await OnClose();
+        foreach (var file in _selectedFiles)
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                using var stream = file.OpenReadStream(MaxFileSize);
+                var streamContent = new StreamContent(stream);
+                content.Add(streamContent, "file", file.Name);
+
+                var response = await Http.PostAsync(SaveUrl, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _successMessages.Add($"Successfully uploaded: {file.Name}");
+                    _uploadedCount++;
+                    Logger.LogInformation("Upload succeeded: {FileName}", file.Name);
+
+                    await BroadcastService.BroadcastFolderContentsChangedAsync(
+                        FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
+                }
+                else
+                {
+                    _errorMessages.Add($"Failed to upload {file.Name}: {response.ReasonPhrase}");
+                    Logger.LogError("Upload failed for {FileName}: {Status}", file.Name, response.ReasonPhrase);
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorMessages.Add($"Failed to upload {file.Name}: {ex.Message}");
+                Logger.LogError(ex, "Upload failed for {FileName}", file.Name);
+            }
+
+            StateHasChanged();
+        }
+
+        _isUploading = false;
+        _hasSelectedFiles = false;
+        _selectedFiles = [];
+        StateHasChanged();
     }
 
     private async Task OnClose()
@@ -205,7 +183,8 @@
             await OnFilesUploaded.InvokeAsync();
 
         _hasSelectedFiles = false;
-        _isRemoving = false;
+        _isUploading = false;
+        _selectedFiles = [];
         _successMessages.Clear();
         _errorMessages.Clear();
         _uploadedCount = 0;

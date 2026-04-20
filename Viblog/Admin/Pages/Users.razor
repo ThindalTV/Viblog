@@ -20,30 +20,28 @@
         <div class="page-actions">
             @if (HasWritePermission())
             {
-                <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                             Icon="@SvgIcon.Plus"
-                             OnClick="@(() => NavigationManager.NavigateTo("/viblog/users/new"))">
-                    New User
-                </TelerikButton>
+                <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/viblog/users/new"))">
+                    <Icon Name="add" /> New User
+                </button>
             }
         </div>
     </div>
 
     <div class="page-content">
         <div class="card">
-            <TelerikGrid @ref="@_gridRef"
-                        TItem="UserEntity"
-                        OnRead="@ReadUsersAsync"
-                        Pageable="true"
-                        PageSize="@_pageSize"
-                        Sortable="true"
-                        FilterMode="@GridFilterMode.FilterRow"
-                        Height="calc(100vh - 300px)">
-                <GridColumns>
-                    <GridColumn Field="@nameof(UserEntity.IsActive)" 
-                               Title="Status" 
-                               Width="100px"
-                               Filterable="false">
+            <ViGrid @ref="@_gridRef"
+                    TItem="UserEntity"
+                    OnRead="@ReadUsersAsync"
+                    Pageable="true"
+                    PageSize="@_pageSize"
+                    Sortable="true"
+                    Height="calc(100vh - 300px)">
+                <Columns>
+                    <Column TItem="UserEntity"
+                            Field="@nameof(UserEntity.IsActive)"
+                            Title="Status"
+                            Width="100px"
+                            Sortable="false">
                         <Template>
                             @{
                                 var user = context as UserEntity;
@@ -57,22 +55,23 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(UserEntity.DisplayName)" 
-                               Title="Name" 
-                               Sortable="true">
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(UserEntity.Email)" 
-                               Title="Email" 
-                               Sortable="true">
-                    </GridColumn>
-                    
-                    <GridColumn Field="@nameof(UserEntity.LastLoginAt)" 
-                               Title="Last Login" 
-                               Width="180px"
-                               Sortable="true">
+                    </Column>
+
+                    <Column TItem="UserEntity"
+                            Field="@nameof(UserEntity.DisplayName)"
+                            Title="Name"
+                            Sortable="true" />
+
+                    <Column TItem="UserEntity"
+                            Field="@nameof(UserEntity.Email)"
+                            Title="Email"
+                            Sortable="true" />
+
+                    <Column TItem="UserEntity"
+                            Field="@nameof(UserEntity.LastLoginAt)"
+                            Title="Last Login"
+                            Width="180px"
+                            Sortable="true">
                         <Template>
                             @{
                                 var user = context as UserEntity;
@@ -86,13 +85,13 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
+                    </Column>
 
-                    <GridColumn Field="@nameof(UserEntity.CustomClaims)" 
-                               Title="Permissions" 
-                               Width="250px"
-                               Filterable="false"
-                               Sortable="false">
+                    <Column TItem="UserEntity"
+                            Field="@nameof(UserEntity.CustomClaims)"
+                            Title="Permissions"
+                            Width="250px"
+                            Sortable="false">
                         <Template>
                             @{
                                 var user = context as UserEntity;
@@ -111,38 +110,39 @@
                                 }
                             }
                         </Template>
-                    </GridColumn>
-                    
-                    <GridColumn Title="Actions" Width="120px" Filterable="false" Sortable="false">
+                    </Column>
+
+                    <Column TItem="UserEntity"
+                            Title="Actions"
+                            Width="120px"
+                            Sortable="false">
                         <Template>
                             @{
                                 var user = context as UserEntity;
                                 <div class="grid-actions">
                                     @if (HasWritePermission())
                                     {
-                                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                                     Icon="@SvgIcon.Pencil"
-                                                     Title="Edit"
-                                                     OnClick="@(() => NavigationManager.NavigateTo($"/viblog/users/edit/{user!.Id}"))">
-                                                     </TelerikButton>
-                                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                                     Icon="@SvgIcon.Trash"
-                                                     Title="Delete"
-                                                     OnClick="@(() => OnDeleteUser(user!))">
-                                        </TelerikButton>
+                                        <button class="btn btn-icon" title="Edit"
+                                                @onclick="@(() => NavigationManager.NavigateTo($"/viblog/users/edit/{user!.Id}"))">
+                                            <Icon Name="edit" />
+                                        </button>
+                                        <button class="btn btn-icon btn-danger" title="Delete"
+                                                @onclick="@(() => OnDeleteUser(user!))">
+                                            <Icon Name="delete" />
+                                        </button>
                                     }
                                 </div>
                             }
                         </Template>
-                    </GridColumn>
-                </GridColumns>
-            </TelerikGrid>
+                    </Column>
+                </Columns>
+            </ViGrid>
         </div>
     </div>
 </div>
 
 @code {
-    private TelerikGrid<UserEntity>? _gridRef;
+    private ViGrid<UserEntity>? _gridRef;
     private int _pageSize = 20;
 
     [CascadingParameter]
