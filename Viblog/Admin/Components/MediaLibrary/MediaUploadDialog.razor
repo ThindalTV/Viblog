@@ -1,9 +1,14 @@
+@using System.Globalization
 @using Microsoft.Extensions.Logging
 @using Viblog.Admin.Services
 @using Viblog.Admin.Components.Dialogs
+@using Viblog.Infrastructure.Facades
+@using Microsoft.Extensions.Options
+@using Viblog.Shared.Configuration
 @inject IMediaLibraryBroadcastService BroadcastService
 @inject ILogger<MediaUploadDialog> Logger
-@inject HttpClient Http
+@inject IMediaFacade MediaFacade
+@inject IOptions<MediaLibrarySettings> Settings
 
 <DialogBase @ref="_dialogBase" IsModal="true" CssClass="media-upload-dialog" OnClose="OnClose">
     <Title>
@@ -94,18 +99,6 @@
 
     private int MaxFileSize => 50 * 1024 * 1024; // 50 MB
 
-    private string SaveUrl
-    {
-        get
-        {
-            var folderPath = FolderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM");
-            var url = $"/api/media/upload?folderPath={Uri.EscapeDataString(folderPath)}";
-            if (!string.IsNullOrEmpty(UploadedBy))
-                url += $"&uploadedBy={Uri.EscapeDataString(UploadedBy)}";
-            return url;
-        }
-    }
-
     // State
     private bool _hasSelectedFiles;
     private bool _isUploading;
@@ -149,31 +142,50 @@
         _isUploading = true;
         StateHasChanged();
 
+        var uploadSettings = Settings.Value.Upload;
+        var folderPath = FolderPath ?? DateTimeOffset.UtcNow.ToString("yyyyMM", CultureInfo.InvariantCulture);
+
         foreach (var file in _selectedFiles)
         {
             try
             {
-                using var content = new MultipartFormDataContent();
+                // Validate file size
+                if (file.Size > uploadSettings.MaxFileSizeBytes)
+                {
+                    _errorMessages.Add($"Failed to upload {file.Name}: File size exceeds maximum allowed size of {uploadSettings.MaxFileSizeMB}MB");
+                    continue;
+                }
+
+                // Validate file extension
+                var extension = Path.GetExtension(file.Name);
+                if (!uploadSettings.IsFileTypeAllowed(extension))
+                {
+                    _errorMessages.Add($"Failed to upload {file.Name}: File type '{extension}' is not allowed");
+                    continue;
+                }
+
+                // Validate MIME type
+                if (!uploadSettings.IsMimeTypeAllowed(file.ContentType))
+                {
+                    _errorMessages.Add($"Failed to upload {file.Name}: MIME type '{file.ContentType}' is not allowed");
+                    continue;
+                }
+
+                // Upload file directly through the facade
                 using var stream = file.OpenReadStream(MaxFileSize);
-                var streamContent = new StreamContent(stream);
-                content.Add(streamContent, "file", file.Name);
+                var result = await MediaFacade.UploadAsync(
+                    file.Name,
+                    stream,
+                    file.ContentType,
+                    folderPath,
+                    UploadedBy);
 
-                var response = await Http.PostAsync(SaveUrl, content);
+                _successMessages.Add($"Successfully uploaded: {file.Name}");
+                _uploadedCount++;
+                Logger.LogInformation("Upload succeeded: {FileName}", file.Name);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    _successMessages.Add($"Successfully uploaded: {file.Name}");
-                    _uploadedCount++;
-                    Logger.LogInformation("Upload succeeded: {FileName}", file.Name);
-
-                    await BroadcastService.BroadcastFolderContentsChangedAsync(
-                        FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
-                }
-                else
-                {
-                    _errorMessages.Add($"Failed to upload {file.Name}: {response.ReasonPhrase}");
-                    Logger.LogError("Upload failed for {FileName}: {Status}", file.Name, response.ReasonPhrase);
-                }
+                await BroadcastService.BroadcastFolderContentsChangedAsync(
+                    FolderContentsChangedEventArgs.ForAllFolders(FolderChangeType.Upload));
             }
             catch (Exception ex)
             {

@@ -1,0 +1,68 @@
+@typeparam TItem
+@using Viblog.Admin.Models
+
+<div class="accordion">
+    @foreach (var item in SortedDataSource)
+    {
+        <div class="accordion-section">
+            <div class="accordion-header @(_expandedKey == item.Key ? "expanded" : "")"
+                 @onclick="() => ToggleSection(item.Key)">
+                @if (HeaderTemplate != null)
+                {
+                    @HeaderTemplate(item)
+                }
+                <span class="accordion-chevron">▼</span>
+            </div>
+            @if (_expandedKey == item.Key && ContentTemplate != null)
+            {
+                <div class="accordion-content">
+                    @ContentTemplate(item.Data)
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string? _expandedKey;
+
+    /// <summary>
+    /// The data source for the accordion sections
+    /// </summary>
+    [Parameter]
+    public List<AccordionPage<TItem>> DataSource { get; set; } = [];
+
+    /// <summary>
+    /// Template for rendering the accordion header
+    /// </summary>
+    [Parameter]
+    public RenderFragment<AccordionPage<TItem>>? HeaderTemplate { get; set; }
+
+    /// <summary>
+    /// Template for rendering the accordion content when expanded
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TItem>? ContentTemplate { get; set; }
+
+    /// <summary>
+    /// Gets the data source sorted by Key in descending order
+    /// </summary>
+    private IEnumerable<AccordionPage<TItem>> SortedDataSource =>
+        DataSource.OrderByDescending(item => item.Key);
+
+    /// <summary>
+    /// Toggles the expansion state of an accordion section.
+    /// Only one section can be expanded at a time.
+    /// </summary>
+    private void ToggleSection(string key)
+    {
+        if (_expandedKey == key)
+        {
+            _expandedKey = null;
+        }
+        else
+        {
+            _expandedKey = key;
+        }
+    }
+}

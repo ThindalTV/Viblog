@@ -1,4 +1,5 @@
 @using Microsoft.Extensions.Logging
+@using System.Globalization
 @using Viblog.Admin.Models
 @using Viblog.Admin.Services
 @using Viblog.Helpers
@@ -35,22 +36,29 @@
         }
         else
         {
-            <ul class="date-folder-list">
-                @foreach (var folder in _dateFolders)
-                {
-                    <li class="@(folder.DateFolder == SelectedDateFolder ? "active" : "")"
-                        @onclick="() => OnDateFolderSelectedAsync(folder.DateFolder)">
-                        <span class="folder-name">@folder.DisplayName</span>
-                        <span class="item-count">@folder.ItemCount</span>
-                    </li>
-                }
-            </ul>
+            <Accordion DataSource="@_accordionData">
+                <HeaderTemplate Context="item">
+                    <span class="year-label">@item.Key</span>
+                </HeaderTemplate>
+                <ContentTemplate Context="months">
+                    <ul class="month-list">
+                        @foreach (var folder in months)
+                        {
+                            <li class="month-item @(folder.DateFolder == SelectedDateFolder ? "active" : "")"
+                                @onclick="() => OnDateFolderSelectedAsync(folder.DateFolder)">
+                                <span class="month-name">@GetMonthName(folder.DateFolder)</span>
+                            </li>
+                        }
+                    </ul>
+                </ContentTemplate>
+            </Accordion>
         }
     </div>
 </div>
 
 @code {
     private List<DateFolderInfo> _dateFolders = [];
+    private List<AccordionPage<List<DateFolderInfo>>> _accordionData = [];
     private bool _isLoading;
     private MediaTypeCategory? _previousMediaType;
     // Prevents concurrent DB operations on the same scoped DbContext: if a load is
@@ -112,11 +120,23 @@
                 ItemCount = 0
             }).ToList();
 
-            // Auto-select the first (newest) folder if none selected
-            if (SelectedDateFolder == null && _dateFolders.Any())
+            // Transform to accordion data structure
+            _accordionData = _dateFolders
+                .GroupBy(df => df.DateFolder[..4])
+                .Select(g => new AccordionPage<List<DateFolderInfo>>
+                {
+                    Key = g.Key,
+                    Data = g.OrderByDescending(df => df.DateFolder).ToList()
+                })
+                .ToList();
+
+            // If the currently selected folder is not in the filtered results, clear the selection
+            if (SelectedDateFolder != null && !_dateFolders.Any(df => df.DateFolder == SelectedDateFolder))
             {
-                await OnDateFolderSelectedAsync(_dateFolders.First().DateFolder);
+                await OnDateFolderSelectedAsync(null);
             }
+            // Note: We no longer auto-select the first folder on initial load
+            // Users should explicitly choose a folder to view its contents
         }
         catch (Exception ex)
         {
@@ -135,10 +155,23 @@
         await LoadDateFoldersAsync();
     }
 
-    private async Task OnDateFolderSelectedAsync(string dateFolder)
+    private async Task OnDateFolderSelectedAsync(string? dateFolder)
     {
         SelectedDateFolder = dateFolder;
         await SelectedDateFolderChanged.InvokeAsync(dateFolder);
+    }
+
+    private static string GetMonthName(string dateFolder)
+    {
+        if (dateFolder.Length != 6 || !int.TryParse(dateFolder, out _))
+        {
+            return dateFolder;
+        }
+
+        var year = dateFolder[..4];
+        var monthNum = int.Parse(dateFolder[4..], CultureInfo.InvariantCulture);
+        return new DateTime(int.Parse(year, CultureInfo.InvariantCulture), monthNum, 1)
+            .ToString("MMMM", CultureInfo.InvariantCulture);
     }
 
     private async Task HandleFolderContentsChangedAsync(FolderContentsChangedEventArgs args)

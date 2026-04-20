@@ -36,11 +36,12 @@ public class PagesAdminFacadeTests
             PageSize = 10
         };
 
+        // Default sort field is now PublishedAt which uses DateTimeOffset?
         _mockRepository.Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<Page, bool>>>(),
                 pagingParams,
-                It.IsAny<Expression<Func<Page, string>>>(),
-                true,
+                It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
+                false,
                 false,
                 default))
             .ReturnsAsync(expectedPages);
@@ -54,8 +55,8 @@ public class PagesAdminFacadeTests
         _mockRepository.Verify(r => r.FindAsync(
             It.IsAny<Expression<Func<Page, bool>>>(),
             pagingParams,
-            It.IsAny<Expression<Func<Page, string>>>(),
-            true,
+            It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
+            false,
             false,
             default), Times.Once);
     }
@@ -73,11 +74,12 @@ public class PagesAdminFacadeTests
             PageSize = 10
         };
 
+        // Default sort field is now PublishedAt which uses DateTimeOffset?
         _mockRepository.Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<Page, bool>>>(),
                 pagingParams,
-                It.IsAny<Expression<Func<Page, string>>>(),
-                true,
+                It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
+                false,
                 false,
                 default))
             .ReturnsAsync(expectedPages);
@@ -108,11 +110,12 @@ public class PagesAdminFacadeTests
             PageSize = 10
         };
 
+        // Default sort field is now PublishedAt which uses DateTimeOffset?
         _mockRepository.Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<Page, bool>>>(),
                 pagingParams,
-                It.IsAny<Expression<Func<Page, string>>>(),
-                true,
+                It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
+                false,
                 false,
                 default))
             .ReturnsAsync(expectedPages);
@@ -132,6 +135,7 @@ public class PagesAdminFacadeTests
     [InlineData(PageSortField.CreatedAt)]
     [InlineData(PageSortField.UpdatedAt)]
     [InlineData(PageSortField.IsPublished)]
+    [InlineData(PageSortField.PublishedAt)]
     public async Task GetPagesAsync_WithDifferentSortFields_CallsRepositoryCorrectly(PageSortField sortField)
     {
         // Arrange
@@ -159,6 +163,16 @@ public class PagesAdminFacadeTests
                 It.IsAny<Expression<Func<Page, bool>>>(),
                 pagingParams,
                 It.IsAny<Expression<Func<Page, DateTimeOffset>>>(),
+                It.IsAny<bool>(),
+                false,
+                default))
+            .ReturnsAsync(expectedPages);
+
+        // Setup for DateTimeOffset?-based sorts (PublishedAt)
+        _mockRepository.Setup(r => r.FindAsync(
+                It.IsAny<Expression<Func<Page, bool>>>(),
+                pagingParams,
+                It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
                 It.IsAny<bool>(),
                 false,
                 default))
@@ -195,10 +209,11 @@ public class PagesAdminFacadeTests
             PageSize = 10
         };
 
+        // Default sort field is now PublishedAt which uses DateTimeOffset?
         _mockRepository.Setup(r => r.FindAsync(
                 It.IsAny<Expression<Func<Page, bool>>>(),
                 pagingParams,
-                It.IsAny<Expression<Func<Page, string>>>(),
+                It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
                 true,
                 false,
                 default))
@@ -211,7 +226,7 @@ public class PagesAdminFacadeTests
         _mockRepository.Verify(r => r.FindAsync(
             It.IsAny<Expression<Func<Page, bool>>>(),
             pagingParams,
-            It.IsAny<Expression<Func<Page, string>>>(),
+            It.IsAny<Expression<Func<Page, DateTimeOffset?>>>(),
             true,
             false,
             default), Times.Once);
@@ -397,6 +412,10 @@ public class PagesAdminFacadeTests
             GroupKey = "pages",
             Slug = slug,
             IsPublished = isPublished,
+            Schedule = new ContentSchedule
+            {
+                PublishedAt = isPublished ? DateTimeOffset.UtcNow : null
+            },
             Live = isPublished ? new PageContent
             {
                 Title = $"Live Title for {slug}",

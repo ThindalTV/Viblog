@@ -1,0 +1,55 @@
+/* Accordion Component Styles */
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.accordion-section {
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--color-background);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    user-select: none;
+}
+
+.accordion-header:hover {
+    background: var(--color-border);
+}
+
+.accordion-header.expanded {
+    background: var(--color-border);
+}
+
+.accordion-chevron {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.accordion-header.expanded .accordion-chevron {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    background: var(--color-surface);
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}

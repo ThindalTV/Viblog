@@ -240,6 +240,87 @@ public class MediaServiceTests
         Assert.Equal(folderPath, capturedItem.FolderPath);
     }
 
+    [Fact]
+    public async Task UploadAsync_WithNonSeekableStream_SuccessfullyUploads()
+    {
+        // Arrange - This tests the Blazor Server scenario where IBrowserFile.OpenReadStream() returns a non-seekable stream
+        var fileName = "test-blazor-upload.jpg";
+        var mimeType = "image/jpeg";
+        var folderPath = "202412";
+        var fileContent = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46 }; // JPEG header + some data
+        using var nonSeekableStream = new NonSeekableStream(fileContent);
+
+        var storageResult = new MediaStorageResult
+        {
+            StoragePath = "2024/12/test-blazor-upload.jpg",
+            PublicUrl = "https://cdn.example.com/2024/12/test-blazor-upload.jpg",
+            FileSize = fileContent.Length
+        };
+
+        var extractedMetadata = new Dictionary<string, string>
+        {
+            ["Width"] = "800",
+            ["Height"] = "600"
+        };
+
+        bool storageStreamWasSeekable = false;
+        bool metadataStreamWasSeekable = false;
+
+        _mockStorageRepository
+            .Setup(x => x.UploadAsync(fileName, It.IsAny<Stream>(), mimeType, folderPath, It.IsAny<CancellationToken>()))
+            .Callback<string, Stream, string, string, CancellationToken>((_, stream, _, _, _) =>
+            {
+                // Verify the stream passed to storage is seekable (MemoryStream) AT THE TIME OF THE CALL
+                storageStreamWasSeekable = stream.CanSeek;
+                Assert.True(stream.CanSeek, "Stream passed to storage repository should be seekable");
+                Assert.True(stream.CanRead, "Stream passed to storage repository should be readable");
+            })
+            .ReturnsAsync(storageResult);
+
+        _mockMetadataExtractor
+            .Setup(x => x.ExtractMetadataAsync(It.IsAny<Stream>(), mimeType, It.IsAny<CancellationToken>()))
+            .Callback<Stream, string, CancellationToken>((stream, _, _) =>
+            {
+                // Verify the stream passed to metadata extractor is seekable (MemoryStream) AT THE TIME OF THE CALL
+                metadataStreamWasSeekable = stream.CanSeek;
+                Assert.True(stream.CanSeek, "Stream passed to metadata extractor should be seekable");
+                Assert.True(stream.CanRead, "Stream passed to metadata extractor should be readable");
+                // Verify position was reset to 0 before passing to metadata extractor
+                Assert.Equal(0, stream.Position);
+            })
+            .ReturnsAsync(extractedMetadata);
+
+        _mockMetadataRepository
+            .Setup(x => x.AddAsync(It.IsAny<MediaItem>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _mockMetadataRepository
+            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _service.UploadAsync(fileName, nonSeekableStream, mimeType, folderPath);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(fileName, result.FileName);
+        Assert.Equal(mimeType, result.MimeType);
+        Assert.Equal(folderPath, result.FolderPath);
+        Assert.Equal(800, result.Width);
+        Assert.Equal(600, result.Height);
+
+        // Verify that the service successfully handled the non-seekable stream by:
+        // 1. Copying it to a MemoryStream
+        // 2. Passing the seekable MemoryStream to both storage and metadata extractor
+        Assert.True(storageStreamWasSeekable, "Storage repository should have received a seekable stream");
+        Assert.True(metadataStreamWasSeekable, "Metadata extractor should have received a seekable stream");
+
+        _mockStorageRepository.Verify(x => x.UploadAsync(
+            fileName, It.IsAny<Stream>(), mimeType, folderPath, It.IsAny<CancellationToken>()), Times.Once);
+        _mockMetadataExtractor.Verify(x => x.ExtractMetadataAsync(
+            It.IsAny<Stream>(), mimeType, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     #endregion
 
     #region GetByIdAsync Tests
@@ -580,4 +661,58 @@ public class MediaServiceTests
     }
 
     #endregion
+}
+
+/// <summary>
+/// Helper stream that simulates Blazor's IBrowserFile.OpenReadStream() behavior.
+/// This stream is forward-only (non-seekable), similar to what happens when
+/// uploading files through InputFile component in Blazor Server.
+/// </summary>
+internal sealed class NonSeekableStream : Stream
+{
+    private readonly MemoryStream _innerStream;
+    private bool _disposed;
+
+    public NonSeekableStream(byte[] data)
+    {
+        _innerStream = new MemoryStream(data);
+    }
+
+    public override bool CanRead => !_disposed;
+    public override bool CanSeek => false; // This is the key - Blazor streams don't support seeking
+    public override bool CanWrite => false;
+    public override long Length => throw new NotSupportedException("Non-seekable streams don't support Length");
+
+    public override long Position
+    {
+        get => throw new NotSupportedException("Non-seekable streams don't support getting Position");
+        set => throw new NotSupportedException("Non-seekable streams don't support setting Position");
+    }
+
+    public override int Read(byte[] buffer, int offset, int count) => 
+        _innerStream.Read(buffer, offset, count);
+
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+        _innerStream.ReadAsync(buffer, offset, count, cancellationToken);
+
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+        _innerStream.ReadAsync(buffer, cancellationToken);
+
+    public override void Flush() => throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => 
+        throw new NotSupportedException("Non-seekable streams don't support Seek");
+    public override void SetLength(long value) => 
+        throw new NotSupportedException("Non-seekable streams don't support SetLength");
+    public override void Write(byte[] buffer, int offset, int count) => 
+        throw new NotSupportedException("Non-seekable streams don't support Write");
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed)
+        {
+            _innerStream.Dispose();
+            _disposed = true;
+        }
+        base.Dispose(disposing);
+    }
 }

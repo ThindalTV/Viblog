@@ -26,6 +26,13 @@
                 <p>Loading...</p>
             </div>
         }
+        else if (SelectedDateFolder == null)
+        {
+            <div class="empty-state">
+                <p>Select a folder to view its contents</p>
+                <p>Choose a month from the folders list on the left</p>
+            </div>
+        }
         else if (!_mediaItems.Any())
         {
             <div class="empty-state">
@@ -78,17 +85,17 @@
             @if (_totalCount > _pageSize)
             {
                 <div class="pagination">
-                    <button class="btn-secondary" 
+                    <button class="btn" 
                             disabled="@(_currentPage <= 1)"
                             @onclick="PreviousPageAsync">
                         Previous
                     </button>
-                    
+
                     <span class="page-info">
                         Page @_currentPage of @Math.Ceiling((double)_totalCount / _pageSize)
                     </span>
-                    
-                    <button class="btn-secondary" 
+
+                    <button class="btn" 
                             disabled="@(_currentPage >= Math.Ceiling((double)_totalCount / _pageSize))"
                             @onclick="NextPageAsync">
                         Next

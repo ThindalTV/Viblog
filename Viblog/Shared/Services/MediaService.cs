@@ -77,23 +77,22 @@ public class MediaService : IMediaService
         {
             _logger.LogInformation("Starting upload for file: {FileName}", fileName);
 
-            // Create a copy of the stream for metadata extraction
-            var memoryStream = new MemoryStream();
+            // Copy the stream to memory (required for non-seekable streams like BrowserFileStream)
+            using var memoryStream = new MemoryStream();
             await fileStream.CopyToAsync(memoryStream, cancellationToken);
             memoryStream.Position = 0;
-            fileStream.Position = 0;
 
-            // Upload to storage
+            // Upload to storage using the memory stream
             var storageResult = await _storageRepository.UploadAsync(
                 fileName,
-                fileStream,
+                memoryStream,
                 mimeType,
                 folderPath,
                 cancellationToken);
 
             _logger.LogInformation("File uploaded to storage: {StoragePath}", storageResult.StoragePath);
 
-            // Extract metadata
+            // Extract metadata from the same memory stream
             memoryStream.Position = 0;
             var extractedMetadata = await _metadataExtractor.ExtractMetadataAsync(
                 memoryStream,
@@ -146,8 +145,6 @@ public class MediaService : IMediaService
                 mediaItem.FileName,
                 $"Uploaded media file '{mediaItem.FileName}' to {mediaItem.FolderPath}",
                 cancellationToken);
-
-            await memoryStream.DisposeAsync();
 
             return mediaItem;
         }

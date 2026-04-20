@@ -14,7 +14,7 @@
     {
         <div class="preview-header">
             <h3>File Details</h3>
-            <button class="btn-close" @onclick="OnClose">×</button>
+            <button class="btn-close" @onclick="OnClose">Ã—</button>
         </div>
         
         <div class="preview-content">
@@ -65,7 +65,7 @@
                     {
                         <div class="info-row">
                             <label>Dimensions:</label>
-                            <span>@SelectedItem.Width × @SelectedItem.Height</span>
+                            <span>@SelectedItem.Width Ã— @SelectedItem.Height</span>
                         </div>
                     }
                     <div class="info-row url-row">
@@ -79,10 +79,10 @@
                 </div>
 
                 <div class="preview-actions">
-                    <button class="btn-primary" @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)">
+                    <button class="btn btn-primary" @onclick="() => CopyUrlAsync(SelectedItem.PublicUrl)">
                         Copy URL
                     </button>
-                    <button class="btn-danger" @onclick="OnDeleteRequested">
+                    <button class="btn btn-danger" @onclick="OnDeleteRequested">
                         Delete
                     </button>
                 </div>

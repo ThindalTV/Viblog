@@ -16,6 +16,7 @@ public class CosmosDbBlogPostRepository : CosmosDbRepository<BlogPost>, IBlogPos
 
     public CosmosDbBlogPostRepository(ApplicationDbContext context, ILogger<CosmosDbBlogPostRepository> logger) : base(context)
     {
+        _logger = logger;
     }
 
 

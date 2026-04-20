@@ -3,16 +3,19 @@
 @layout AdminLayout
 @using Viblog.Admin.Layout
 @using Viblog.Admin.Components.MediaLibrary
+@using Viblog.Admin.Components
 @inject ILogger<MediaLibrary> Logger
 
 <PageTitle>Media Library - Viblog Admin</PageTitle>
 
-<div class="media-library">
-    <div class="media-library-header">
+<div class="admin-page">
+    <div class="page-header">
         <h1>Media Library</h1>
-        <button class="btn-primary upload-btn" @onclick="ShowUploadDialog">
-            <span class="icon">+</span> Upload Files
-        </button>
+        <div class="page-actions">
+            <button class="btn btn-primary" @onclick="ShowUploadDialog">
+                <Icon Name="upload" /> Upload Files
+            </button>
+        </div>
     </div>
 
     <MediaLibraryContent />

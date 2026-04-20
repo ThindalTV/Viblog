@@ -61,9 +61,6 @@ Blog components:
 - 
 ## Dependencies & Libraries
 
-### Preferred Libraries
-- Telerik UI for Blazor
-
 ## Database & Data Access
 
 - Use Entity Framework Core for data access, even with CosmosDB
@@ -88,7 +85,6 @@ Blog components:
 - Use async/await for I/O operations
 - Validate inputs and handle edge cases
 - Keep methods focused and single-purpose
-- Use SASS for styling
 
 ### Don't:
 - Mix different architectural patterns

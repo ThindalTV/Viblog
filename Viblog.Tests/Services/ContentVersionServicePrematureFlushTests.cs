@@ -80,15 +80,22 @@ public class ContentVersionServicePrematureFlushTests
     ///      CreatePublishedSnapshotAsync already flushed everything.
     /// FIX: Remove the SaveChangesAsync call from CreatePublishedSnapshotAsync; let the
     ///      caller's SaveChangesAsync commit both the version snapshot and the post.
+    ///
+    /// NOTE: This test uses mocked repositories instead of real Cosmos repositories to avoid
+    ///       InMemory provider compatibility issues with Cosmos-specific partition key APIs.
     /// </summary>
     [Fact]
     public async Task PromoteDraftToLiveAsync_WithSharedDbContext_DoesNotPrematurelyFlushBlogPost()
     {
-        // Arrange — both repositories share the SAME context, mirroring production DI scope
+        // Arrange — mock the version repository to avoid Cosmos-specific WithPartitionKey calls
+        var mockVersionRepo = new Mock<IBlogPostVersionRepository>();
+        mockVersionRepo
+            .Setup(r => r.GetLatestVersionNumberAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
         using var context = CreateSharedContext(Guid.NewGuid().ToString());
-        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
         var service = new ContentVersionService(
-            versionRepo,
+            mockVersionRepo.Object,
             Mock.Of<IPageVersionRepository>(),
             Mock.Of<ILogger<ContentVersionService>>());
 
@@ -127,15 +134,24 @@ public class ContentVersionServicePrematureFlushTests
     ///
     /// This is the unsafe intermediate state that can leave CosmosDB with GroupKey="draft"
     /// and IsPublished=true simultaneously.
+    ///
+    /// NOTE: This test uses mocked repositories instead of real Cosmos repositories to avoid
+    ///       InMemory provider compatibility issues with Cosmos-specific partition key APIs.
     /// </summary>
     [Fact]
     public async Task PromoteDraftToLiveAsync_WithSharedDbContext_DoesNotPersistBlogPostWithoutExplicitSave()
     {
         var dbName = Guid.NewGuid().ToString();
         using var context = CreateSharedContext(dbName);
-        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
+
+        // Mock the version repository to avoid Cosmos-specific WithPartitionKey calls
+        var mockVersionRepo = new Mock<IBlogPostVersionRepository>();
+        mockVersionRepo
+            .Setup(r => r.GetLatestVersionNumberAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
         var service = new ContentVersionService(
-            versionRepo,
+            mockVersionRepo.Object,
             Mock.Of<IPageVersionRepository>(),
             Mock.Of<ILogger<ContentVersionService>>());
 
@@ -173,6 +189,9 @@ public class ContentVersionServicePrematureFlushTests
     /// Both production call sites follow this pattern:
     ///   PostsAdminFacade.PublishPostNowAsync    → _blogPostRepository.SaveChangesAsync()
     ///   ContentPublishingBackgroundService       → blogPostRepository.SaveChangesAsync()
+    ///
+    /// NOTE: This test uses mocked repositories instead of real Cosmos repositories to avoid
+    ///       InMemory provider compatibility issues with Cosmos-specific partition key APIs.
     /// </summary>
     [Fact]
     public async Task PromoteDraftToLiveAsync_AfterCallerSavesChanges_VersionSnapshotIsPersisted()
@@ -180,10 +199,23 @@ public class ContentVersionServicePrematureFlushTests
         var dbName = Guid.NewGuid().ToString();
         using var context = CreateSharedContext(dbName);
 
-        // Both repositories use the SAME context — mirrors the production DI scope
-        var versionRepo = new BlogPostVersionRepository(context, Mock.Of<ILogger<BlogPostVersionRepository>>());
+        // Mock the version repository to avoid Cosmos-specific WithPartitionKey calls
+        // but ensure AddAsync actually adds to the shared DbContext
+        var mockVersionRepo = new Mock<IBlogPostVersionRepository>();
+        mockVersionRepo
+            .Setup(r => r.GetLatestVersionNumberAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        mockVersionRepo
+            .Setup(r => r.AddAsync(It.IsAny<BlogPostVersion>(), It.IsAny<CancellationToken>()))
+            .Callback<BlogPostVersion, CancellationToken>((version, _) => 
+            {
+                // Add to the shared context so SaveChangesAsync will persist it
+                context.Set<BlogPostVersion>().Add(version);
+            })
+            .Returns(Task.CompletedTask);
+
         var service = new ContentVersionService(
-            versionRepo,
+            mockVersionRepo.Object,
             Mock.Of<IPageVersionRepository>(),
             Mock.Of<ILogger<ContentVersionService>>());
 

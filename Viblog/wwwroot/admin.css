@@ -87,6 +87,39 @@
     border-color: var(--admin-primary-dark, #5568d3);
 }
 
+.btn-danger {
+    background-color: var(--color-error, #dc3545);
+    border-color: var(--color-error, #dc3545);
+    color: var(--color-white, #ffffff);
+}
+
+.btn-danger:hover {
+    background-color: var(--color-error-dark, #c82333);
+    border-color: var(--color-error-dark, #c82333);
+    color: var(--color-white, #ffffff);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+    background-color: var(--color-white, #ffffff);
+    border-color: var(--admin-border, #e0e0e0);
+    color: var(--admin-text, #333);
+}
+
+.btn-primary:disabled:hover {
+    background-color: var(--admin-primary, #667eea);
+    border-color: var(--admin-primary, #667eea);
+}
+
+.btn-danger:disabled:hover {
+    background-color: var(--color-error, #dc3545);
+    border-color: var(--color-error, #dc3545);
+}
+
 /* Button group */
 .button-group {
     display: flex;

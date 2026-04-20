@@ -52,7 +52,8 @@ public class CosmosDbBlogPostRepositoryTests
     public async Task AddAsync_SetsConstantPartitionKey()
     {
         using var context = CreateInMemoryContext();
-        var repo = new CosmosDbBlogPostRepository(context);
+        var mockLogger = new Mock<ILogger<CosmosDbBlogPostRepository>>();
+        var repo = new CosmosDbBlogPostRepository(context, mockLogger.Object);
 
         var post = CreateDraftPost();
         await repo.AddAsync(post, default);
@@ -65,7 +66,8 @@ public class CosmosDbBlogPostRepositoryTests
     public async Task UpdateAsync_WhenPublished_KeepsSamePartitionKey()
     {
         using var context = CreateInMemoryContext();
-        var repo = new CosmosDbBlogPostRepository(context);
+        var mockLogger = new Mock<ILogger<CosmosDbBlogPostRepository>>();
+        var repo = new CosmosDbBlogPostRepository(context, mockLogger.Object);
 
         var post = CreateDraftPost();
         await repo.AddAsync(post, default);
@@ -87,7 +89,8 @@ public class CosmosDbBlogPostRepositoryTests
     public async Task UpdateAsync_WhenUnpublished_KeepsSamePartitionKey()
     {
         using var context = CreateInMemoryContext();
-        var repo = new CosmosDbBlogPostRepository(context);
+        var mockLogger = new Mock<ILogger<CosmosDbBlogPostRepository>>();
+        var repo = new CosmosDbBlogPostRepository(context, mockLogger.Object);
 
         var post = CreateDraftPost();
         post.IsPublished = true;
